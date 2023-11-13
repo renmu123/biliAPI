@@ -1,0 +1,14 @@
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+
+# build
+*.js.map
+
+dist
+*.code-workspace
+
+test.js
