@@ -1,28 +1,29 @@
-import type { Request, CommonResponse } from "~/types";
+import type { CommonResponse, Request, UploadResponse } from "~/types";
 import path from "path";
 import fs from "fs";
+import cookie from "cookie";
 
-// {
-//   "OK": 1,
-//   "auth": "ak=1494471752\u0026cdn=%2F%2Fupos-cs-upcdnbldsa.bilivideo.com\u0026os=upos\u0026sign=413e9a9ad5f12f22932f42bde213578f\u0026timestamp=1699885603.815\u0026uid=10995238\u0026uip=101.88.178.236\u0026uport=6908\u0026use_dqp=0",
-//   "biz_id": 1331321717,
-//   "chunk_retry": 10,
-//   "chunk_retry_delay": 3,
-//   "chunk_size": 10485760,
-//   "endpoint": "//upos-cs-upcdnbldsa.bilivideo.com",
-//   "endpoints": [
-//       "//upos-cs-upcdnbldsa.bilivideo.com",
-//       "//upos-cs-upcdnqn.bilivideo.com",
-//       "//upos-cs-upcdnbda2.bilivideo.com"
-//   ],
-//   "expose_params": null,
-//   "put_query": "os=upos\u0026profile=ugcfx%2Fbup",
-//   "threads": 3,
-//   "timeout": 1200,
-//   "uip": "101.88.178.236",
-//   "upos_uri": "upos://ugcfx2lf/n231113sa10t9rub2135fw30ykhm7zcm.mp4"
-// }
-export const preupload = async (request: Request, filePath: string) => {
+export const preupload = async (
+  request: Request,
+  filePath: string
+): Promise<
+  UploadResponse<{
+    OK: number;
+    auth: string;
+    biz_id: number;
+    chunk_retry: number;
+    chunk_retry_delay: number;
+    chunk_size: number;
+    endpoint: string;
+    endpoints: string[];
+    expose_params: any;
+    put_query: string;
+    threads: number;
+    timeout: number;
+    uip: string;
+    upos_uri: string;
+  }>
+> => {
   const { base } = path.parse(filePath);
   const size = await getFileSize(filePath);
   return request.get("https://member.bilibili.com/preupload", {
@@ -42,37 +43,18 @@ export const preupload = async (request: Request, filePath: string) => {
   });
 };
 
-// {
-//   "OK": 1,
-//   "auth": "ak=1494471752\u0026cdn=%2F%2Fupos-cs-upcdnqn.bilivideo.com\u0026os=upos\u0026sign=aaf052bb1e44d3559b4a6f9a7b96177e\u0026timestamp=1699885603.990\u0026uid=10995238\u0026uip=101.88.178.236\u0026uport=6908\u0026use_dqp=0",
-//   "biz_id": 0,
-//   "chunk_retry": 10,
-//   "chunk_retry_delay": 3,
-//   "chunk_size": 10485760,
-//   "endpoint": "//upos-cs-upcdnqn.bilivideo.com",
-//   "endpoints": [
-//       "//upos-cs-upcdnqn.bilivideo.com",
-//       "//upos-cs-upcdnbda2.bilivideo.com"
-//   ],
-//   "expose_params": null,
-//   "put_query": "os=upos\u0026profile=fxmeta%2Fbup",
-//   "threads": 5,
-//   "timeout": 1200,
-//   "uip": "101.88.178.236",
-//   "upos_uri": "upos://fxmetalf/n231113qnhpn2ehlcuf45299b4qk23ut.txt"
-// }
 export const preuploadMeta = async (
   request: Request
 ): Promise<
-  CommonResponse<{
+  UploadResponse<{
     OK: number;
     auth: string;
     biz_id: number;
     chunk_retry: number;
     chunk_retry_delay: number;
     chunk_size: number;
-    end_point: string;
-    end_points: string[];
+    endpoint: string;
+    endpoints: string[];
     expose_params: any;
     put_query: string;
     threads: number;
@@ -95,6 +77,226 @@ export const preuploadMeta = async (
   });
 };
 
+export const getUploadInfo = async (
+  request: Request,
+  url: string,
+  filePath: string,
+  biz_id: number,
+  chunk_size: number,
+  // meta_upos_uri: string,
+  auth: string
+): Promise<
+  UploadResponse<{
+    OK: number;
+    bucket: string;
+    key: string;
+    upload_id: string;
+  }>
+> => {
+  const size = await getFileSize(filePath);
+  return request.post(url, "", {
+    params: {
+      uploads: "",
+      output: "json",
+      profile: "ugcfx/bup",
+      filesize: size,
+      partsize: chunk_size,
+      // meta_upos_uri: meta_upos_uri,
+      biz_id: biz_id,
+    },
+    headers: {
+      "X-Upos-Auth": auth,
+    },
+  });
+};
+
+async function uploadChunk(
+  request: Request,
+  url: string,
+  filePath: string,
+  auth: string,
+  uploadId: string,
+  chunk_size: number
+) {
+  const size = await getFileSize(filePath);
+  const chunks = Math.ceil(size / chunk_size);
+
+  // const paramsArray = [];
+  //
+  // for (let i = 0; i < chunks; i++) {
+  //   paramsArray.push({
+  //     uploadId: uploadId,
+  //     partNumber: i + 1,
+  //     chunk: i,
+  //     chunks: chunks,
+  //     size: chunk_size,
+  //     start: i * chunk_size,
+  //     end: (i + 1) * chunk_size,
+  //     total: size,
+  //   });
+  // }
+  fs.readFile(filePath, async (err, data) => {
+    if (err) throw err;
+
+    const numberOfChunks = Math.ceil(size / chunk_size);
+
+    for (let i = 0; i < numberOfChunks; i++) {
+      const start = i * chunk_size;
+      const end = (i + 1) * chunk_size;
+      const chunkData = data.slice(start, end);
+
+      const params = {
+        uploadId: uploadId,
+        partNumber: i + 1,
+        chunk: i,
+        chunks: chunks,
+        size: chunk_size,
+        start: start,
+        end: end,
+        total: size,
+      };
+      console.log("params", params);
+
+      const res = await request.put(url, chunkData, {
+        params: params,
+        headers: {
+          "X-Upos-Auth": auth,
+        },
+        proxy: {
+          host: "127.0.0.1",
+          port: 9999,
+          protocol: "http",
+        },
+      });
+      console.log("data", res.data);
+
+      // 写入切片文件
+      // fs.writeFile(chunkFileName, chunkData, err => {
+      //   if (err) throw err;
+      //   console.log(`Chunk ${i + 1} created: ${chunkFileName}`);
+      // });
+    }
+  });
+}
+
+interface MediaOptions {
+  cover?: string;
+  title: string;
+  copyright?: 0 | 1;
+  tid: number;
+  tag: string;
+  desc?: string;
+  dynamic?: string;
+  dolby?: 0 | 1;
+  lossless_music?: 0 | 1;
+}
+
+async function submit(
+  request: Request,
+  cookieString: string,
+  biz_id: number,
+  filename: string,
+  options: MediaOptions
+): Promise<
+  CommonResponse<{
+    aid: number;
+    bvid: string;
+  }>
+> {
+  console.log(cookie.parse(cookieString));
+  const cookieObj = cookie.parse(cookieString);
+  const crsf = cookieObj.bili_jct;
+  const data = {
+    copyright: 1,
+    tid: 124,
+    desc_format_id: 9999,
+    desc: "",
+    recreate: -1,
+    dynamic: "",
+    interactive: 0,
+    videos: [
+      {
+        filename: "",
+        title: "",
+        desc: "",
+        cid: 0,
+      },
+    ],
+    act_reserve_create: 0,
+    no_disturbance: 0,
+    no_reprint: 1,
+    subtitle: { open: 0, lan: "" },
+    dolby: 0,
+    lossless_music: 0,
+    up_selection_reply: false,
+    up_close_reply: false,
+    up_close_danmu: false,
+    web_os: 1,
+    csrf: crsf,
+    ...options,
+  };
+
+  data.videos[0] = {
+    filename: filename,
+    title: "录制-27430232-20231114-100239-728-张三普法1-45",
+    desc: "",
+    cid: biz_id,
+  };
+  console.log("submit", data);
+
+  return request.post("https://member.bilibili.com/x/vu/web/add/v3", data, {
+    params: {
+      t: Date.now(),
+      csrf: crsf,
+    },
+  });
+}
+
+export const upload = async (
+  request: Request,
+  cookieString: string,
+  filePath: string,
+  options: MediaOptions
+) => {
+  const res = await preupload(request, filePath);
+  console.log("preupload", res.data);
+
+  const { endpoint, upos_uri, biz_id, chunk_size, auth } = res.data;
+  const url = `https:${endpoint}/${upos_uri.slice(7)}`;
+  console.log("url", url);
+
+  const uploadInfo = (
+    await getUploadInfo(
+      request,
+      url,
+      filePath,
+      biz_id,
+      chunk_size,
+      // meta_upos_uri,
+      auth
+    )
+  ).data;
+  console.log("uploadInfo", uploadInfo);
+
+  await uploadChunk(
+    request,
+    url,
+    filePath,
+    auth,
+    uploadInfo.upload_id,
+    chunk_size
+  );
+  const res2 = await submit(
+    request,
+    cookieString,
+    biz_id,
+    uploadInfo.key.replaceAll("/", "").split(".")[0],
+    options
+  );
+  console.log("submit", res2.data);
+  return res2.data;
+};
+
 async function getFileSize(filePath: string) {
   try {
     const stats = await fs.promises.stat(filePath);
@@ -109,7 +311,7 @@ async function getFileSize(filePath: string) {
     // console.log("File Size (KB):", fileSizeInKB);
     // console.log("File Size (MB):", fileSizeInMB);
     // console.log("File Size (GB):", fileSizeInGB);
-    return fileSizeInKB;
+    return fileSizeInBytes;
   } catch (err) {
     console.error("Error reading file:", err);
   }

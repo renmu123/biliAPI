@@ -1,9 +1,11 @@
 import fs from "fs";
+import url from "url";
 
 import axios from "axios";
 import type { Request } from "~/types";
 import { checkTag } from "~/member/index.ts";
 import { generate_qrcode, poll_qrcode } from "~/user/login.ts";
+import { upload } from "~/media/upload.ts";
 
 export default class Client {
   request: Request;
@@ -23,6 +25,9 @@ export default class Client {
     this.request.interceptors.request.use(config => {
       if (this.cookie) {
         config.headers["cookie"] = this.cookie;
+      }
+      if (!config.headers.host) {
+        config.headers["host"] = url.parse(config.url).hostname;
       }
       return config;
     });
@@ -46,6 +51,9 @@ export default class Client {
   }
   poll_qrcode(qrcode_key: string) {
     return poll_qrcode(this.request, qrcode_key);
+  }
+  upload(filePath: string, options: any) {
+    return upload(this.request, this.cookie, filePath, options);
   }
 }
 

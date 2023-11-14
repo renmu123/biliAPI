@@ -10,3 +10,7 @@ export interface CommonResponse<T> extends AxiosResponse {
     data: T;
   };
 }
+
+export interface UploadResponse<T> extends AxiosResponse {
+  data: T;
+}
