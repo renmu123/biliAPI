@@ -6,7 +6,7 @@
     "module": "ESNext",
     "target": "ES6",
     "downlevelIteration": true,
-    "allowJs": true,
+    "allowJs": false,
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": true,

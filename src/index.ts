@@ -2,10 +2,10 @@ import fs from "fs";
 import url from "url";
 
 import axios from "axios";
-import type { Request } from "~/types";
+import type { Request, MediaOptions } from "~/types";
 import { checkTag } from "~/member/index.ts";
 import { generate_qrcode, poll_qrcode } from "~/user/login.ts";
-import { upload } from "~/media/upload.ts";
+import { Uploader } from "~/media/upload.ts";
 
 export default class Client {
   request: Request;
@@ -52,9 +52,13 @@ export default class Client {
   poll_qrcode(qrcode_key: string) {
     return poll_qrcode(this.request, qrcode_key);
   }
-  upload(filePath: string, options: any) {
-    return upload(this.request, this.cookie, filePath, options);
+  // 新增投稿
+  addMedia(filePath: string, options: MediaOptions) {
+    const uploader = new Uploader(this.request, this.cookie, filePath, options);
+    return uploader.upload();
   }
+  // 编辑投稿
+  editMedia(aid: number, options: MediaOptions) {}
 }
 
 function RequireLogin() {
@@ -63,7 +67,7 @@ function RequireLogin() {
     propertyName: string,
     descriptor: PropertyDescriptor
   ) => {
-    console.log(target.prototype.cookie, propertyName, descriptor);
+    console.log(this, propertyName, descriptor);
 
     const originalMethod = descriptor.value;
 
