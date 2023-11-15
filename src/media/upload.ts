@@ -12,30 +12,17 @@ import type {
 
 export class Uploader {
   request: Request;
-  cookieString: string;
-  filePath: string;
-  options: MediaOptions;
+  filePaths: string[];
 
-  constructor(
-    request: Request,
-    cookie: string,
-    filePath: string,
-    options: MediaOptions
-  ) {
+  constructor(request: Request, filePath: string[]) {
     this.request = request;
-    this.cookieString = cookie;
-    this.filePath = filePath;
-    if (this.checkOptions(options)) this.options = options;
+    this.filePaths = filePath;
   }
 
-  checkOptions(options: MediaOptions) {
-    if (!options.title) throw new Error("title is required");
-    if (!options.tag) throw new Error("tag is required");
-    if (!options.tid) throw new Error("tid is required");
-    return true;
-  }
-
-  async preupload(size: number): Promise<
+  async preupload(
+    filePath: string,
+    size: number
+  ): Promise<
     UploadResponse<{
       OK: number;
       auth: string;
@@ -53,7 +40,7 @@ export class Uploader {
       upos_uri: string;
     }>
   > {
-    const { base } = path.parse(this.filePath);
+    const { base } = path.parse(filePath);
     return this.request.get("https://member.bilibili.com/preupload", {
       params: {
         zone: "cs",
@@ -101,6 +88,7 @@ export class Uploader {
   }
 
   async uploadChunk(
+    filePath: string,
     url: string,
     auth: string,
     uploadId: string,
@@ -109,148 +97,170 @@ export class Uploader {
   ) {
     const chunks = Math.ceil(size / chunk_size);
 
-    fs.readFile(this.filePath, async (err, data) => {
-      if (err) throw err;
+    const data = await fs.promises.readFile(filePath);
+    const numberOfChunks = Math.ceil(size / chunk_size);
+    for (let i = 0; i < numberOfChunks; i++) {
+      const start = i * chunk_size;
+      const end = (i + 1) * chunk_size;
+      const chunkData = data.slice(start, end);
 
-      const numberOfChunks = Math.ceil(size / chunk_size);
+      const params = {
+        uploadId: uploadId,
+        partNumber: i + 1,
+        chunk: i,
+        chunks: chunks,
+        size: chunk_size,
+        start: start,
+        end: end,
+        total: size,
+      };
+      console.log("params", params);
 
-      for (let i = 0; i < numberOfChunks; i++) {
-        const start = i * chunk_size;
-        const end = (i + 1) * chunk_size;
-        const chunkData = data.slice(start, end);
-
-        const params = {
-          uploadId: uploadId,
-          partNumber: i + 1,
-          chunk: i,
-          chunks: chunks,
-          size: chunk_size,
-          start: start,
-          end: end,
-          total: size,
-        };
-        console.log("params", params);
-
-        const res = await this.request.put(url, chunkData, {
-          params: params,
-          headers: {
-            "X-Upos-Auth": auth,
-          },
-        });
-        console.log("data", res.data);
-      }
-    });
+      const res = await this.request.put(url, chunkData, {
+        params: params,
+        headers: {
+          "X-Upos-Auth": auth,
+        },
+      });
+      console.log("chunk data", res.data);
+    }
   }
 
-  async submit(
-    biz_id: number,
-    uploadKey: string
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
-    const cookieObj = cookie.parse(this.cookieString);
-    const crsf = cookieObj.bili_jct;
-    const data = {
-      copyright: 1,
-      tid: 124,
-      desc_format_id: 9999,
-      desc: "",
-      recreate: -1,
-      dynamic: "",
-      interactive: 0,
-      videos: [
-        {
-          filename: "",
-          title: "",
-          desc: "",
-          cid: 0,
-        },
-      ],
-      act_reserve_create: 0,
-      no_disturbance: 0,
-      no_reprint: 1,
-      subtitle: { open: 0, lan: "" },
-      dolby: 0,
-      lossless_music: 0,
-      up_selection_reply: false,
-      up_close_reply: false,
-      up_close_danmu: false,
-      web_os: 1,
-      csrf: crsf,
-      ...this.options,
-    };
-
-    console.log("submit", data);
-
-    const { name } = path.parse(this.filePath);
-
-    data.videos[0] = {
-      filename: uploadKey,
-      title: name,
-      desc: "",
-      cid: biz_id,
-    };
-
-    return this.request.post(
-      "https://member.bilibili.com/x/vu/web/add/v3",
-      data,
-      {
-        params: {
-          t: Date.now(),
-          csrf: crsf,
-        },
-      }
-    );
-  }
   async upload() {
-    const size = await getFileSize(this.filePath);
+    const videos = [];
+    for (let i = 0; i < this.filePaths.length; i++) {
+      const filePath = this.filePaths[i];
+      const { name: title } = path.parse(filePath);
+      const size = await getFileSize(filePath);
 
-    const res = await this.preupload(size);
-    console.log("preupload", res.data);
+      const res = await this.preupload(filePath, size);
+      console.log("preupload", res.data);
 
-    const { endpoint, upos_uri, biz_id, chunk_size, auth } = res.data;
-    const url = `https:${endpoint}/${upos_uri.slice(7)}`;
-    console.log("url", url);
+      const { endpoint, upos_uri, biz_id, chunk_size, auth } = res.data;
+      const url = `https:${endpoint}/${upos_uri.slice(7)}`;
+      console.log("url", url);
 
-    const uploadInfo = (
-      await this.getUploadInfo(url, biz_id, chunk_size, auth, size)
-    ).data;
-    console.log("uploadInfo", uploadInfo);
+      const uploadInfo = (
+        await this.getUploadInfo(url, biz_id, chunk_size, auth, size)
+      ).data;
+      console.log("uploadInfo", uploadInfo);
 
-    await this.uploadChunk(url, auth, uploadInfo.upload_id, chunk_size, size);
-    const res2 = await this.submit(
-      biz_id,
-      uploadInfo.key.replaceAll("/", "").split(".")[0]
-    );
-    console.log("submit", res2.data);
-    return res2.data;
-  }
-  async addMedia() {
-    const size = await getFileSize(this.filePath);
+      await this.uploadChunk(
+        filePath,
+        url,
+        auth,
+        uploadInfo.upload_id,
+        chunk_size,
+        size
+      );
 
-    const res = await this.preupload(size);
-    console.log("preupload", res.data);
-
-    const { endpoint, upos_uri, biz_id, chunk_size, auth } = res.data;
-    const url = `https:${endpoint}/${upos_uri.slice(7)}`;
-    console.log("url", url);
-
-    const uploadInfo = (
-      await this.getUploadInfo(url, biz_id, chunk_size, auth, size)
-    ).data;
-    console.log("uploadInfo", uploadInfo);
-
-    await this.uploadChunk(url, auth, uploadInfo.upload_id, chunk_size, size);
-    const res2 = await this.submit(
-      biz_id,
-      uploadInfo.key.replaceAll("/", "").split(".")[0]
-    );
-    console.log("submit", res2.data);
-    return res2.data;
+      videos.push({
+        cid: biz_id,
+        filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
+        title: title,
+      });
+    }
+    return videos;
   }
 
   async upload_cover() {}
+}
+
+export async function addMedia(
+  request: Request,
+  videos: { cid: number; filename: string; title: string; desc?: string }[],
+  cookieString: string,
+  options: MediaOptions
+): Promise<
+  CommonResponse<{
+    aid: number;
+    bvid: string;
+  }>
+> {
+  const cookieObj = cookie.parse(cookieString);
+  const crsf = cookieObj.bili_jct;
+  const data = {
+    copyright: 1,
+    tid: 124,
+    desc_format_id: 9999,
+    desc: "",
+    recreate: -1,
+    dynamic: "",
+    interactive: 0,
+    videos: videos,
+    act_reserve_create: 0,
+    no_disturbance: 0,
+    no_reprint: 1,
+    subtitle: { open: 0, lan: "" },
+    dolby: 0,
+    lossless_music: 0,
+    up_selection_reply: false,
+    up_close_reply: false,
+    up_close_danmu: false,
+    web_os: 1,
+    csrf: crsf,
+    ...options,
+  };
+
+  console.log("submit", data);
+
+  return request.post("https://member.bilibili.com/x/vu/web/add", data, {
+    params: {
+      t: Date.now(),
+      csrf: crsf,
+    },
+  });
+}
+
+export async function editMedia(
+  request: Request,
+  videos: { cid: number; filename: string; title: string; desc?: string }[],
+  cookieString: string,
+  options: MediaOptions & { aid: number }
+): Promise<
+  CommonResponse<{
+    aid: number;
+    bvid: string;
+  }>
+> {
+  const cookieObj = cookie.parse(cookieString);
+  const crsf = cookieObj.bili_jct;
+  const data = {
+    copyright: 1,
+    tid: 124,
+    desc_format_id: 9999,
+    desc: "",
+    recreate: -1,
+    dynamic: "",
+    interactive: 0,
+    videos: videos,
+    act_reserve_create: 0,
+    no_disturbance: 0,
+    no_reprint: 1,
+    subtitle: { open: 0, lan: "" },
+    dolby: 0,
+    lossless_music: 0,
+    up_selection_reply: false,
+    up_close_reply: false,
+    up_close_danmu: false,
+    web_os: 1,
+    csrf: crsf,
+    ...options,
+  };
+
+  console.log("edit submit", data);
+
+  return request.post("https://member.bilibili.com/x/vu/web/edit", data, {
+    params: {
+      t: Date.now(),
+      csrf: crsf,
+    },
+  });
+}
+
+function checkOptions(options: MediaOptions) {
+  if (!options.title) throw new Error("title is required");
+  if (!options.tag) throw new Error("tag is required");
+  if (!options.tid) throw new Error("tid is required");
+  return true;
 }

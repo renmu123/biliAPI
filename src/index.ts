@@ -5,7 +5,7 @@ import axios from "axios";
 import type { Request, MediaOptions } from "~/types";
 import { checkTag } from "~/member/index.ts";
 import { generate_qrcode, poll_qrcode } from "~/user/login.ts";
-import { Uploader } from "~/media/upload.ts";
+import { Uploader, addMedia, editMedia } from "~/media/upload.ts";
 
 export default class Client {
   request: Request;
@@ -53,33 +53,25 @@ export default class Client {
     return poll_qrcode(this.request, qrcode_key);
   }
   // 新增投稿
-  addMedia(filePath: string, options: MediaOptions) {
-    const uploader = new Uploader(this.request, this.cookie, filePath, options);
-    return uploader.upload();
+  // upload(filePath: string, options: MediaOptions) {
+  //   const uploader = new Uploader(this.request, this.cookie, filePath, options);
+  //   return uploader.upload();
+  // }
+  // 新增投稿
+  async addMedia(filePaths: string[], options: MediaOptions) {
+    const uploader = new Uploader(this.request, filePaths);
+    const videos = await uploader.upload();
+    // return uploader.upload2();
+    const res = await addMedia(this.request, [videos[0]], this.cookie, options);
+    console.log("add res", res.data);
+
+    if (res.data.code !== 0) {
+      throw new Error(res.data.message);
+    }
+    const { aid } = res.data.data;
+
+    return editMedia(this.request, videos, this.cookie, { aid, ...options });
   }
   // 编辑投稿
   editMedia(aid: number, options: MediaOptions) {}
-}
-
-function RequireLogin() {
-  return (
-    target: any,
-    propertyName: string,
-    descriptor: PropertyDescriptor
-  ) => {
-    console.log(this, propertyName, descriptor);
-
-    const originalMethod = descriptor.value;
-
-    // 修改原始方法，添加登录检查逻辑
-    descriptor.value = function (...args: any[]) {
-      // 这里可以添加你的登录检查逻辑
-      if (target.cookie) {
-        return originalMethod.apply(this, args);
-      } else {
-        throw new Error("请先进行登录");
-      }
-    };
-    return descriptor;
-  };
 }
