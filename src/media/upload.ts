@@ -10,7 +10,7 @@ import type {
   MediaOptions,
 } from "~/types";
 
-export class Uploader {
+export class WebVideoUploader {
   request: Request;
   filePaths: string[];
 
@@ -166,7 +166,7 @@ export class Uploader {
   async upload_cover() {}
 }
 
-export async function addMedia(
+export async function addMediaWeb(
   request: Request,
   videos: { cid: number; filename: string; title: string; desc?: string }[],
   cookieString: string,
@@ -177,6 +177,7 @@ export async function addMedia(
     bvid: string;
   }>
 > {
+  checkOptions(options);
   const cookieObj = cookie.parse(cookieString);
   const crsf = cookieObj.bili_jct;
   const data = {
@@ -212,6 +213,50 @@ export async function addMedia(
   });
 }
 
+export async function addMediaClient(
+  request: Request,
+  videos: { cid: number; filename: string; title: string; desc?: string }[],
+  accessKey: string,
+  options: MediaOptions
+): Promise<
+  CommonResponse<{
+    aid: number;
+    bvid: string;
+  }>
+> {
+  checkOptions(options);
+  const data = {
+    copyright: 1,
+    tid: 124,
+    desc_format_id: 9999,
+    desc: "",
+    recreate: -1,
+    dynamic: "",
+    interactive: 0,
+    videos: videos,
+    act_reserve_create: 0,
+    no_disturbance: 0,
+    no_reprint: 1,
+    subtitle: { open: 0, lan: "" },
+    dolby: 0,
+    lossless_music: 0,
+    up_selection_reply: false,
+    up_close_reply: false,
+    up_close_danmu: false,
+    web_os: 1,
+    ...options,
+  };
+
+  console.log("submit", data);
+
+  return request.post("http://member.bilibili.com/x/vu/client/add", data, {
+    params: {
+      t: Date.now(),
+      access_key: accessKey,
+    },
+  });
+}
+
 export async function editMedia(
   request: Request,
   videos: { cid: number; filename: string; title: string; desc?: string }[],
@@ -223,6 +268,7 @@ export async function editMedia(
     bvid: string;
   }>
 > {
+  checkOptions(options);
   const cookieObj = cookie.parse(cookieString);
   const crsf = cookieObj.bili_jct;
   const data = {

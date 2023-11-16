@@ -12,3 +12,4 @@ dist
 *.code-workspace
 
 test.js
+cookies.json
