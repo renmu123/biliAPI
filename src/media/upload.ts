@@ -8,7 +8,7 @@ import type {
   Request,
   UploadResponse,
   MediaOptions,
-} from "~/types";
+} from "~/types/index.d.ts";
 
 export class WebVideoUploader {
   request: Request;

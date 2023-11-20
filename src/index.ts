@@ -2,7 +2,7 @@ import fs from "fs";
 import url from "url";
 
 import axios from "axios";
-import type { Request, MediaOptions, CommonResponse } from "~/types";
+import type { Request, MediaOptions, CommonResponse } from "~/types/index.d.ts";
 import { checkTag } from "~/member/index.ts";
 import { BiliQrcodeLogin } from "~/user/login.ts";
 import {
@@ -11,6 +11,7 @@ import {
   editMedia,
   addMediaClient,
 } from "~/media/upload.ts";
+import { getArchives } from "~/media/index.ts";
 
 export default class Client {
   request: Request;
@@ -104,6 +105,14 @@ export default class Client {
     if (!isLogin) {
       throw new Error("You need to login first");
     }
+  }
+
+  getArchives(
+    options: Parameters<typeof getArchives>[1]
+  ): ReturnType<typeof getArchives> {
+    this.authLogin();
+
+    return getArchives(this.request, options);
   }
 }
 

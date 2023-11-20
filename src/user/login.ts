@@ -1,4 +1,4 @@
-import type { Request, CommonResponse } from "~/types";
+import type { Request, CommonResponse } from "~/types/index.d.ts";
 import crypto from "crypto";
 import axios from "axios";
 /**

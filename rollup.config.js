@@ -3,6 +3,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import dts from "rollup-plugin-dts";
+import alias from "@rollup/plugin-alias";
 
 export default [
   {
@@ -27,7 +28,15 @@ export default [
   },
   {
     input: "src/index.ts",
-    plugins: [dts()],
+    plugins: [
+      typescript(),
+      nodeResolve(),
+      commonjs(),
+      alias({
+        entries: [{ find: "~", replacement: "./src" }],
+      }),
+      dts(),
+    ],
     output: {
       format: "esm",
       file: "dist/index.d.ts",

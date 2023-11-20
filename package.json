@@ -16,12 +16,14 @@
   },
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js"
+    "build": "rollup --config rollup.config.js",
+    "publish": "npm run build && npm publish"
   },
   "keywords": [],
   "author": "",
   "license": "GPL",
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.1",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
