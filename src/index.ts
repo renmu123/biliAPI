@@ -38,6 +38,18 @@ export default class Client {
 
       return config;
     });
+    this.request.interceptors.response.use(
+      response => {
+        return Promise.resolve(response.data);
+      },
+      error => {
+        if (error.response) {
+          return error.response;
+        } else {
+          return Promise.reject(error);
+        }
+      }
+    );
   }
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");
@@ -108,7 +120,7 @@ export default class Client {
   }
 
   getArchives(
-    options: Parameters<typeof getArchives>[1]
+    options?: Parameters<typeof getArchives>[1]
   ): ReturnType<typeof getArchives> {
     this.authLogin();
 

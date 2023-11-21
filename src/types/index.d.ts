@@ -1,8 +1,8 @@
-import type { AxiosInstance, AxiosResponse } from "axios";
+import type { AxiosInstance } from "axios";
 
 export type Request = AxiosInstance;
 
-export interface CommonResponse<T> extends AxiosResponse {
+export interface CommonResponse<T> {
   data: {
     code: number;
     message: string;
@@ -11,7 +11,7 @@ export interface CommonResponse<T> extends AxiosResponse {
   };
 }
 
-export interface UploadResponse<T> extends AxiosResponse {
+export interface UploadResponse<T> {
   data: T;
 }
 
