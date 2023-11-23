@@ -3,12 +3,10 @@ import type { AxiosInstance } from "axios";
 export type Request = AxiosInstance;
 
 export interface CommonResponse<T> {
-  data: {
-    code: number;
-    message: string;
-    ttl: number;
-    data: T;
-  };
+  code: number;
+  message: string;
+  ttl: number;
+  data: T;
 }
 
 export interface UploadResponse<T> {
