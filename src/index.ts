@@ -3,7 +3,6 @@ import url from "url";
 
 import axios from "axios";
 import type { Request, MediaOptions, CommonResponse } from "~/types/index.d.ts";
-import { checkTag } from "~/member/index.ts";
 import { BiliQrcodeLogin } from "~/user/login.ts";
 import {
   WebVideoUploader,
@@ -11,7 +10,8 @@ import {
   editMedia,
   addMediaClient,
 } from "~/media/upload.ts";
-import { getArchives } from "~/media/index.ts";
+import { getArchives, checkTag } from "~/media/index.ts";
+import { getMyInfo } from "~/member/index.ts";
 
 export default class Client {
   request: Request;
@@ -119,12 +119,14 @@ export default class Client {
     }
   }
 
-  getArchives(
-    options?: Parameters<typeof getArchives>[1]
-  ): ReturnType<typeof getArchives> {
+  getArchives(options?: Parameters<typeof getArchives>[1]) {
     this.authLogin();
 
     return getArchives(this.request, options);
+  }
+  getMyInfo() {
+    this.authLogin();
+    return getMyInfo(this.request);
   }
 }
 

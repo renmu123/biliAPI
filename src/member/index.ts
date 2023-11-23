@@ -1,17 +1,25 @@
-import type { Request } from "~/types/index.d.ts";
-/**
- * 检查tag是否可用
- * @param _request 实例
- * @param tag 需要检查的tag
- * @returns
- */
-export async function checkTag(_request: Request, tag: string) {
-  return _request.get(
-    `https://member.bilibili.com/x/vupre/web/topic/tag/check`,
-    {
-      params: {
-        tag: tag,
-      },
-    }
-  );
-}
+import type { Request, CommonResponse } from "~/types/index.d.ts";
+
+export const getMyInfo = (
+  request: Request
+): Promise<
+  CommonResponse<{
+    coins: number;
+    follower: number;
+    following: number;
+    level_exp: {
+      current_exp: number;
+      current_level: number;
+      current_min: number;
+      level_up: number;
+      next_exp: number;
+    };
+    profile: {
+      face: string;
+      mid: number;
+      name: string;
+    };
+  }>
+> => {
+  return request.get("https://api.bilibili.com/x/space/v2/myinfo");
+};
