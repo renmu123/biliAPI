@@ -1,9 +1,9 @@
 import fs from "fs";
 import url from "url";
 
-import axios from "axios";
-import type { Request, MediaOptions, CommonResponse } from "~/types/index.d.ts";
+import type { MediaOptions, CommonResponse } from "~/types/index.d.ts";
 import { BiliQrcodeLogin } from "~/user/login.ts";
+import { getMyInfo } from "~/user/index.ts";
 import {
   WebVideoUploader,
   addMediaWeb,
@@ -11,22 +11,14 @@ import {
   addMediaClient,
 } from "~/media/upload.ts";
 import { getArchives, checkTag } from "~/media/index.ts";
-import { getMyInfo } from "~/member/index.ts";
+import { BaseRequest } from "~/base/index.ts";
 
-export default class Client {
-  request: Request;
+export default class Client extends BaseRequest {
   cookie: string;
   accessToken: string;
 
-  constructor(requestOptions = {}) {
-    this.request = axios.create({
-      timeout: 10000,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/63.0.3239.108",
-      },
-      ...requestOptions,
-    });
+  constructor() {
+    super();
 
     this.request.interceptors.request.use(config => {
       if (this.cookie) {
@@ -38,18 +30,6 @@ export default class Client {
 
       return config;
     });
-    this.request.interceptors.response.use(
-      response => {
-        return Promise.resolve(response.data);
-      },
-      error => {
-        if (error.response) {
-          return error.response;
-        } else {
-          return Promise.reject(error);
-        }
-      }
-    );
   }
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");

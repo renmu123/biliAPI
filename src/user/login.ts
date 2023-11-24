@@ -1,6 +1,7 @@
 import type { Request, CommonResponse } from "~/types/index.d.ts";
 import crypto from "crypto";
-import axios from "axios";
+import { BaseRequest } from "~/base/index.ts";
+
 /**
  * 获取登录二维码
  * @param _request 实例
@@ -46,22 +47,15 @@ export function poll_qrcode(
   );
 }
 
-export class BiliQrcodeLogin {
+export class BiliQrcodeLogin extends BaseRequest {
   appkey: string;
   secretKey: string;
   session: Request;
   constructor() {
+    super();
     this.appkey = "4409e2ce8ffd12b8";
     this.secretKey = "59b43e04ad6965f34319062b478f83dd";
-    this.session = axios.create({
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/63.0.3239.108",
-        Referer: "https://www.bilibili.com/",
-        Connection: "keep-alive",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    this.session = this.request;
   }
 
   async getQrcode(): Promise<
@@ -108,19 +102,19 @@ export class BiliQrcodeLogin {
 
     return new Promise((resolve, reject) => {
       let timer = setInterval(async () => {
-        const response = await this.session.post(
+        const response = await this.session.post<never, CommonResponse<any>>(
           "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll",
           params
         );
         // 86039 二维码尚未确认
-        if (response.data.code === 0) {
+        if (response.code === 0) {
           clearInterval(timer);
-          resolve(response.data);
-        } else if (response.data.code === 86038) {
+          resolve(response);
+        } else if (response.code === 86038) {
           clearInterval(timer);
-          reject(response.data.message);
+          reject(response.message);
         } else {
-          console.log("scaned", response.data);
+          console.log("scaned", response);
         }
       }, 1000);
     });

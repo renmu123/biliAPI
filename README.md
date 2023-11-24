@@ -10,11 +10,11 @@ bili 的 node 包装库
 const login = new BiliQrcodeLogin();
 const res = await login.getQrcode();
 
-console.log("res", res.data);
+console.log("res", res);
 // 找个二维码工具将 res.data.url 转换为二维码，使用bilibili app扫码登录
 
-const res2 = await login.poll(res.data.data.auth_code);
-console.log("res2", res2.data);
+const res2 = await login.poll(res.data.auth_code);
+console.log("res2", res2);
 ```
 
 ## 上传视频
