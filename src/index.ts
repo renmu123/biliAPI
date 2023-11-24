@@ -1,7 +1,6 @@
 import fs from "fs";
 import url from "url";
 
-import type { MediaOptions, CommonResponse } from "~/types/index.d.ts";
 import { BiliQrcodeLogin } from "~/user/login.ts";
 import { getMyInfo } from "~/user/index.ts";
 import {
@@ -12,6 +11,9 @@ import {
 } from "~/media/upload.ts";
 import { getArchives, checkTag } from "~/media/index.ts";
 import { BaseRequest } from "~/base/index.ts";
+import Live from "~/live/index.ts";
+
+import type { MediaOptions, CommonResponse } from "~/types/index.d.ts";
 
 export default class Client extends BaseRequest {
   cookie: string;
@@ -21,7 +23,7 @@ export default class Client extends BaseRequest {
     super();
 
     this.request.interceptors.request.use(config => {
-      if (this.cookie) {
+      if (this.cookie && config.headers["cookie"] === undefined) {
         config.headers["cookie"] = this.cookie;
       }
       if (!config.headers.host) {
@@ -31,6 +33,7 @@ export default class Client extends BaseRequest {
       return config;
     });
   }
+  live = new Live(this.request);
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");
     const cookieObj = JSON.parse(cookie);

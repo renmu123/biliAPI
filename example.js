@@ -18,8 +18,8 @@ async function qrcodeLogin() {
   const login = new BiliQrcodeLogin();
   const res = await login.getQrcode();
 
-  console.log("res", res.data);
-  const res2 = await login.poll(res.data.data.auth_code);
-  console.log("res2", res2.data);
-  fs.writeFileSync("cookie.json", res2.data);
+  console.log("res", res);
+  const res2 = await login.poll(res.data.auth_code);
+  console.log("res2", res2);
+  fs.writeFileSync("cookie.json", res2);
 }
