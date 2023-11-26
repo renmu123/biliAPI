@@ -16,7 +16,7 @@
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js",
-    "publish": "npm run build && npm publish"
+    "publish": "pnpm run build && npm publish"
   },
   "keywords": [],
   "author": "",
