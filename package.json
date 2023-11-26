@@ -1,6 +1,6 @@
 {
-  "name": "biliAPI",
-  "version": "0.0.1",
+  "name": "@renmu/bili-api",
+  "version": "0.0.2",
   "type": "module",
   "description": "",
   "main": "dist/index.cjs",
@@ -16,8 +16,11 @@
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js",
-    "publish": "pnpm run build && npm publish"
+    "publish": "pnpm run build && npm publish --access=public"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [],
   "author": "",
   "license": "GPL",

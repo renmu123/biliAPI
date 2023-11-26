@@ -15,7 +15,7 @@ import Live from "~/live/index.ts";
 
 import type { MediaOptions, CommonResponse } from "~/types/index.d.ts";
 
-export default class Client extends BaseRequest {
+class Client extends BaseRequest {
   cookie: string;
   accessToken: string;
 
@@ -113,4 +113,4 @@ export default class Client extends BaseRequest {
   }
 }
 
-export { BiliQrcodeLogin };
+export { BiliQrcodeLogin, Client };

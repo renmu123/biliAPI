@@ -1,4 +1,4 @@
-import Client, { BiliQrcodeLogin } from "./dist/index.mjs";
+import { Client, BiliQrcodeLogin } from "./dist/index.mjs";
 import fs from "fs";
 
 // 上传视频
