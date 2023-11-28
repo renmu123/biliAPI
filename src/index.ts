@@ -2,7 +2,7 @@ import fs from "fs";
 import url from "url";
 
 import { BiliQrcodeLogin } from "~/user/login.ts";
-import { getMyInfo } from "~/user/index.ts";
+import User, { getMyInfo } from "~/user/index.ts";
 import {
   WebVideoUploader,
   addMediaWeb,
@@ -34,6 +34,7 @@ class Client extends BaseRequest {
     });
   }
   live = new Live(this.request);
+  user = new User(this.request);
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");
     const cookieObj = JSON.parse(cookie);
