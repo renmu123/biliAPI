@@ -1,4 +1,5 @@
 import type { Request, CommonResponse } from "~/types/index.d.ts";
+import type { getMasterInfoReturnType } from "~/types/live.d.ts";
 
 export default class Live {
   request: Request;
@@ -96,6 +97,17 @@ export default class Live {
         params: params,
         headers: {
           cookie: null,
+        },
+      }
+    );
+  }
+
+  getMasterInfo(uid: number): Promise<CommonResponse<getMasterInfoReturnType>> {
+    return this.request.get(
+      "https://api.live.bilibili.com/live_user/v1/Master/info",
+      {
+        params: {
+          uid: uid,
         },
       }
     );
