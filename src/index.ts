@@ -2,7 +2,7 @@ import fs from "fs";
 import url from "url";
 
 import { BiliQrcodeLogin } from "~/user/login.ts";
-import User, { getMyInfo } from "~/user/index.ts";
+import User from "~/user/index.ts";
 import {
   WebVideoUploader,
   addMediaWeb,
@@ -107,10 +107,6 @@ class Client extends BaseRequest {
     this.authLogin();
 
     return getArchives(this.request, options);
-  }
-  getMyInfo() {
-    this.authLogin();
-    return getMyInfo(this.request);
   }
 }
 
