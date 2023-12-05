@@ -17,6 +17,8 @@ const res2 = await login.poll(res.data.auth_code);
 console.log("res2", res2);
 ```
 
+# 投稿中心
+
 ## 上传视频
 
 ```js
@@ -28,3 +30,27 @@ const res = await client.addMediaClient(["test.mp4"], {
   tag: "测试",
 });
 ```
+
+# 用户
+
+## 获取当前用户信息
+
+`client.user.getMyInfo();`
+
+## 获取其他用户信息
+
+`client.user.getUserInfo(uid)`
+
+# 直播
+
+## 获取房间信息
+
+`client.live.getRoomInfo(room_id)`
+
+## 获取某主播信息
+
+`client.live.getMasterInfo(uid)`
+
+## 获取舰长信息
+
+`client.live.getGuardTopList({user_id:1,room_id:1,page:1,page_size:20})`
