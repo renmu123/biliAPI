@@ -1,4 +1,5 @@
 import type { AxiosInstance } from "axios";
+import { Client as ClientClass } from "~/index.ts";
 
 export type Request = AxiosInstance;
 
@@ -24,3 +25,10 @@ export interface MediaOptions {
   dolby?: 0 | 1;
   lossless_music?: 0 | 1;
 }
+
+export interface MediaPartOptions {
+  path: string;
+  title?: string;
+}
+
+export type Client = InstanceType<typeof ClientClass>;

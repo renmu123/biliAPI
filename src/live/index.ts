@@ -1,11 +1,13 @@
-import type { Request, CommonResponse } from "~/types/index.d.ts";
+import type { Request, CommonResponse, Client } from "~/types/index.d.ts";
 import type { getMasterInfoReturnType } from "~/types/live.d.ts";
 
 export default class Live {
   request: Request;
+  client: Client;
 
-  constructor(request: Request) {
-    this.request = request;
+  constructor(client: Client) {
+    this.request = client.request;
+    this.client = client;
   }
   /**
    * 获取房间信息

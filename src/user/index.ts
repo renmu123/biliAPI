@@ -1,5 +1,4 @@
-import { WbiSign } from "~/base/sign";
-import type { Request, CommonResponse } from "~/types/index.d.ts";
+import type { Request, CommonResponse, Client } from "~/types/index.d.ts";
 import type {
   MyInfoReturnType,
   GetUserInfoReturnType,
@@ -7,9 +6,11 @@ import type {
 
 export default class User {
   request: Request;
+  client: Client;
 
-  constructor(request: Request) {
-    this.request = request;
+  constructor(client: Client) {
+    this.request = client.request;
+    this.client = client;
   }
   async getMyInfo(): Promise<CommonResponse<MyInfoReturnType>> {
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
@@ -17,7 +18,7 @@ export default class User {
   async getUserInfo(
     uid: number
   ): Promise<CommonResponse<GetUserInfoReturnType>> {
-    const signParams = await WbiSign({
+    const signParams = await this.client.WbiSign({
       mid: uid,
       token: "",
       platform: "web",

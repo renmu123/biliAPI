@@ -5,6 +5,7 @@ import type {
   MediaOptions,
 } from "~/types/index.d.ts";
 
+// 废弃，下个版本会删除
 export const getArchives = (
   request: Request,
   params?: {

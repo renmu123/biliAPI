@@ -1,11 +1,17 @@
 import url from "url";
 
 import axios from "axios";
+import { encWbi } from "~/base/sign.ts";
+
 import type { CreateAxiosDefaults, AxiosRequestConfig } from "axios";
 import type { Request } from "~/types/index.d.ts";
 
 export class BaseRequest {
   request: Request;
+  wbiKeys: {
+    img_key: string;
+    sub_key: string;
+  };
   constructor(options?: CreateAxiosDefaults) {
     const instance = axios.create({
       timeout: 10000,
@@ -36,5 +42,36 @@ export class BaseRequest {
       }
     );
     this.request = instance;
+  }
+  // 获取最新的 img_key 和 sub_key
+  async getWbiKeys() {
+    const resp = await this.request({
+        url: "https://api.bilibili.com/x/web-interface/nav",
+        method: "get",
+        responseType: "json",
+        headers: {
+          cookie: null,
+        },
+      }),
+      json_content = resp.data,
+      img_url = json_content.data.wbi_img.img_url,
+      sub_url = json_content.data.wbi_img.sub_url;
+
+    this.wbiKeys = {
+      img_key: img_url.slice(
+        img_url.lastIndexOf("/") + 1,
+        img_url.lastIndexOf(".")
+      ),
+      sub_key: sub_url.slice(
+        sub_url.lastIndexOf("/") + 1,
+        sub_url.lastIndexOf(".")
+      ),
+    };
+    return this.wbiKeys;
+  }
+  async WbiSign(params: any) {
+    if (this.wbiKeys !== undefined) await this.getWbiKeys();
+
+    return encWbi(params, this.wbiKeys.img_key, this.wbiKeys.sub_key);
   }
 }

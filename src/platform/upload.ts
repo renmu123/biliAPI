@@ -1,24 +1,23 @@
 import path from "path";
 import fs from "fs";
 import cookie from "cookie";
-import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
+import { getFileSize } from "~/utils/index.ts";
 
 import type {
   CommonResponse,
   Request,
   UploadResponse,
   MediaOptions,
+  MediaPartOptions,
 } from "~/types/index.d.ts";
-
-// 废弃，下个版本会删除
 
 export class WebVideoUploader {
   request: Request;
-  filePaths: string[];
+  filePaths: Required<MediaPartOptions[]>;
 
-  constructor(request: Request, filePath: string[]) {
+  constructor(request: Request, mediaOptions: Required<MediaPartOptions[]>) {
     this.request = request;
-    this.filePaths = filePath;
+    this.filePaths = mediaOptions;
   }
 
   async preupload(
@@ -95,16 +94,13 @@ export class WebVideoUploader {
   ) {
     const chunks = Math.ceil(size / chunk_size);
 
+    const data = await fs.promises.readFile(filePath);
     const numberOfChunks = Math.ceil(size / chunk_size);
     for (let i = 0; i < numberOfChunks; i++) {
       const start = i * chunk_size;
       const end = (i + 1) * chunk_size;
-      const chunkData = await readBytesFromFile(
-        filePath,
-        start,
-        chunk_size,
-        size
-      );
+      const chunkData = data.slice(start, end);
+
       const params = {
         uploadId: uploadId,
         partNumber: i + 1,
@@ -130,7 +126,8 @@ export class WebVideoUploader {
   async upload() {
     const videos = [];
     for (let i = 0; i < this.filePaths.length; i++) {
-      const filePath = this.filePaths[i];
+      const fileOptions = this.filePaths[i];
+      const filePath = fileOptions.path;
       const { name: title } = path.parse(filePath);
       const size = await getFileSize(filePath);
 
@@ -169,6 +166,50 @@ export class WebVideoUploader {
   }
 
   async upload_cover() {}
+}
+
+export async function addMediaClient(
+  request: Request,
+  videos: { cid: number; filename: string; title: string; desc?: string }[],
+  accessKey: string,
+  options: MediaOptions
+): Promise<
+  CommonResponse<{
+    aid: number;
+    bvid: string;
+  }>
+> {
+  checkOptions(options);
+  const data = {
+    copyright: 1,
+    tid: 124,
+    desc_format_id: 9999,
+    desc: "",
+    recreate: -1,
+    dynamic: "",
+    interactive: 0,
+    videos: videos,
+    act_reserve_create: 0,
+    no_disturbance: 0,
+    no_reprint: 1,
+    subtitle: { open: 0, lan: "" },
+    dolby: 0,
+    lossless_music: 0,
+    up_selection_reply: false,
+    up_close_reply: false,
+    up_close_danmu: false,
+    web_os: 1,
+    ...options,
+  };
+
+  console.log("submit", data);
+
+  return request.post("http://member.bilibili.com/x/vu/client/add", data, {
+    params: {
+      t: Date.now(),
+      access_key: accessKey,
+    },
+  });
 }
 
 export async function addMediaWeb(
@@ -217,52 +258,7 @@ export async function addMediaWeb(
     },
   });
 }
-
-export async function addMediaClient(
-  request: Request,
-  videos: { cid: number; filename: string; title: string; desc?: string }[],
-  accessKey: string,
-  options: MediaOptions
-): Promise<
-  CommonResponse<{
-    aid: number;
-    bvid: string;
-  }>
-> {
-  checkOptions(options);
-  const data = {
-    copyright: 1,
-    tid: 124,
-    desc_format_id: 9999,
-    desc: "",
-    recreate: -1,
-    dynamic: "",
-    interactive: 0,
-    videos: videos,
-    act_reserve_create: 0,
-    no_disturbance: 0,
-    no_reprint: 1,
-    subtitle: { open: 0, lan: "" },
-    dolby: 0,
-    lossless_music: 0,
-    up_selection_reply: false,
-    up_close_reply: false,
-    up_close_danmu: false,
-    web_os: 1,
-    ...options,
-  };
-
-  console.log("submit", data);
-
-  return request.post("http://member.bilibili.com/x/vu/client/add", data, {
-    params: {
-      t: Date.now(),
-      access_key: accessKey,
-    },
-  });
-}
-
-export async function editMedia(
+export async function editMediaWeb(
   request: Request,
   videos: { cid: number; filename: string; title: string; desc?: string }[],
   cookieString: string,

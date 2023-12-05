@@ -54,3 +54,25 @@ const res = await client.addMediaClient(["test.mp4"], {
 ## 获取舰长信息
 
 `client.live.getGuardTopList({user_id:1,room_id:1,page:1,page_size:20})`
+
+# 创作中心
+
+## 添加投稿
+
+`client.platorm.uploadMedia(...)`
+
+## 编辑投稿
+
+`client.platorm.editMedia(...)`
+
+## 获取投稿详情
+
+`client.platorm.getMediaDetail(aid)`
+
+## 获取投稿列表
+
+`client.platorm.getArchives(...)`
+
+## 检查标签可用性
+
+`client.platorm.checkTag(text)`

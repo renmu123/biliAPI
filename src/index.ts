@@ -12,6 +12,7 @@ import {
 import { getArchives, checkTag } from "~/media/index.ts";
 import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
+import Platform from "~/platform";
 
 import type { MediaOptions, CommonResponse } from "~/types/index.d.ts";
 
@@ -33,8 +34,9 @@ class Client extends BaseRequest {
       return config;
     });
   }
-  live = new Live(this.request);
-  user = new User(this.request);
+  live = new Live(this);
+  user = new User(this);
+  platform = new Platform(this);
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");
     const cookieObj = JSON.parse(cookie);

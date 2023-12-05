@@ -5,7 +5,7 @@ import fs from "fs";
 async function upload() {
   const client = new Client();
   await client.loadCookieFile("cookies.json");
-  const res = await client.addMedia(["test.mp4"], {
+  const res = await client.platform.uploadMedia(["test.mp4"], {
     title: "测试",
     tid: 138,
     tag: "测试",
