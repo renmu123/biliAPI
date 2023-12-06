@@ -18,19 +18,19 @@ export function readBytesFromFile(
   start: number,
   numBytes: number,
   totalBytes: number
-) {
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const endByte = Math.min(start + numBytes - 1, totalBytes - 1);
 
     const readStream = fs.createReadStream(filePath, { start, end: endByte });
-    let data = "";
+    let data: Buffer[] = [];
 
     readStream.on("data", chunk => {
-      data += chunk;
+      data.push(chunk as Buffer);
     });
 
     readStream.on("end", () => {
-      resolve(data);
+      resolve(Buffer.concat(data));
     });
 
     readStream.on("error", err => {

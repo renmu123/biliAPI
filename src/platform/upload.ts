@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import cookie from "cookie";
-import { getFileSize } from "~/utils/index.ts";
+import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
 
 import type {
   CommonResponse,
@@ -102,8 +102,13 @@ export class WebVideoUploader {
     }[] = [];
     for (let i = 0; i < numberOfChunks; i++) {
       const start = i * chunk_size;
-      const end = (i + 1) * chunk_size;
-      const chunkData = data.slice(start, end);
+      const chunkData = await readBytesFromFile(
+        filePath,
+        start,
+        chunk_size,
+        size
+      );
+      console.log("chunkData", chunkData);
 
       const params = {
         uploadId: uploadId,
@@ -198,7 +203,7 @@ export class WebVideoUploader {
       let attempt = 0;
       while (attempt < 5) {
         const res = await this.mergeVideo(url, params, parts, auth);
-        if (res.OK !== 0) {
+        if (res.OK !== 1) {
           attempt += 1;
           console.log("合并视频失败，等待重试");
           await this.sleep(10000);
@@ -206,6 +211,7 @@ export class WebVideoUploader {
           break;
         }
       }
+      if (attempt >= 5) throw new Error("合并视频失败");
 
       videos.push({
         cid: biz_id,
