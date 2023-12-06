@@ -96,6 +96,10 @@ export class WebVideoUploader {
 
     const data = await fs.promises.readFile(filePath);
     const numberOfChunks = Math.ceil(size / chunk_size);
+    const parts: {
+      partNumber: number;
+      eTag: "etag";
+    }[] = [];
     for (let i = 0; i < numberOfChunks; i++) {
       const start = i * chunk_size;
       const end = (i + 1) * chunk_size;
@@ -106,9 +110,9 @@ export class WebVideoUploader {
         partNumber: i + 1,
         chunk: i,
         chunks: chunks,
-        size: chunk_size,
+        size: chunkData.length,
         start: start,
-        end: end,
+        end: start + chunkData.length,
         total: size,
       };
       console.log("params", params);
@@ -120,9 +124,37 @@ export class WebVideoUploader {
         },
       });
       console.log("chunk data", res.data);
+      parts.push({ partNumber: i + 1, eTag: "etag" });
     }
+
+    return parts;
   }
 
+  async mergeVideo(url: string, params: any, parts: any, auth: string) {
+    const res = await this.request.post<
+      never,
+      {
+        OK: number;
+        bucket: string;
+        etag: string;
+        key: string;
+        location: string;
+      }
+    >(
+      url,
+      {},
+      {
+        params: params,
+        headers: {
+          "X-Upos-Auth": auth,
+        },
+      }
+    );
+    console.log("mergeVideo", res);
+    return res;
+  }
+
+  sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
   async upload() {
     const videos = [];
     for (let i = 0; i < this.filePaths.length; i++) {
@@ -135,7 +167,7 @@ export class WebVideoUploader {
       console.log("preupload", data);
 
       const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
-      const url = `https:${endpoint}/${upos_uri.slice(7)}`;
+      const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
       console.log("url", url);
 
       const uploadInfo = await this.getUploadInfo(
@@ -147,7 +179,7 @@ export class WebVideoUploader {
       );
       console.log("uploadInfo", uploadInfo);
 
-      await this.uploadChunk(
+      const parts = await this.uploadChunk(
         filePath,
         url,
         auth,
@@ -155,6 +187,25 @@ export class WebVideoUploader {
         chunk_size,
         size
       );
+
+      const params = {
+        name: title,
+        uploadId: uploadInfo.upload_id,
+        biz_id: biz_id,
+        output: "json",
+        profile: "ugcupos/bup",
+      };
+      let attempt = 0;
+      while (attempt < 5) {
+        const res = await this.mergeVideo(url, params, parts, auth);
+        if (res.OK !== 0) {
+          attempt += 1;
+          console.log("合并视频失败，等待重试");
+          await this.sleep(10000);
+        } else {
+          break;
+        }
+      }
 
       videos.push({
         cid: biz_id,
@@ -198,7 +249,6 @@ export async function addMediaClient(
     up_selection_reply: false,
     up_close_reply: false,
     up_close_danmu: false,
-    web_os: 1,
     ...options,
   };
 
@@ -206,7 +256,6 @@ export async function addMediaClient(
 
   return request.post("http://member.bilibili.com/x/vu/client/add", data, {
     params: {
-      t: Date.now(),
       access_key: accessKey,
     },
   });

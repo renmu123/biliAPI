@@ -50,7 +50,7 @@ export class WebVideoUploader {
         r: "upos",
         profile: "ugcfx/bup",
         ssl: "0",
-        version: "",
+        version: "2.14.0.0",
         build: "2140000",
         size: size,
         webVersion: "2.14.0",
@@ -138,7 +138,7 @@ export class WebVideoUploader {
       console.log("preupload", data);
 
       const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
-      const url = `https:${endpoint}/${upos_uri.slice(7)}`;
+      const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
       console.log("url", url);
 
       const uploadInfo = await this.getUploadInfo(
@@ -248,7 +248,6 @@ export async function addMediaClient(
     up_selection_reply: false,
     up_close_reply: false,
     up_close_danmu: false,
-    web_os: 1,
     ...options,
   };
 
@@ -256,7 +255,6 @@ export async function addMediaClient(
 
   return request.post("http://member.bilibili.com/x/vu/client/add", data, {
     params: {
-      t: Date.now(),
       access_key: accessKey,
     },
   });
