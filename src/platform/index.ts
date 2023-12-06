@@ -10,6 +10,7 @@ import type {
   MediaOptions,
   MediaPartOptions,
 } from "~/types/index.d.ts";
+import { MediaDetailReturnType } from "~/types/platform";
 
 export default class Platform {
   request: Request;
@@ -128,7 +129,6 @@ export default class Platform {
     console.log(mediaOptions);
     const uploader = new WebVideoUploader(this.request, mediaOptions);
     const videos = await uploader.upload();
-
     if (api === "client") {
       const res = await addMediaClient(
         this.request,
@@ -149,12 +149,22 @@ export default class Platform {
       throw new Error("You can only set api as client or web");
     }
   }
-  async getMediaDetail(bvid: string) {
+  async getMediaDetail(
+    bvid: string
+  ): Promise<CommonResponse<MediaDetailReturnType>> {
     return this.request.get(
       `https://member.bilibili.com/x/vupre/web/archive/view?aid=${bvid}`
     );
   }
 
+  /**
+   * 编辑视频，推荐使用client api
+   * @param aid 视频id
+   * @param mode 编辑模式，append是追加，replace是替换
+   * @param filePaths 文件路径
+   * @param options
+   * @param api
+   */
   async editMedia(
     aid: number,
     mode: "append" | "replace",
