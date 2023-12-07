@@ -2,15 +2,13 @@ import path from "path";
 import fs from "fs";
 import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
 
-import type { Request, MediaPartOptions } from "~/types/index.d.ts";
+import type { Request } from "~/types/index.d.ts";
 
 export class WebVideoUploader {
   request: Request;
-  filePaths: Required<MediaPartOptions[]>;
 
-  constructor(request: Request, mediaOptions: Required<MediaPartOptions[]>) {
+  constructor(request: Request) {
     this.request = request;
-    this.filePaths = mediaOptions;
   }
 
   async preupload(
@@ -153,65 +151,59 @@ export class WebVideoUploader {
   }
 
   sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-  async upload() {
-    const videos = [];
-    for (let i = 0; i < this.filePaths.length; i++) {
-      const fileOptions = this.filePaths[i];
-      const filePath = fileOptions.path;
-      const { name: title } = path.parse(filePath);
-      const size = await getFileSize(filePath);
+  async upload(filePath: string) {
+    const { name: title } = path.parse(filePath);
+    const size = await getFileSize(filePath);
 
-      const data = await this.preupload(filePath, size);
-      console.log("preupload", data);
+    const data = await this.preupload(filePath, size);
+    console.log("preupload", data);
 
-      const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
-      const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
-      console.log("url", url);
+    const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
+    const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
+    console.log("url", url);
 
-      const uploadInfo = await this.getUploadInfo(
-        url,
-        biz_id,
-        chunk_size,
-        auth,
-        size
-      );
-      console.log("uploadInfo", uploadInfo);
+    const uploadInfo = await this.getUploadInfo(
+      url,
+      biz_id,
+      chunk_size,
+      auth,
+      size
+    );
+    console.log("uploadInfo", uploadInfo);
 
-      const parts = await this.uploadChunk(
-        filePath,
-        url,
-        auth,
-        uploadInfo.upload_id,
-        chunk_size,
-        size
-      );
+    const parts = await this.uploadChunk(
+      filePath,
+      url,
+      auth,
+      uploadInfo.upload_id,
+      chunk_size,
+      size
+    );
 
-      const params = {
-        name: title,
-        uploadId: uploadInfo.upload_id,
-        biz_id: biz_id,
-        output: "json",
-        profile: "ugcupos/bup",
-      };
-      let attempt = 0;
-      while (attempt < 5) {
-        const res = await this.mergeVideo(url, params, parts, auth);
-        if (res.OK !== 1) {
-          attempt += 1;
-          console.log("合并视频失败，等待重试");
-          await this.sleep(10000);
-        } else {
-          break;
-        }
+    const params = {
+      name: title,
+      uploadId: uploadInfo.upload_id,
+      biz_id: biz_id,
+      output: "json",
+      profile: "ugcupos/bup",
+    };
+    let attempt = 0;
+    while (attempt < 5) {
+      const res = await this.mergeVideo(url, params, parts, auth);
+      if (res.OK !== 1) {
+        attempt += 1;
+        console.log("合并视频失败，等待重试");
+        await this.sleep(10000);
+      } else {
+        break;
       }
-      if (attempt >= 5) throw new Error("合并视频失败");
-
-      videos.push({
-        cid: biz_id,
-        filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
-        title: title,
-      });
     }
-    return videos;
+    if (attempt >= 5) throw new Error("合并视频失败");
+
+    return {
+      cid: biz_id,
+      filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
+      title: title,
+    };
   }
 }

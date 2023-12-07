@@ -134,8 +134,12 @@ export default class Platform {
     );
 
     console.log(mediaOptions);
-    const uploader = new WebVideoUploader(this.request, mediaOptions);
-    const videos = await uploader.upload();
+    const uploader = new WebVideoUploader(this.request);
+    const videos = [];
+    for (let i = 0; i < mediaOptions.length; i++) {
+      const video = await uploader.upload(mediaOptions[i].path);
+      videos.push(video);
+    }
     if (api.submit === "client") {
       const res = await this._addMediaClientApi(
         this.request,
@@ -204,7 +208,7 @@ export default class Platform {
       }
     );
 
-    const uploader = new WebVideoUploader(this.request, mediaOptions);
+    // const uploader = new WebVideoUploader(this.request, mediaOptions);
     // const videos = await uploader.upload();
 
     // if (api === "client") {

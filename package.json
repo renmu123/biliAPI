@@ -29,7 +29,6 @@
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
-    "@types/cookie": "^0.6.0",
     "@types/lodash": "^4.14.202",
     "@types/md5": "^2.3.5",
     "@types/node": "^18.19.2",
@@ -41,6 +40,7 @@
   "dependencies": {
     "axios": "^1.6.2",
     "lodash": "^4.17.21",
-    "md5": "^2.3.0"
+    "md5": "^2.3.0",
+    "p-queue": "^7.4.1"
   }
 }
