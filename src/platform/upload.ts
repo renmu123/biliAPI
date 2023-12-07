@@ -1,11 +1,13 @@
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+
+import PQueue from "p-queue";
 import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
 
 import type { Request } from "~/types/index.d.ts";
 
 export class WebVideoUploader {
   request: Request;
+  queue: PQueue;
 
   constructor(request: Request) {
     this.request = request;
@@ -74,8 +76,55 @@ export class WebVideoUploader {
       },
     });
   }
+  async _uploadChunk(options: {
+    filePath: string;
+    start: number;
+    chunk_size: number;
+    size: number;
+    auth: string;
+    url: string;
+    uploadId: string;
+    chunk: number;
+    chunks: number;
+  }) {
+    const {
+      filePath,
+      start,
+      chunk_size,
+      size,
+      auth,
+      url,
+      uploadId,
+      chunk,
+      chunks,
+    } = options;
+    const chunkData = await readBytesFromFile(
+      filePath,
+      start,
+      chunk_size,
+      size
+    );
 
-  async uploadChunk(
+    const params = {
+      uploadId: uploadId,
+      partNumber: chunk + 1,
+      chunk: chunk,
+      chunks: chunks,
+      size: chunkData.length,
+      start: start,
+      end: start + chunkData.length,
+      total: size,
+    };
+    const res = await this.request.put(url, chunkData, {
+      params: params,
+      headers: {
+        "X-Upos-Auth": auth,
+      },
+    });
+    return params;
+  }
+
+  uploadChunk(
     filePath: string,
     url: string,
     auth: string,
@@ -83,47 +132,47 @@ export class WebVideoUploader {
     chunk_size: number,
     size: number
   ) {
-    const chunks = Math.ceil(size / chunk_size);
+    return new Promise((resolve, reject) => {
+      const queue = new PQueue({ concurrency: 3 });
+      this.queue = queue;
 
-    const data = await fs.promises.readFile(filePath);
-    const numberOfChunks = Math.ceil(size / chunk_size);
-    const parts: {
-      partNumber: number;
-      eTag: "etag";
-    }[] = [];
-    for (let i = 0; i < numberOfChunks; i++) {
-      const start = i * chunk_size;
-      const chunkData = await readBytesFromFile(
-        filePath,
-        start,
-        chunk_size,
-        size
-      );
-      console.log("chunkData", chunkData);
+      const chunks = Math.ceil(size / chunk_size);
+      const numberOfChunks = Math.ceil(size / chunk_size);
+      const chunkParams = [];
+      for (let i = 0; i < numberOfChunks; i++) {
+        const start = i * chunk_size;
+        chunkParams.push({
+          filePath: filePath,
+          start: start,
+          chunk_size: chunk_size,
+          size: size,
+          auth: auth,
+          url: url,
+          uploadId,
+          chunks,
+          chunk: i,
+        });
+      }
 
-      const params = {
-        uploadId: uploadId,
-        partNumber: i + 1,
-        chunk: i,
-        chunks: chunks,
-        size: chunkData.length,
-        start: start,
-        end: start + chunkData.length,
-        total: size,
-      };
-      console.log("params", params);
-
-      const res = await this.request.put(url, chunkData, {
-        params: params,
-        headers: {
-          "X-Upos-Auth": auth,
-        },
+      chunkParams.map(params => {
+        return queue.add(() => this._uploadChunk(params));
       });
-      console.log("chunk data", res.data);
-      parts.push({ partNumber: i + 1, eTag: "etag" });
-    }
 
-    return parts;
+      const parts: {
+        partNumber: number;
+        eTag: "etag";
+      }[] = [];
+
+      queue.addListener("completed", ({ partNumber }) => {
+        console.log(`Part #${partNumber} uploaded!`);
+        parts.push({ partNumber, eTag: "etag" });
+      });
+
+      queue.on("idle", () => {
+        console.log("All done!");
+        resolve(parts);
+      });
+    });
   }
 
   async mergeVideo(url: string, params: any, parts: any, auth: string) {
@@ -171,6 +220,7 @@ export class WebVideoUploader {
     );
     console.log("uploadInfo", uploadInfo);
 
+    const start = Date.now();
     const parts = await this.uploadChunk(
       filePath,
       url,
@@ -179,6 +229,7 @@ export class WebVideoUploader {
       chunk_size,
       size
     );
+    console.log("duration", Date.now() - start);
 
     const params = {
       name: title,
