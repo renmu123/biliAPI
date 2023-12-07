@@ -24,7 +24,7 @@ console.log("res2", res2);
 ```js
 const client = new Client();
 await client.loadCookieFile("cookies.json");
-const res = await client.addMediaClient(["test.mp4"], {
+const res = await client.platform.uploadMedia(["test.mp4"], {
   title: "测试",
   tid: 138,
   tag: "测试",
