@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 
 export async function getFileSize(filePath: string) {
   try {
@@ -37,4 +38,31 @@ export function readBytesFromFile(
       reject(`Error reading file: ${err.message}`);
     });
   });
+}
+
+export async function readFileAsBase64(filePath: string) {
+  return fs.promises
+    .readFile(filePath)
+    .then(data => {
+      // 获取文件扩展名
+      const extname = path.extname(filePath).toLowerCase();
+
+      // 根据文件类型添加Base64编码的数据头部
+      let base64Data = "";
+      if (extname === ".jpg" || extname === ".jpeg") {
+        base64Data = "data:image/jpeg;base64," + data.toString("base64");
+      } else if (extname === ".png") {
+        base64Data = "data:image/png;base64," + data.toString("base64");
+      } else if (extname === ".gif") {
+        base64Data = "data:image/gif;base64," + data.toString("base64");
+      } else {
+        base64Data =
+          "data:application/octet-stream;base64," + data.toString("base64");
+      }
+
+      return base64Data;
+    })
+    .catch(err => {
+      throw err;
+    });
 }

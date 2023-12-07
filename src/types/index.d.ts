@@ -17,7 +17,7 @@ export interface UploadResponse<T> {
 export interface MediaOptions {
   cover?: string;
   title: string;
-  copyright?: 0 | 1;
+  copyright?: 1 | 2;
   tid: number;
   tag: string;
   desc?: string;

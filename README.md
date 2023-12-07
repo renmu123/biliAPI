@@ -76,3 +76,11 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
 ## 检查标签可用性
 
 `client.platorm.checkTag(text)`
+
+## 上传图片
+
+`client.platform.uploadCover(filePath)`
+
+## 获取上传模板
+
+`client.platform.getUploadTemplateList()`

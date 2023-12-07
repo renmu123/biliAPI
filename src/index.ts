@@ -10,6 +10,10 @@ import Platform from "~/platform";
 
 class Client extends BaseRequest {
   cookie: string;
+  cookieObj: {
+    bili_jct: string;
+    [key: string]: string;
+  };
   accessToken: string;
 
   constructor() {
@@ -39,6 +43,17 @@ class Client extends BaseRequest {
       )
       .join("; ");
     this.cookie = cookieStr;
+    this.cookieObj = cookieObj.cookie_info.cookies.reduce(
+      (
+        obj: { [key: string]: string },
+        item: { name: string; value: string }
+      ) => {
+        obj[item.name] = item.value;
+        return obj;
+      },
+      {}
+    );
+    console.log(this.cookieObj);
     this.accessToken = cookieObj.token_info.access_token;
   }
 
