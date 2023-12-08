@@ -11,14 +11,31 @@ bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性
 ## 扫码登录
 
 ```js
-const login = new TvQrcodeLogin();
-const res = await login.getQrcode();
+const tv = new TvQrcodeLogin();
+const url = await tv.login();
+console.log(url);
+// 找个二维码工具将 url 转换为二维码，使用bilibili app扫码登录
 
-console.log("res", res);
-// 找个二维码工具将 res.data.url 转换为二维码，使用bilibili app扫码登录
+// 扫码完成会触发
+tv.on("completed", res => {
+  console.log("completed", res);
+  fs.writeFileSync("cookie.json", JSON.stringify(res.data));
+});
 
-const res2 = await login.poll(res.data.auth_code);
-console.log("res2", res2);
+// 失败会触发比如超时
+tv.on("error", res => {
+  console.log("err", res);
+});
+
+// 扫描中会触发
+tv.on("scan", res => {
+  console.log("scan", res);
+});
+
+// 完成和失败后都会触发
+tv.on("end", res => {
+  console.log("end", res);
+});
 ```
 
 # 投稿中心

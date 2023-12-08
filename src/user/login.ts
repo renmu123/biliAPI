@@ -42,7 +42,6 @@ export function poll_qrcode(
     {
       params: {
         qrcode_key: qrcode_key,
-        source: "main-fe-header",
       },
     }
   );
@@ -56,14 +55,15 @@ const enum Event {
   end = "end",
 }
 export class TvQrcodeLogin extends BaseRequest {
-  private appkey: string;
-  private secretKey: string;
-  private emitter: EventEmitter;
+  private appkey = "4409e2ce8ffd12b8";
+  private secretKey = "59b43e04ad6965f34319062b478f83dd";
+  emitter = new EventEmitter();
   constructor() {
-    super();
-    this.appkey = "4409e2ce8ffd12b8";
-    this.secretKey = "59b43e04ad6965f34319062b478f83dd";
-    this.emitter = new EventEmitter();
+    super({
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
   }
 
   async getQrcode(): Promise<
@@ -114,13 +114,13 @@ export class TvQrcodeLogin extends BaseRequest {
 
   async login() {
     const res = await this.getQrcode();
-    console.log(res);
     if (res.code !== 0) {
       throw new Error(res.message);
     }
     const auth_code = res.data.auth_code;
 
     this.emitter.emit("start");
+    let count = 0;
     const timer = setInterval(async () => {
       const response = await this.poll(auth_code);
       // 0：成功
@@ -129,18 +129,34 @@ export class TvQrcodeLogin extends BaseRequest {
       // 86090：二维码已扫码未确认
 
       if (response.code === 0) {
-        clearInterval(timer);
         this.emitter.emit(Event.completed, response);
-      } else if (response.code === 86038) {
         clearInterval(timer);
+      } else if (response.code === 86038) {
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
+        clearInterval(timer);
       } else if (response.code === 86039 || response.code === 86090) {
         this.emitter.emit(Event.scan, response);
       } else {
-        clearInterval(timer);
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
+        clearInterval(timer);
+      }
+      count++;
+      if (count > 180) {
+        this.emitter.emit(Event.end, {
+          code: 86038,
+          message: "二维码已失效",
+          ttl: 1,
+          data: null,
+        });
+        this.emitter.emit(Event.error, {
+          code: 86038,
+          message: "二维码已失效",
+          ttl: 1,
+          data: null,
+        });
+        clearInterval(timer);
       }
     }, 1000);
 

@@ -15,13 +15,23 @@ async function upload() {
 
 // 二维码登录
 async function qrcodeLogin() {
-  const login = new TvQrcodeLogin();
-  const res = await login.getQrcode();
+  const tv = new TvQrcodeLogin();
+  const url = await tv.login();
+  console.log(url);
 
-  console.log("res", res);
-  const res2 = await login.poll(res.data.auth_code);
-  console.log("res2", res2);
-  fs.writeFileSync("cookie.json", res2);
+  tv.on("completed", res => {
+    console.log("completed", res);
+    fs.writeFileSync("cookie.json", JSON.stringify(res.data));
+  });
+  tv.on("error", res => {
+    console.log("err", res);
+  });
+  tv.on("scan", res => {
+    console.log("scan", res);
+  });
+  tv.on("end", res => {
+    console.log("end", res);
+  });
 }
 
 // 获取登录用户信息
