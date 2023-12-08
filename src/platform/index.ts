@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import { isString, readFileAsBase64 } from "~/utils";
 
 import { WebVideoUploader } from "./upload";

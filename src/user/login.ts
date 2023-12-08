@@ -1,7 +1,9 @@
-import type { Request, CommonResponse } from "~/types/index.d.ts";
-import crypto from "crypto";
+import EventEmitter from "node:events";
+
 import { BaseRequest } from "~/base/index.ts";
-import EventEmitter from "events";
+import { md5 } from "~/utils/index.ts";
+
+import type { Request, CommonResponse } from "~/types/index.d.ts";
 
 /**
  * 获取登录二维码
@@ -195,6 +197,6 @@ export class TvQrcodeLogin extends BaseRequest {
       .map(key => `${key}=${params[key]}`)
       .join("&");
     const signString = `${queryString}${this.secretKey}`;
-    return crypto.createHash("md5").update(signString).digest("hex");
+    return md5(signString);
   }
 }

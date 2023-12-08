@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
 
 export async function getFileSize(filePath: string) {
   try {
@@ -65,4 +66,10 @@ export async function readFileAsBase64(filePath: string) {
     .catch(err => {
       throw err;
     });
+}
+
+export function md5(data: any) {
+  const md5Hash = crypto.createHash("md5");
+  md5Hash.update(data);
+  return md5Hash.digest("hex");
 }

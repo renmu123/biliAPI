@@ -2,7 +2,6 @@ import fs from "node:fs";
 import url from "node:url";
 
 import { TvQrcodeLogin } from "~/user/login.ts";
-
 import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
 import Platform from "~/platform";
@@ -53,7 +52,6 @@ class Client extends BaseRequest {
       },
       {}
     );
-    console.log(this.cookieObj);
     this.accessToken = cookieObj.token_info.access_token;
   }
 

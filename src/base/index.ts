@@ -1,10 +1,10 @@
-import url from "url";
+import url from "node:url";
 
 import axios from "axios";
 import { encWbi } from "~/base/sign.ts";
 
 import type { CreateAxiosDefaults, AxiosRequestConfig } from "axios";
-import type { Request } from "~/types/index.d.ts";
+import type { CommonResponse, Request } from "~/types/index.d.ts";
 
 export class BaseRequest {
   request: Request;
@@ -45,17 +45,26 @@ export class BaseRequest {
   }
   // 获取最新的 img_key 和 sub_key
   async getWbiKeys() {
-    const resp = await this.request({
-        url: "https://api.bilibili.com/x/web-interface/nav",
-        method: "get",
-        responseType: "json",
-        headers: {
-          cookie: null,
-        },
-      }),
-      json_content = resp.data,
-      img_url = json_content.data.wbi_img.img_url,
-      sub_url = json_content.data.wbi_img.sub_url;
+    const resp = await this.request<
+      never,
+      CommonResponse<{
+        isLogin: boolean;
+        wbi_img: {
+          img_url: string;
+          sub_url: string;
+        };
+      }>
+    >({
+      url: "https://api.bilibili.com/x/web-interface/nav",
+      method: "get",
+      responseType: "json",
+      headers: {
+        cookie: null,
+      },
+    });
+    const data = resp.data;
+    const img_url = data.wbi_img.img_url;
+    const sub_url = data.wbi_img.sub_url;
 
     this.wbiKeys = {
       img_key: img_url.slice(
@@ -70,8 +79,7 @@ export class BaseRequest {
     return this.wbiKeys;
   }
   async WbiSign(params: any) {
-    if (this.wbiKeys !== undefined) await this.getWbiKeys();
-
+    if (this.wbiKeys?.img_key === undefined) await this.getWbiKeys();
     return encWbi(params, this.wbiKeys.img_key, this.wbiKeys.sub_key);
   }
 }
