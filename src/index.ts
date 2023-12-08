@@ -66,7 +66,4 @@ class Client extends BaseRequest {
   }
 }
 
-const login = new TvQrcodeLogin();
-// login.on("login", () => {
-
 export { TvQrcodeLogin, Client };
