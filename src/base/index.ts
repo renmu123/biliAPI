@@ -8,7 +8,7 @@ import type { Request } from "~/types/index.d.ts";
 
 export class BaseRequest {
   request: Request;
-  wbiKeys: {
+  protected wbiKeys: {
     img_key: string;
     sub_key: string;
   };

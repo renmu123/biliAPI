@@ -1,12 +1,12 @@
-import fs from "fs";
-import url from "url";
+import fs from "node:fs";
+import url from "node:url";
 
-import { BiliQrcodeLogin } from "~/user/login.ts";
-import User from "~/user/index.ts";
+import { TvQrcodeLogin } from "~/user/login.ts";
 
 import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
 import Platform from "~/platform";
+import User from "~/user/index.ts";
 
 class Client extends BaseRequest {
   cookie: string;
@@ -66,4 +66,7 @@ class Client extends BaseRequest {
   }
 }
 
-export { BiliQrcodeLogin, Client };
+const login = new TvQrcodeLogin();
+// login.on("login", () => {
+
+export { TvQrcodeLogin, Client };

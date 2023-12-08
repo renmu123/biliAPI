@@ -1,4 +1,4 @@
-import { Client, BiliQrcodeLogin } from "./dist/index.mjs";
+import { Client, TvQrcodeLogin } from "./dist/index.mjs";
 import fs from "fs";
 
 // 上传视频
@@ -15,7 +15,7 @@ async function upload() {
 
 // 二维码登录
 async function qrcodeLogin() {
-  const login = new BiliQrcodeLogin();
+  const login = new TvQrcodeLogin();
   const res = await login.getQrcode();
 
   console.log("res", res);

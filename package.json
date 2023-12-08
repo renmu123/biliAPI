@@ -1,14 +1,17 @@
 {
   "name": "@renmu/bili-api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": {
+        "default": "./dist/index.d.ts"
+      },
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }

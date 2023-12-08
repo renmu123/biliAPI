@@ -1,6 +1,7 @@
 import type { Request, CommonResponse } from "~/types/index.d.ts";
 import crypto from "crypto";
 import { BaseRequest } from "~/base/index.ts";
+import EventEmitter from "events";
 
 /**
  * 获取登录二维码
@@ -47,15 +48,22 @@ export function poll_qrcode(
   );
 }
 
-export class BiliQrcodeLogin extends BaseRequest {
-  appkey: string;
-  secretKey: string;
-  session: Request;
+const enum Event {
+  start = "start",
+  scan = "scan",
+  completed = "completed",
+  error = "error",
+  end = "end",
+}
+export class TvQrcodeLogin extends BaseRequest {
+  private appkey: string;
+  private secretKey: string;
+  private emitter: EventEmitter;
   constructor() {
     super();
     this.appkey = "4409e2ce8ffd12b8";
     this.secretKey = "59b43e04ad6965f34319062b478f83dd";
-    this.session = this.request;
+    this.emitter = new EventEmitter();
   }
 
   async getQrcode(): Promise<
@@ -78,13 +86,12 @@ export class BiliQrcodeLogin extends BaseRequest {
     params.sign = this.generateSign(params);
     console.log("params", params);
 
-    return this.session.post(
+    return this.request.post(
       "http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code",
       params
     );
   }
-
-  async poll(auth_code: string) {
+  poll(auth_code: string) {
     const params: {
       appkey: string;
       auth_code: string;
@@ -99,25 +106,48 @@ export class BiliQrcodeLogin extends BaseRequest {
     };
 
     params.sign = this.generateSign(params);
+    return this.request.post<never, CommonResponse<any>>(
+      "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll",
+      params
+    );
+  }
 
-    return new Promise((resolve, reject) => {
-      let timer = setInterval(async () => {
-        const response = await this.session.post<never, CommonResponse<any>>(
-          "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll",
-          params
-        );
-        // 86039 二维码尚未确认
-        if (response.code === 0) {
-          clearInterval(timer);
-          resolve(response);
-        } else if (response.code === 86038) {
-          clearInterval(timer);
-          reject(response.message);
-        } else {
-          console.log("scaned", response);
-        }
-      }, 1000);
-    });
+  async login() {
+    const res = await this.getQrcode();
+    console.log(res);
+    if (res.code !== 0) {
+      throw new Error(res.message);
+    }
+    const auth_code = res.data.auth_code;
+
+    this.emitter.emit("start");
+    const timer = setInterval(async () => {
+      const response = await this.poll(auth_code);
+      // 0：成功
+      // 86039 二维码尚未确认
+      // 86038：二维码已失效
+      // 86090：二维码已扫码未确认
+
+      if (response.code === 0) {
+        clearInterval(timer);
+        this.emitter.emit(Event.completed, response);
+      } else if (response.code === 86038) {
+        clearInterval(timer);
+        this.emitter.emit(Event.end, response);
+        this.emitter.emit(Event.error, response);
+      } else if (response.code === 86039 || response.code === 86090) {
+        this.emitter.emit(Event.scan, response);
+      } else {
+        clearInterval(timer);
+        this.emitter.emit(Event.end, response);
+        this.emitter.emit(Event.error, response);
+      }
+    }, 1000);
+
+    return res.data.url;
+  }
+  on(event: keyof typeof Event, callback: (response: any) => void) {
+    this.emitter.on(event, callback);
   }
 
   generateSign(params: any) {

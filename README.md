@@ -1,13 +1,17 @@
 # 介绍
 
-bili 的 node 包装库
+bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性
+
+## 安装
+
+`npm install @renmu/bili-api`
 
 # 登录
 
 ## 扫码登录
 
 ```js
-const login = new BiliQrcodeLogin();
+const login = new TvQrcodeLogin();
 const res = await login.getQrcode();
 
 console.log("res", res);

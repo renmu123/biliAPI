@@ -38,9 +38,11 @@ export default [
         },
       }),
     ],
-    output: {
-      format: "es",
-      file: "dist/index.d.ts",
-    },
+    output: [
+      {
+        format: "es",
+        file: "dist/index.d.ts",
+      },
+    ],
   },
 ];
