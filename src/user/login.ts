@@ -57,6 +57,7 @@ const enum Event {
 export class TvQrcodeLogin extends BaseRequest {
   private appkey = "4409e2ce8ffd12b8";
   private secretKey = "59b43e04ad6965f34319062b478f83dd";
+  private timmer: NodeJS.Timeout | null = null;
   emitter = new EventEmitter();
   constructor() {
     super({
@@ -159,11 +160,29 @@ export class TvQrcodeLogin extends BaseRequest {
         clearInterval(timer);
       }
     }, 1000);
+    this.timmer = timer;
 
     return res.data.url;
   }
+  interrupt() {
+    clearInterval(this.timmer);
+    this.removeAllListeners();
+  }
   on(event: keyof typeof Event, callback: (response: any) => void) {
     this.emitter.on(event, callback);
+  }
+  once(event: keyof typeof Event, callback: (response: any) => void) {
+    this.emitter.once(event, callback);
+  }
+  off(event: keyof typeof Event, callback: (response: any) => void) {
+    this.emitter.off(event, callback);
+  }
+  removeAllListeners(event?: keyof typeof Event) {
+    if (event) {
+      this.emitter.removeAllListeners(event);
+    } else {
+      this.emitter.removeAllListeners();
+    }
   }
 
   generateSign(params: any) {
