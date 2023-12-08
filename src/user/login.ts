@@ -57,6 +57,7 @@ const enum Event {
 export class TvQrcodeLogin extends BaseRequest {
   private appkey = "4409e2ce8ffd12b8";
   private secretKey = "59b43e04ad6965f34319062b478f83dd";
+  private timmer: NodeJS.Timeout | null = null;
   emitter = new EventEmitter();
   constructor() {
     super({
@@ -130,17 +131,21 @@ export class TvQrcodeLogin extends BaseRequest {
 
       if (response.code === 0) {
         this.emitter.emit(Event.completed, response);
+        this.emitter.emit(Event.end, response);
         clearInterval(timer);
+        this.removeAllListeners();
       } else if (response.code === 86038) {
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
         clearInterval(timer);
+        this.removeAllListeners();
       } else if (response.code === 86039 || response.code === 86090) {
         this.emitter.emit(Event.scan, response);
       } else {
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
         clearInterval(timer);
+        this.removeAllListeners();
       }
       count++;
       if (count > 180) {
@@ -157,13 +162,32 @@ export class TvQrcodeLogin extends BaseRequest {
           data: null,
         });
         clearInterval(timer);
+        this.emitter.emit(Event.end, response);
       }
     }, 1000);
+    this.timmer = timer;
 
     return res.data.url;
   }
+  interrupt() {
+    clearInterval(this.timmer);
+    this.removeAllListeners();
+  }
   on(event: keyof typeof Event, callback: (response: any) => void) {
     this.emitter.on(event, callback);
+  }
+  once(event: keyof typeof Event, callback: (response: any) => void) {
+    this.emitter.once(event, callback);
+  }
+  off(event: keyof typeof Event, callback: (response: any) => void) {
+    this.emitter.off(event, callback);
+  }
+  removeAllListeners(event?: keyof typeof Event) {
+    if (event) {
+      this.emitter.removeAllListeners(event);
+    } else {
+      this.emitter.removeAllListeners();
+    }
   }
 
   generateSign(params: any) {
