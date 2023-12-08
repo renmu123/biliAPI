@@ -131,17 +131,21 @@ export class TvQrcodeLogin extends BaseRequest {
 
       if (response.code === 0) {
         this.emitter.emit(Event.completed, response);
+        this.emitter.emit(Event.end, response);
         clearInterval(timer);
+        this.removeAllListeners();
       } else if (response.code === 86038) {
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
         clearInterval(timer);
+        this.removeAllListeners();
       } else if (response.code === 86039 || response.code === 86090) {
         this.emitter.emit(Event.scan, response);
       } else {
         this.emitter.emit(Event.end, response);
         this.emitter.emit(Event.error, response);
         clearInterval(timer);
+        this.removeAllListeners();
       }
       count++;
       if (count > 180) {
@@ -158,6 +162,7 @@ export class TvQrcodeLogin extends BaseRequest {
           data: null,
         });
         clearInterval(timer);
+        this.emitter.emit(Event.end, response);
       }
     }, 1000);
     this.timmer = timer;
