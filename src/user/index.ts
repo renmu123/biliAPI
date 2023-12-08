@@ -12,9 +12,17 @@ export default class User {
     this.request = client.request;
     this.client = client;
   }
+  /**
+   * 获取登录用户信息
+   */
   async getMyInfo(): Promise<CommonResponse<MyInfoReturnType>> {
+    this.client.authLogin();
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
+  /**
+   * 获取用户信息
+   * @param uid 用户id
+   */
   async getUserInfo(
     uid: number
   ): Promise<CommonResponse<GetUserInfoReturnType>> {
@@ -24,7 +32,6 @@ export default class User {
       platform: "web",
       web_location: "1550101",
     });
-    console.log(signParams);
 
     return this.request.get(
       `https://api.bilibili.com/x/space/wbi/acc/info?${signParams}`,

@@ -21,9 +21,11 @@ await client.loadCookieFile("cookies.json");
 
 - [biliLive-tools](https://github.com/renmu123/biliLive-tools) B 站录播一站式工具
 
-# 登录
+# 接口
 
-## 扫码登录
+## 登录
+
+### 扫码登录
 
 ```js
 const tv = new TvQrcodeLogin();
@@ -53,33 +55,36 @@ tv.on("end", res => {
 });
 ```
 
-# 用户
+## 用户
 
-## 获取当前用户信息
+### 获取当前用户信息
 
+登录：必要  
 `client.user.getMyInfo();`
 
-## 获取其他用户信息
+### 获取其他用户信息
 
 `client.user.getUserInfo(uid)`
 
-# 直播
+## 直播
 
-## 获取房间信息
+### 获取房间信息
 
 `client.live.getRoomInfo(room_id)`
 
-## 获取某主播信息
+### 获取某主播信息
 
 `client.live.getMasterInfo(uid)`
 
-## 获取舰长信息
+### 获取舰长信息
 
 `client.live.getGuardTopList({user_id:1,room_id:1,page:1,page_size:20})`
 
-# 创作中心
+## 创作中心
 
-## 添加投稿
+登录：必要
+
+### 添加投稿
 
 ```js
 const client = new Client();
@@ -91,26 +96,26 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
 });
 ```
 
-## 编辑投稿
+### 编辑投稿
 
 `client.platorm.editMedia(...)`
 
-## 获取投稿详情
+### 获取投稿详情
 
 `client.platorm.getMediaDetail(aid)`
 
-## 获取投稿列表
+### 获取投稿列表
 
 `client.platorm.getArchives(...)`
 
-## 检查标签可用性
+### 检查标签可用性
 
 `client.platorm.checkTag(text)`
 
-## 上传图片
+### 上传图片
 
 `client.platform.uploadCover(filePath)`
 
-## 获取上传模板
+### 获取上传模板
 
 `client.platform.getUploadTemplateList()`

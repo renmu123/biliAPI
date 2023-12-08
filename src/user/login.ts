@@ -65,10 +65,14 @@ export class TvQrcodeLogin extends BaseRequest {
     super({
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        cookie: null,
       },
     });
   }
 
+  /**
+   * 获取登录二维码
+   */
   async getQrcode(): Promise<
     CommonResponse<{
       url: string;
@@ -94,6 +98,10 @@ export class TvQrcodeLogin extends BaseRequest {
       params
     );
   }
+  /**
+   * 轮询二维码状态
+   * @param auth_code
+   */
   poll(auth_code: string) {
     const params: {
       appkey: string;
@@ -171,19 +179,34 @@ export class TvQrcodeLogin extends BaseRequest {
 
     return res.data.url;
   }
+  /**
+   * 中断任务
+   */
   interrupt() {
     clearInterval(this.timmer);
     this.removeAllListeners();
   }
+  /**
+   * 监听事件
+   */
   on(event: keyof typeof Event, callback: (response: any) => void) {
     this.emitter.on(event, callback);
   }
+  /**
+   * 监听事件，只触发一次
+   */
   once(event: keyof typeof Event, callback: (response: any) => void) {
     this.emitter.once(event, callback);
   }
+  /**
+   * 移除监听事件
+   */
   off(event: keyof typeof Event, callback: (response: any) => void) {
     this.emitter.off(event, callback);
   }
+  /**
+   * 移除所有监听事件
+   */
   removeAllListeners(event?: keyof typeof Event) {
     if (event) {
       this.emitter.removeAllListeners(event);
@@ -192,6 +215,10 @@ export class TvQrcodeLogin extends BaseRequest {
     }
   }
 
+  /**
+   * 生成签名
+   * @param params 签名参数
+   */
   generateSign(params: any) {
     const queryString = Object.keys(params)
       .map(key => `${key}=${params[key]}`)

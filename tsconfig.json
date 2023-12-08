@@ -17,7 +17,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": false,
     "experimentalDecorators": true
   },
   "include": ["**/*.ts", "**/*.d.ts"]

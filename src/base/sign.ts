@@ -68,16 +68,3 @@ export async function WbiSign(params: any) {
   const wbi_keys = await getWbiKeys();
   return encWbi(params, wbi_keys.img_key, wbi_keys.sub_key);
 }
-
-// getWbiKeys().then(wbi_keys => {
-//   const query = encWbi(
-//     {
-//       foo: "114",
-//       bar: "514",
-//       baz: 1919810,
-//     },
-//     wbi_keys.img_key,
-//     wbi_keys.sub_key
-//   );
-//   console.log(query);
-// });

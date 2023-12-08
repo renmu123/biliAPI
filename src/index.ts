@@ -14,9 +14,14 @@ class Client extends BaseRequest {
     [key: string]: string;
   };
   accessToken: string;
+  useCookie: boolean;
 
-  constructor() {
+  /**
+   * @param useCookie 无需登录的接口是否使用cookie
+   */
+  constructor(useCookie = false) {
     super();
+    this.useCookie = useCookie;
 
     this.request.interceptors.request.use(config => {
       if (this.cookie && config.headers["cookie"] === undefined) {
@@ -25,6 +30,7 @@ class Client extends BaseRequest {
       if (!config.headers.host) {
         config.headers["host"] = url.parse(config.url).hostname;
       }
+      console.log("config", config);
 
       return config;
     });
@@ -32,6 +38,10 @@ class Client extends BaseRequest {
   live = new Live(this);
   user = new User(this);
   platform = new Platform(this);
+  /**
+   * 加载cookie文件
+   * @param path cookie文件路径
+   */
   async loadCookieFile(path: string) {
     const cookie = await fs.promises.readFile(path, "utf-8");
     const cookieObj = JSON.parse(cookie);
