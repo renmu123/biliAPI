@@ -6,6 +6,7 @@ import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
 import Platform from "~/platform";
 import User from "~/user/index.ts";
+import { WbiSign } from "~/base/sign";
 
 class Client extends BaseRequest {
   cookie: string;
@@ -13,7 +14,7 @@ class Client extends BaseRequest {
     bili_jct: string;
     [key: string]: string;
   };
-  accessToken: string;
+  accessToken?: string;
   useCookie: boolean;
 
   /**
@@ -38,6 +39,7 @@ class Client extends BaseRequest {
   live = new Live(this);
   user = new User(this);
   platform = new Platform(this);
+
   /**
    * 加载cookie文件
    * @param path cookie文件路径
@@ -65,13 +67,53 @@ class Client extends BaseRequest {
     this.accessToken = cookieObj.token_info.access_token;
   }
 
-  // 登录验证
-  async authLogin() {
-    const isLogin = !!this.cookie;
-    if (!isLogin) {
-      throw new Error("You need to login first");
+  /**
+   * 设置登录相关参数
+   */
+  setAuth(
+    cookie?: {
+      bili_jct: string;
+      SESSDATA: string;
+      [key: string]: string;
+    },
+    accessToken?: string
+  ) {
+    if (cookie) {
+      this.cookieObj = cookie;
+      this.cookie = Object.entries(cookie)
+        .map(([key, value]) => {
+          return `${key}=${value}`;
+        })
+        .join("; ");
+    }
+
+    this.accessToken = accessToken;
+  }
+
+  /**
+   * 登录验证
+   * @param [api=["web"]] 用于验证web还是client api
+   */
+  async authLogin(api: Array<"web" | "client"> = ["web"]) {
+    if (api.includes("web")) {
+      const isLogin = !!this.cookie;
+      if (!isLogin) {
+        throw new Error("接口为web端接口，需要cookie");
+      }
+    }
+    if (api.includes("client")) {
+      const isLogin = !!this.accessToken;
+      if (!isLogin) {
+        throw new Error(
+          "接口为客户端接口，需要access_token，请使用客户端登录接口"
+        );
+      }
     }
   }
 }
 
-export { TvQrcodeLogin, Client };
+const utils = {
+  WbiSign,
+};
+
+export { TvQrcodeLogin, Client, utils };

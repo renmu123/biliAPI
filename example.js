@@ -32,6 +32,9 @@ async function qrcodeLogin() {
   tv.on("end", res => {
     console.log("end", res);
   });
+
+  // 中断任务，并清除所有监听器
+  // tv.interrupt();
 }
 
 // 获取登录用户信息

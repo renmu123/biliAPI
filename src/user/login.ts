@@ -180,7 +180,7 @@ export class TvQrcodeLogin extends BaseRequest {
     return res.data.url;
   }
   /**
-   * 中断任务
+   * 中断任务，并清除所有监听器
    */
   interrupt() {
     clearInterval(this.timmer);

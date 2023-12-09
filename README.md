@@ -13,8 +13,8 @@ bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性�
 import { Client, TvQrcodeLogin } from "@renmu/bili-api";
 
 const client = new Client();
-// 加载cookie,cookie如何获取参考登录，目前仅支持tv平台扫码登录
-await client.loadCookieFile("cookies.json");
+const res = await client.live.getMasterInfo(3927637, false);
+console.log(res);
 ```
 
 ## 衍生项目
@@ -22,6 +22,37 @@ await client.loadCookieFile("cookies.json");
 - [biliLive-tools](https://github.com/renmu123/biliLive-tools) B 站录播一站式工具
 
 # 接口
+
+绝大部分接口都是 web api，只需要 cookie，目前只有上传稿件且使用`client`提交接口需要`accessToken`
+
+## 基础类
+
+```js
+import { Client, TvQrcodeLogin } from "@renmu/bili-api";
+
+// 默认无需登录的接口是不使用cookie，部分接口在登录与未登录态下返回参数不同，也在调用时单独传入是否使用cookie参数
+const client = new Client(false);
+// 加载cookie,cookie如何获取参考登录，目前仅支持tv平台扫码登录
+await client.loadCookieFile("cookies.json");
+// 也可以手动设置cookie和accessToken，cookie可在web抓包获取
+client.setAuth(
+  {
+    bili_jct: "1111",
+    SESSDATA: "111",
+  },
+  "1111"
+);
+```
+
+## 工具类
+
+```js
+import { utils } from "@renmu/bili-api";
+// 用于wbi接口签名, 返回的参数直接用于url拼接
+const query = await utils.WbiSign({
+  test: "111",
+});
+```
 
 ## 登录
 
@@ -53,6 +84,9 @@ tv.on("scan", res => {
 tv.on("end", res => {
   console.log("end", res);
 });
+
+// 可用于中断任务，并清除所有监听器
+// tv.interrupt();
 ```
 
 ## 用户
@@ -86,6 +120,8 @@ tv.on("end", res => {
 
 ### 添加投稿
 
+使用`client`提交接口需要`accessToken`
+
 ```js
 const client = new Client();
 await client.loadCookieFile("cookies.json");
@@ -95,10 +131,6 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
   tag: "测试",
 });
 ```
-
-### 编辑投稿
-
-`client.platorm.editMedia(...)`
 
 ### 获取投稿详情
 

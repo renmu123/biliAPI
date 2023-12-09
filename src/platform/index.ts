@@ -125,7 +125,7 @@ export default class Platform {
       submit: "client",
     }
   ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
-    this.client.authLogin();
+    this.client.authLogin([api.submit, api.uploader]);
     this.checkOptions(options);
 
     const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
@@ -164,12 +164,7 @@ export default class Platform {
       );
       return res;
     } else if (api.submit === "web") {
-      const res = await this._addMediaClientApi(
-        this.request,
-        videos,
-        this.client.cookie,
-        options
-      );
+      const res = await this._addMediaWebApi(this.request, videos, options);
       return res;
     } else {
       throw new Error("You can only set api as client or web");
@@ -281,7 +276,7 @@ export default class Platform {
     };
 
     console.log("submit", data);
-    this.client.authLogin();
+    this.client.authLogin(["client"]);
 
     return request.post("http://member.bilibili.com/x/vu/client/add", data, {
       params: {
@@ -303,6 +298,7 @@ export default class Platform {
       bvid: string;
     }>
   > {
+    this.client.authLogin();
     this.checkOptions(options);
     const csrf = this.client.cookieObj.bili_jct;
     const data = {
@@ -352,6 +348,7 @@ export default class Platform {
       bvid: string;
     }>
   > {
+    this.client.authLogin();
     this.checkOptions(options);
     const csrf = this.client.cookieObj.bili_jct;
     const data = {
