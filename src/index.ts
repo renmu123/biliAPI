@@ -31,7 +31,6 @@ class Client extends BaseRequest {
       if (!config.headers.host) {
         config.headers["host"] = url.parse(config.url).hostname;
       }
-      console.log("config", config);
 
       return config;
     });

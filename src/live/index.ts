@@ -124,7 +124,6 @@ export default class Live {
     useCookie: boolean = undefined
   ): Promise<CommonResponse<getMasterInfoReturnType>> {
     const cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
-    console.log(cookie, this.client.useCookie);
     return this.request.get(
       "https://api.live.bilibili.com/live_user/v1/Master/info",
       {

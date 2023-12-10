@@ -91,7 +91,6 @@ export class TvQrcodeLogin extends BaseRequest {
     };
 
     params.sign = this.generateSign(params);
-    console.log("params", params);
 
     return this.request.post(
       "http://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code",
