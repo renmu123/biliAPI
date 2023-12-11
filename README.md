@@ -105,6 +105,10 @@ tv.on("end", res => {
 
 `client.user.space(uid)`
 
+### 获取用户投稿
+
+`client.user.getVideos({mid: uid})`
+
 ## 直播
 
 ### 获取房间信息

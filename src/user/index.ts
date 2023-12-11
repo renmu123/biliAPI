@@ -43,7 +43,7 @@ export default class User {
     );
   }
   /**
-   * 获取动态
+   * 获取用户动态
    * 返回值参考 @link : https://socialsisteryi.github.io/bilibili-API-collect/docs/dynamic/get_dynamic_detail.html
    */
   async space(
@@ -72,6 +72,51 @@ export default class User {
         headers: {
           cookie: cookie,
           "User-Agent": "Mozilla/5.0",
+        },
+      }
+    );
+  }
+  /**
+   * 用户投稿列表
+   */
+  async getVideos(
+    params: {
+      mid: number;
+      ps?: number;
+      pn?: number;
+      tid?: number;
+      keyword?: string;
+      order?: "pubdate" | "click" | "stow";
+    },
+    useCookie?: string
+  ) {
+    const defaultParams = {
+      ps: "30",
+      tid: "0",
+      pn: "1",
+      keyword: "",
+      order: "pubdate",
+      platform: "web",
+      web_location: "1550101",
+      order_avoided: "true",
+    };
+    let cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
+    if (!cookie) {
+      cookie =
+        "buvid3=57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc;b_nut=1701088795";
+    }
+
+    const signParams = await this.client.WbiSign({
+      ...defaultParams,
+      ...params,
+    });
+    return this.request.get(
+      `https://api.bilibili.com/x/space/wbi/arc/search?${signParams}`,
+      {
+        headers: {
+          cookie: cookie,
+          "User-Agent": "Mozilla/5.0",
+          origin: "https://space.bilibili.com",
         },
       }
     );
