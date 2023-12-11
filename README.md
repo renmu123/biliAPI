@@ -1,11 +1,12 @@
 # 介绍
 
 bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，具体文档之后会补。  
-部分示例可参考[example](./example.js)
+部分示例可参考[example](https://github.com/renmu123/biliAPI/blob/master/example.js)
 
 ## 安装
 
-`npm install @renmu/bili-api`
+`npm install @renmu/bili-api`  
+需要 node>=18
 
 ## 使用
 
