@@ -5,8 +5,10 @@ import { TvQrcodeLogin } from "~/user/login.ts";
 import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
 import Platform from "~/platform";
+import { WebVideoUploader } from "~/platform/upload";
 import Search from "~/search/index.ts";
 import User from "~/user/index.ts";
+import Common from "~/common/index.ts";
 import { WbiSign } from "~/base/sign";
 
 class Client extends BaseRequest {
@@ -40,6 +42,7 @@ class Client extends BaseRequest {
   user = new User(this);
   platform = new Platform(this);
   search = new Search(this);
+  common = new Common(this);
 
   /**
    * 加载cookie文件
@@ -117,4 +120,4 @@ const utils = {
   WbiSign,
 };
 
-export { TvQrcodeLogin, Client, utils };
+export { TvQrcodeLogin, Client, utils, WebVideoUploader };

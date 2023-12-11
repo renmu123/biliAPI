@@ -172,3 +172,9 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
 具体参数见类型文件
 
 `client.search.type({keyword:"测试",search_type:"video"})`
+
+## 通用
+
+### 获取分区
+
+`client.common.getAreas()`
