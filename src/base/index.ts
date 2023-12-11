@@ -12,6 +12,10 @@ export class BaseRequest {
     img_key: string;
     sub_key: string;
   };
+  protected buvid: {
+    buvid3: string;
+    buvid: string;
+  };
   constructor(options?: CreateAxiosDefaults) {
     const instance = axios.create({
       timeout: 100000,
@@ -52,5 +56,22 @@ export class BaseRequest {
   async WbiSign(params: any) {
     if (this.wbiKeys?.img_key === undefined) await this.getWbiKeys();
     return encWbi(params, this.wbiKeys.img_key, this.wbiKeys.sub_key);
+  }
+  /**
+   * 获取buvid3,buvid3
+   */
+  async getBuvid() {
+    if (this.buvid?.buvid3) return this.buvid;
+    const res = await this.request.get(
+      "https://api.bilibili.com/x/frontend/finger/spi"
+    );
+    this.buvid = {
+      buvid3: res.data.b_3,
+      buvid: res.data.b_4,
+    };
+    return {
+      buvid3: res.data.b_3,
+      buvid: res.data.b_4,
+    };
   }
 }

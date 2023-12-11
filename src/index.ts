@@ -5,6 +5,7 @@ import { TvQrcodeLogin } from "~/user/login.ts";
 import { BaseRequest } from "~/base/index.ts";
 import Live from "~/live/index.ts";
 import Platform from "~/platform";
+import Search from "~/search/index.ts";
 import User from "~/user/index.ts";
 import { WbiSign } from "~/base/sign";
 
@@ -38,6 +39,7 @@ class Client extends BaseRequest {
   live = new Live(this);
   user = new User(this);
   platform = new Platform(this);
+  search = new Search(this);
 
   /**
    * 加载cookie文件
