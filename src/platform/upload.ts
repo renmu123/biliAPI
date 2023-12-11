@@ -1,4 +1,5 @@
 import path from "node:path";
+import EventEmitter from "node:events";
 
 import PQueue from "p-queue";
 import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
@@ -8,6 +9,7 @@ import type { Request } from "~/types/index.d.ts";
 export class WebVideoUploader {
   request: Request;
   queue: PQueue;
+  emitter = new EventEmitter();
 
   constructor(request: Request) {
     this.request = request;
@@ -115,6 +117,11 @@ export class WebVideoUploader {
       end: start + chunkData.length,
       total: size,
     };
+    this.emitter.emit("progress", {
+      event: `uploadChunk-part#${params.partNumber}-start`,
+      progress: 0,
+      data: options,
+    });
     const res = await this.request.put(url, chunkData, {
       params: params,
       headers: {
@@ -166,6 +173,11 @@ export class WebVideoUploader {
       queue.addListener("completed", ({ partNumber }) => {
         console.log(`Part #${partNumber} uploaded!`);
         parts.push({ partNumber, eTag: "etag" });
+
+        this.emitter.emit("progress", {
+          event: `uploadChunk-part#${partNumber}-end`,
+          progress: 0,
+        });
       });
 
       queue.on("idle", () => {
@@ -204,13 +216,25 @@ export class WebVideoUploader {
     const { name: title } = path.parse(filePath);
     const size = await getFileSize(filePath);
 
+    this.emitter.emit("progress", {
+      event: "preuplad-start",
+      progress: 0,
+    });
     const data = await this.preupload(filePath, size);
+    this.emitter.emit("progress", {
+      event: "preuplad-end",
+      progress: 0,
+    });
     console.log("preupload", data);
 
     const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
     const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
     console.log("url", url);
 
+    this.emitter.emit("progress", {
+      event: "getUploadInfo-start",
+      progress: 0,
+    });
     const uploadInfo = await this.getUploadInfo(
       url,
       biz_id,
@@ -218,6 +242,11 @@ export class WebVideoUploader {
       auth,
       size
     );
+    this.emitter.emit("progress", {
+      event: "getUploadInfo-end",
+      progress: 0,
+      data: uploadInfo,
+    });
     console.log("uploadInfo", uploadInfo);
 
     const start = Date.now();
@@ -238,6 +267,11 @@ export class WebVideoUploader {
       output: "json",
       profile: "ugcupos/bup",
     };
+    this.emitter.emit("progress", {
+      event: "merge-start",
+      progress: 100,
+      data: params,
+    });
     let attempt = 0;
     while (attempt < 5) {
       const res = await this.mergeVideo(url, params, parts, auth);
@@ -250,11 +284,41 @@ export class WebVideoUploader {
       }
     }
     if (attempt >= 5) throw new Error("合并视频失败");
+    this.emitter.emit("progress", {
+      event: "merge-end",
+      progress: 100,
+      data: params,
+    });
+
+    this.emitter.emit("completed", {
+      cid: biz_id,
+      filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
+      title: title,
+    });
 
     return {
       cid: biz_id,
       filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
       title: title,
     };
+  }
+  pause() {
+    this.queue.pause();
+  }
+  start() {
+    this.queue.start();
+  }
+  clear() {
+    this.queue.clear();
+  }
+  on(event: "start" | "completed" | "progress", callback: () => void) {
+    this.emitter.on(event, callback);
+    // progress callback(event: 'preuplad-start'|'preuplad-end'|'merge-start'|'merge-end'|'getUploadInfo-end'|'getUploadInfo-start',progress:number)
+  }
+  once(event: "start" | "completed" | "progress", callback: () => void) {
+    this.emitter.once(event, callback);
+  }
+  off(event: "start" | "completed" | "progress", callback: () => void) {
+    this.emitter.off(event, callback);
   }
 }

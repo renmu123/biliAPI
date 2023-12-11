@@ -149,9 +149,9 @@ export default class Platform {
     );
 
     console.log(mediaOptions);
-    const uploader = new WebVideoUploader(this.request);
     const videos = [];
     for (let i = 0; i < mediaOptions.length; i++) {
+      const uploader = new WebVideoUploader(this.request);
       const video = await uploader.upload(mediaOptions[i].path);
       videos.push(video);
     }
