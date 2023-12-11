@@ -42,4 +42,38 @@ export default class User {
       }
     );
   }
+  /**
+   * 获取动态
+   * 返回值参考 @link : https://socialsisteryi.github.io/bilibili-API-collect/docs/dynamic/get_dynamic_detail.html
+   */
+  async space(
+    /** 用户id */
+    mid: number,
+    /** offset为分页参数，来自上一页返回接口的offset参数 */
+    offset?: number,
+    useCookie?: string
+  ) {
+    let cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
+    const params = {
+      timezone_offset: -480,
+      platform: "web",
+      features: "itemOpusStyle,listOnlyfans,opusBigCover",
+      host_mid: mid,
+    };
+    if (offset) {
+      // @ts-ignore
+      params.offset = offset;
+    }
+    console.log(params);
+    const signParams = await this.client.WbiSign(params);
+    return this.request.get(
+      `https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?${signParams}`,
+      {
+        headers: {
+          cookie: cookie,
+          "User-Agent": "Mozilla/5.0",
+        },
+      }
+    );
+  }
 }

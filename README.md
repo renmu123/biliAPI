@@ -97,9 +97,13 @@ tv.on("end", res => {
 登录：必要  
 `client.user.getMyInfo();`
 
-### 获取其他用户信息
+### 通过 id 获取用户信息
 
 `client.user.getUserInfo(uid)`
+
+### 获取用户动态列表
+
+`client.user.space(uid)`
 
 ## 直播
 
