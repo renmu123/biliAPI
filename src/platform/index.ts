@@ -48,13 +48,22 @@ export default class Platform {
       arc_audits: {
         stat: {
           aid: number;
+          [key: string]: any;
         };
         Archive: {
+          aid: number;
+          bvid: string;
+          mid: number;
           cover: string;
           title: string;
           tag: string;
           tid: number;
+          /* -30:待审核 0:审核通过 */
+          state: -30 | 0 | number;
+          [key: string]: any;
         };
+        Videos: [];
+        [key: string]: any;
       }[];
       page: {
         pn: number;
