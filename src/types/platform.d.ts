@@ -169,3 +169,22 @@ export interface MediaDetailReturnType {
   videos: Video[];
   watermark: Watermark;
 }
+
+export interface getArchivesReturnType {
+  arc_audits: {
+    stat: {
+      aid: number;
+    };
+    Archive: {
+      cover: string;
+      title: string;
+      tag: string;
+      tid: number;
+    };
+  }[];
+  page: {
+    pn: number;
+    ps: number;
+    count: number;
+  };
+}

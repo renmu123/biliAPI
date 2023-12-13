@@ -143,7 +143,7 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
 
 ### 获取投稿详情
 
-`client.platorm.getMediaDetail(aid)`
+`client.platorm.getArchive(aid)`
 
 ### 获取投稿列表
 

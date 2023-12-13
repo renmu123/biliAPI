@@ -10,7 +10,7 @@ import type {
   MediaOptions,
   MediaPartOptions,
 } from "~/types/index.d.ts";
-import { MediaDetailReturnType } from "~/types/platform";
+import { MediaDetailReturnType, getArchivesReturnType } from "~/types/platform";
 
 export default class Platform {
   request: Request;
@@ -43,26 +43,7 @@ export default class Platform {
     interactive?: number;
     tid?: number;
     order?: "click" | "stow" | "dm_count" | "scores";
-  }): Promise<
-    CommonResponse<{
-      arc_audits: {
-        stat: {
-          aid: number;
-        };
-        Archive: {
-          cover: string;
-          title: string;
-          tag: string;
-          tid: number;
-        };
-      }[];
-      page: {
-        pn: number;
-        ps: number;
-        count: number;
-      };
-    }>
-  > {
+  }): Promise<CommonResponse<getArchivesReturnType>> {
     this.client.authLogin();
     const defaultParams = {
       pn: 1,
@@ -174,7 +155,7 @@ export default class Platform {
    * 投稿视频详情
    * @param bvid 视频bvid
    */
-  async getMediaDetail(
+  async getArchive(
     bvid: string
   ): Promise<CommonResponse<MediaDetailReturnType>> {
     return this.request.get(
