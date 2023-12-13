@@ -46,9 +46,21 @@ export default class Platform {
   }): Promise<
     CommonResponse<{
       arc_audits: {
+        /* 审核中状态时，stat中的参数均为0  */
         stat: {
           aid: number;
-          [key: string]: any;
+          view: number;
+          danmuku: number;
+          reply: number;
+          favorite: number;
+          coin: number;
+          share: number;
+          now_rank: number;
+          his_rank: number;
+          like: number;
+          dislike: number;
+          vt: number;
+          vv: number;
         };
         Archive: {
           aid: number;
@@ -58,7 +70,7 @@ export default class Platform {
           title: string;
           tag: string;
           tid: number;
-          /* -30:待审核 0:审核通过 */
+          /* -30:审核中 0:审核通过 */
           state: -30 | 0 | number;
           [key: string]: any;
         };
