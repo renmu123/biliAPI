@@ -1,7 +1,7 @@
 import url from "node:url";
 
 import axios from "axios";
-import { encWbi, getWbiKeys } from "./sign.ts";
+import { encWbi, getWbiKeys } from "./sign";
 
 import type { CreateAxiosDefaults } from "axios";
 import type { Request } from "../types/index";

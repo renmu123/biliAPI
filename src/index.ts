@@ -1,14 +1,14 @@
 import fs from "node:fs";
 import url from "node:url";
 
-import { TvQrcodeLogin } from "./user/login.ts";
-import { BaseRequest } from "./base/index.ts";
-import Live from "./live/index.ts";
+import { TvQrcodeLogin, WebQrcodeLogin } from "./user/login";
+import { BaseRequest } from "./base/index";
+import Live from "./live/index";
 import Platform from "./platform";
 import { WebVideoUploader } from "./platform/upload";
-import Search from "./search/index.ts";
-import User from "./user/index.ts";
-import Common from "./common/index.ts";
+import Search from "./search/index";
+import User from "./user/index";
+import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 
 class Client extends BaseRequest {
@@ -45,7 +45,7 @@ class Client extends BaseRequest {
   common = new Common(this);
 
   /**
-   * 加载cookie文件
+   * 加载cookie文件，仅限TvQrcodeLogin返回的参数
    * @param path cookie文件路径
    */
   async loadCookieFile(path: string) {
@@ -120,4 +120,4 @@ const utils = {
   WbiSign,
 };
 
-export { TvQrcodeLogin, Client, utils, WebVideoUploader };
+export { TvQrcodeLogin, Client, utils, WebVideoUploader, WebQrcodeLogin };

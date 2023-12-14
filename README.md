@@ -60,6 +60,9 @@ const query = await utils.WbiSign({
 ### 扫码登录
 
 ```js
+import { TvQrcodeLogin, WebQrcodeLogin } from "@renmu/bili-api";
+
+// 也可以使用WebQrcodeLogin使用web端的扫码登录
 const tv = new TvQrcodeLogin();
 const url = await tv.login();
 console.log(url);
@@ -68,7 +71,18 @@ console.log(url);
 // 扫码完成会触发
 tv.on("completed", res => {
   console.log("completed", res);
+  // 如果是tv端，可以直接保存后调用loadCookieFile函数
   fs.writeFileSync("cookie.json", JSON.stringify(res.data));
+  // 以下为web端扫码登录返回的参数，可以尝试使用setAuth进行登录
+  //   {
+  //   DedeUserID: '111',
+  //   DedeUserID__ckMd5: '111',
+  //   Expires: '1718116416',
+  //   SESSDATA: '111',
+  //   bili_jct: '1111',
+  //   gourl: 'https://www.bilibili.com',
+  //   refresh_token: '1111'
+  // }
 });
 
 // 失败会触发比如超时
@@ -81,7 +95,7 @@ tv.on("scan", res => {
   console.log("scan", res);
 });
 
-// 完成和失败后都会触发
+// 完成和失败后都会触发，返回原始参数
 tv.on("end", res => {
   console.log("end", res);
 });

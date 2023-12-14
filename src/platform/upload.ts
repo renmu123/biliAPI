@@ -2,7 +2,7 @@ import path from "node:path";
 import EventEmitter from "events";
 
 import PQueue from "p-queue";
-import { getFileSize, readBytesFromFile } from "../utils/index.ts";
+import { getFileSize, readBytesFromFile } from "../utils/index";
 
 import type { Request } from "../types/index";
 
