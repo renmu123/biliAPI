@@ -1,5 +1,5 @@
-import type { Request, CommonResponse, Client } from "~/types/index.d.ts";
-import type { SearchTypeParams } from "~/types/search.d.ts";
+import type { Request, CommonResponse, Client } from "../types/index";
+import type { SearchTypeParams } from "../types/search";
 
 export default class Search {
   request: Request;

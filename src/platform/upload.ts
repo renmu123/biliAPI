@@ -2,9 +2,9 @@ import path from "node:path";
 import EventEmitter from "events";
 
 import PQueue from "p-queue";
-import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
+import { getFileSize, readBytesFromFile } from "../utils/index.ts";
 
-import type { Request } from "~/types/index.d.ts";
+import type { Request } from "../types/index";
 
 export class WebVideoUploader {
   request: Request;

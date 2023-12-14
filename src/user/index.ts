@@ -1,8 +1,5 @@
-import type { Request, CommonResponse, Client } from "~/types/index.d.ts";
-import type {
-  MyInfoReturnType,
-  GetUserInfoReturnType,
-} from "~/types/user.d.ts";
+import type { Request, CommonResponse, Client } from "../types/index";
+import type { MyInfoReturnType, GetUserInfoReturnType } from "../types/user";
 
 export default class User {
   request: Request;

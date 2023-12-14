@@ -1,5 +1,5 @@
-import type { Request, CommonResponse, Client } from "~/types/index.d.ts";
-import type { getMasterInfoReturnType } from "~/types/live.d.ts";
+import type { Request, CommonResponse, Client } from "../types/index";
+import type { getMasterInfoReturnType } from "../types/live";
 
 export default class Live {
   request: Request;

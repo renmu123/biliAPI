@@ -1,5 +1,5 @@
 import path from "node:path";
-import { isString, readFileAsBase64 } from "~/utils";
+import { isString, readFileAsBase64 } from "../utils";
 
 import { WebVideoUploader } from "./upload";
 
@@ -9,8 +9,8 @@ import type {
   Client,
   MediaOptions,
   MediaPartOptions,
-} from "~/types/index.d.ts";
-import { MediaDetailReturnType } from "~/types/platform";
+} from "../types/index";
+import { MediaDetailReturnType } from "../types/platform";
 
 export default class Platform {
   request: Request;

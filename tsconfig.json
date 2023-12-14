@@ -11,14 +11,13 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "lib": ["dom", "es5", "scripthost", "es2015", "es2020", "ESNext"],
-    "paths": {
-      "~/*": ["src/*"]
-    },
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": false,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationDir": "types"
   },
-  "include": ["**/*.ts", "**/*.d.ts"]
+  "include": ["**/*.ts", "**/*"]
 }

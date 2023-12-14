@@ -1,9 +1,9 @@
 import EventEmitter from "node:events";
 
-import { BaseRequest } from "~/base/index.ts";
-import { md5 } from "~/utils/index.ts";
+import { BaseRequest } from "../base/index.ts";
+import { md5 } from "../utils/index.ts";
 
-import type { Request, CommonResponse } from "~/types/index.d.ts";
+import type { Request, CommonResponse } from "../types/index";
 
 const enum Event {
   start = "start",

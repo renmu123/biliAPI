@@ -1,15 +1,15 @@
 import fs from "node:fs";
 import url from "node:url";
 
-import { TvQrcodeLogin } from "~/user/login.ts";
-import { BaseRequest } from "~/base/index.ts";
-import Live from "~/live/index.ts";
-import Platform from "~/platform";
-import { WebVideoUploader } from "~/platform/upload";
-import Search from "~/search/index.ts";
-import User from "~/user/index.ts";
-import Common from "~/common/index.ts";
-import { WbiSign } from "~/base/sign";
+import { TvQrcodeLogin } from "./user/login.ts";
+import { BaseRequest } from "./base/index.ts";
+import Live from "./live/index.ts";
+import Platform from "./platform";
+import { WebVideoUploader } from "./platform/upload";
+import Search from "./search/index.ts";
+import User from "./user/index.ts";
+import Common from "./common/index.ts";
+import { WbiSign } from "./base/sign";
 
 class Client extends BaseRequest {
   cookie: string;
