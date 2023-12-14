@@ -1,8 +1,20 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 import typescript from "@rollup/plugin-typescript";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import dts from "rollup-plugin-dts";
+import { del } from "@kineticcafe/rollup-plugin-delete";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const deleteDistTypes = () =>
+  del({
+    targets: path.resolve(__dirname, "dist/types"),
+    hook: "writeBundle",
+  });
 
 export default [
   {
@@ -37,6 +49,7 @@ export default [
           },
         },
       }),
+      deleteDistTypes(),
     ],
     output: [
       {

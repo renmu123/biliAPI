@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "dev": "rollup --config rollup.config.js -w",
+    "dev": "rollup --config rollup-dev.config.js -w",
     "build": "rollup --config rollup.config.js",
     "publish": "pnpm run build && npm publish --access=public"
   },
@@ -35,6 +35,7 @@
   "author": "renmu123",
   "license": "GPL",
   "devDependencies": {
+    "@kineticcafe/rollup-plugin-delete": "3.0.0-beta.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
