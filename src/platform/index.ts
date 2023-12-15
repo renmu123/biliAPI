@@ -10,7 +10,10 @@ import type {
   MediaOptions,
   MediaPartOptions,
 } from "../types/index";
-import { MediaDetailReturnType } from "../types/platform";
+import {
+  MediaDetailReturnType,
+  getArchivesReturnType,
+} from "../types/platform";
 
 export default class Platform {
   request: Request;
@@ -43,47 +46,7 @@ export default class Platform {
     interactive?: number;
     tid?: number;
     order?: "click" | "stow" | "dm_count" | "scores";
-  }): Promise<
-    CommonResponse<{
-      arc_audits: {
-        /* 审核中状态时，stat中的参数均为0  */
-        stat: {
-          aid: number;
-          view: number;
-          danmuku: number;
-          reply: number;
-          favorite: number;
-          coin: number;
-          share: number;
-          now_rank: number;
-          his_rank: number;
-          like: number;
-          dislike: number;
-          vt: number;
-          vv: number;
-        };
-        Archive: {
-          aid: number;
-          bvid: string;
-          mid: number;
-          cover: string;
-          title: string;
-          tag: string;
-          tid: number;
-          /* -30:审核中 0:审核通过 */
-          state: -30 | 0 | number;
-          [key: string]: any;
-        };
-        Videos: [];
-        [key: string]: any;
-      }[];
-      page: {
-        pn: number;
-        ps: number;
-        count: number;
-      };
-    }>
-  > {
+  }): Promise<CommonResponse<getArchivesReturnType>> {
     this.client.authLogin();
     const defaultParams = {
       pn: 1,
@@ -195,7 +158,7 @@ export default class Platform {
    * 投稿视频详情
    * @param bvid 视频bvid
    */
-  async getMediaDetail(
+  async getArchive(
     bvid: string
   ): Promise<CommonResponse<MediaDetailReturnType>> {
     return this.request.get(
