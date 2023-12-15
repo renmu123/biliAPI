@@ -1,5 +1,5 @@
 import path from "node:path";
-import EventEmitter from "node:events";
+import EventEmitter from "events";
 
 import PQueue from "p-queue";
 import { getFileSize, readBytesFromFile } from "~/utils/index.ts";
@@ -138,7 +138,7 @@ export class WebVideoUploader {
     uploadId: string,
     chunk_size: number,
     size: number
-  ) {
+  ): Promise<{ partNumber: number; eTag: "etag" }[]> {
     return new Promise((resolve, reject) => {
       const queue = new PQueue({ concurrency: 3 });
       this.queue = queue;
@@ -169,7 +169,6 @@ export class WebVideoUploader {
         partNumber: number;
         eTag: "etag";
       }[] = [];
-
       queue.addListener("completed", ({ partNumber }) => {
         console.log(`Part #${partNumber} uploaded!`);
         parts.push({ partNumber, eTag: "etag" });
