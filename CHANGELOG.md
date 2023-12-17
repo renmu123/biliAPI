@@ -3,6 +3,7 @@
 1. 增加分区查询接口
 2. 重构 types 导出
 3. 增加 WebQrcodeLogin 登录参数
+4. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
 
 # 0.5.0
 
