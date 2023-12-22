@@ -11,6 +11,8 @@ import User from "./user/index";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 
+import type { CommonResponse } from "./types";
+
 class Client extends BaseRequest {
   cookie: string;
   cookieObj: {
@@ -120,4 +122,11 @@ const utils = {
   WbiSign,
 };
 
-export { TvQrcodeLogin, Client, utils, WebVideoUploader, WebQrcodeLogin };
+export {
+  TvQrcodeLogin,
+  Client,
+  utils,
+  WebVideoUploader,
+  WebQrcodeLogin,
+  CommonResponse,
+};

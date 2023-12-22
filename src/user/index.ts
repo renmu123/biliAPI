@@ -123,6 +123,7 @@ export default class User {
           cookie: cookie,
           "User-Agent": "Mozilla/5.0",
           origin: "https://space.bilibili.com",
+          "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
         },
       }
     );
