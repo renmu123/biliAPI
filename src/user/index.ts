@@ -17,6 +17,15 @@ export default class User {
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
   /**
+   * 获取用户卡片信息
+   * @param uid 用户id
+   */
+  async getCardInfo(uid: number) {
+    return this.request.get(
+      `https://api.bilibili.com/x/web-interface/card?mid=${uid}`
+    );
+  }
+  /**
    * 获取用户信息
    * @param uid 用户id
    */
