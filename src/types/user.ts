@@ -1,7 +1,4 @@
-/**
- * getMyInfo返回数据结构
- */
-export type MyInfoReturnType = {
+type CommonInfo = {
   /** 用户ID */
   mid: number;
   /** 昵称 */
@@ -28,6 +25,142 @@ export type MyInfoReturnType = {
   tel_status: number;
   /** 作用尚不明确的认证信息 */
   identification: number;
+};
+
+type Profile = CommonInfo & {
+  vip: {
+    type: number;
+    status: number;
+    due_date: number;
+    vip_pay_type: number;
+    theme_type: number;
+    label: {
+      path: string;
+      text: string;
+      label_theme: string;
+      text_color: string;
+      bg_style: number;
+      bg_color: string;
+      border_color: string;
+      use_img_label: boolean;
+      img_label_uri_hans: string;
+      img_label_uri_hant: string;
+      img_label_uri_hans_static: string;
+      img_label_uri_hant_static: string;
+    };
+    avatar_subscript: number;
+    nickname_color: string;
+    role: number;
+    avatar_subscript_url: string;
+    tv_vip_status: number;
+    tv_vip_pay_type: number;
+    tv_due_date: number;
+  };
+  pendant: {
+    pid: number;
+    name: string;
+    image: string;
+    expire: number;
+    image_enhance: string;
+    image_enhance_frame: string;
+    n_pid: number;
+  };
+  nameplate: {
+    nid: number;
+    name: string;
+    image: string;
+    image_small: string;
+    level: string;
+    condition: string;
+  };
+  official: {
+    role: number;
+    title: string;
+    desc: string;
+    type: number;
+  };
+  birthday: number;
+  is_tourist: number;
+  is_fake_account: number;
+  pin_prompting: number;
+  is_deleted: number;
+  in_reg_audit: number;
+  is_rip_user: boolean;
+  profession: {
+    id: number;
+    name: string;
+    show_name: string;
+    is_show: number;
+    category_one: string;
+    realname: string;
+    title: string;
+    department: string;
+    certificate_no: string;
+    certificate_show: boolean;
+  };
+  face_nft: number;
+  face_nft_new: number;
+  is_senior_member: number;
+  honours: {
+    mid: number;
+    colour: {
+      dark: string;
+      normal: string;
+    };
+    tags: null;
+    is_latest_100honour: number;
+  };
+  digital_id: string;
+  digital_type: number;
+  attestation: {
+    type: number;
+    common_info: {
+      title: string;
+      prefix: string;
+      prefix_title: string;
+    };
+    splice_info: {
+      title: string;
+    };
+    icon: string;
+    desc: string;
+  };
+  expert_info: {
+    title: string;
+    state: number;
+    type: number;
+    desc: string;
+  };
+};
+
+type LevelExp = {
+  /** 当前等级 (0-6级) */
+  current_level: number;
+  /** 当前等级从多少经验值开始 */
+  current_min: number;
+  /** 当前账户的经验值 */
+  current_exp: number;
+  /** 下一个等级所需的经验值 (不是还需要多少) */
+  next_exp: number;
+};
+
+/**
+ * getMyInfoV2返回数据结构
+ */
+export type MyInfoV2ReturnType = {
+  profile: Profile;
+  level_exp: LevelExp & {
+    level_up: number;
+  };
+  coins: number;
+  following: number;
+  follower: number;
+};
+
+/**
+ * getMyInfoV1返回数据结构
+ */
+export type MyInfoV1ReturnType = CommonInfo & {
   /**
    * 大会员状态
    */
@@ -120,16 +253,7 @@ export type MyInfoReturnType = {
     /**
      * 等级经验信息
      */
-    level_exp: {
-      /** 当前等级 (0-6级) */
-      current_level: number;
-      /** 当前等级从多少经验值开始 */
-      current_min: number;
-      /** 当前账户的经验值 */
-      current_exp: number;
-      /** 下一个等级所需的经验值 (不是还需要多少) */
-      next_exp: number;
-    };
+    level_exp: LevelExp;
   };
 };
 

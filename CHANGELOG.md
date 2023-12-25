@@ -5,6 +5,7 @@
 3. 增加 WebQrcodeLogin 登录参数
 4. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
 5. 无需登录接口中的 buvid3 改为随机值
+6. 修复 getMyInfo 返回类型错误的 bug
 
 # 0.5.0
 

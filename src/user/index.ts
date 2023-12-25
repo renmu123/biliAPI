@@ -1,7 +1,7 @@
 import { fakeBuvid3 } from "../utils/index";
 
 import type { Request, CommonResponse, Client } from "../types/index";
-import type { MyInfoReturnType, GetUserInfoReturnType } from "../types/user";
+import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 
 export default class User {
   request: Request;
@@ -14,7 +14,7 @@ export default class User {
   /**
    * 获取登录用户信息
    */
-  async getMyInfo(): Promise<CommonResponse<MyInfoReturnType>> {
+  async getMyInfo(): Promise<CommonResponse<MyInfoV2ReturnType>> {
     this.client.authLogin();
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
