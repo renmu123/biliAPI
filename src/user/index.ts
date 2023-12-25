@@ -45,6 +45,8 @@ export default class User {
       {
         headers: {
           cookie: `buvid3=${fakeBuvid3()}`,
+          origin: "https://space.bilibili.com",
+          referer: `https://space.bilibili.com/${uid}`,
         },
       }
     );
