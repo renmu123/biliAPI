@@ -1,3 +1,5 @@
+import { fakeBuvid3 } from "../utils/index";
+
 import type { Request, CommonResponse, Client } from "../types/index";
 import type { SearchTypeParams } from "../types/search";
 
@@ -15,7 +17,7 @@ export default class Search {
       `https://api.bilibili.com/x/web-interface/wbi/search/all/v2?${signParams}`,
       {
         headers: {
-          cookie: "buvid3=57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc",
+          cookie: `buvid3=${fakeBuvid3()}`,
         },
       }
     );
@@ -31,7 +33,7 @@ export default class Search {
       `https://api.bilibili.com/x/web-interface/wbi/search/type?${signParams}`,
       {
         headers: {
-          cookie: "buvid3=57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc",
+          cookie: `buvid3=${fakeBuvid3()}`,
         },
       }
     );

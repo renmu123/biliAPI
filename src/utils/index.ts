@@ -73,3 +73,20 @@ export function md5(data: any) {
   md5Hash.update(data);
   return md5Hash.digest("hex");
 }
+
+export function fakeBuvid3() {
+  // 57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc
+  function randomStr() {
+    const str = "0123456789abcdef";
+    return str[Math.floor(Math.random() * str.length)].toUpperCase();
+  }
+  let str = `${Array.from({ length: 8 }, () => randomStr()).join(
+    ""
+  )}-${Array.from({ length: 4 }, () => randomStr()).join("")}-${Array.from(
+    { length: 4 },
+    () => randomStr()
+  ).join("")}-${Array.from({ length: 4 }, () => randomStr()).join(
+    ""
+  )}-${Array.from({ length: 17 }, () => randomStr()).join("")}`;
+  return str + "infoc";
+}

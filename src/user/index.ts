@@ -1,3 +1,5 @@
+import { fakeBuvid3 } from "../utils/index";
+
 import type { Request, CommonResponse, Client } from "../types/index";
 import type { MyInfoReturnType, GetUserInfoReturnType } from "../types/user";
 
@@ -38,12 +40,11 @@ export default class User {
       platform: "web",
       web_location: "1550101",
     });
-
     return this.request.get(
       `https://api.bilibili.com/x/space/wbi/acc/info?${signParams}`,
       {
         headers: {
-          cookie: "buvid3=57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc",
+          cookie: `buvid3=${fakeBuvid3()}`,
         },
       }
     );
@@ -108,8 +109,7 @@ export default class User {
     };
     let cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
     if (!cookie) {
-      cookie =
-        "buvid3=57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc;b_nut=1701088795";
+      cookie = `buvid3=${fakeBuvid3()}`;
     }
 
     const signParams = await this.client.WbiSign({
