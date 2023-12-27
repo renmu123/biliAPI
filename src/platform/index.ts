@@ -140,29 +140,36 @@ export default class Platform {
       videos.push(video);
     }
     if (api.submit === "client") {
-      const res = await this._addMediaClientApi(
-        this.request,
-        videos,
-        this.client.accessToken,
-        options
-      );
+      const res = await this.addMediaClientApi(videos, options);
       return res;
     } else if (api.submit === "web") {
-      const res = await this._addMediaWebApi(this.request, videos, options);
+      const res = await this.addMediaWebApi(videos, options);
       return res;
     } else {
       throw new Error("You can only set api as client or web");
     }
   }
   /**
-   * 投稿视频详情
+   * 投稿视频详情，bvid和aid必须传一个
    * @param bvid 视频bvid
+   * @param aid 视频aid
    */
-  async getArchive(
-    bvid: string
-  ): Promise<CommonResponse<MediaDetailReturnType>> {
+  async getArchive({
+    bvid,
+    aid,
+  }: {
+    bvid?: string;
+    aid?: number;
+  }): Promise<CommonResponse<MediaDetailReturnType>> {
+    const params = {
+      bvid: bvid,
+      aid: aid,
+    };
     return this.request.get(
-      `https://member.bilibili.com/x/vupre/web/archive/view?aid=${bvid}`
+      `https://member.bilibili.com/x/vupre/web/archive/view`,
+      {
+        params: params,
+      }
     );
   }
 
@@ -176,10 +183,16 @@ export default class Platform {
    */
   async editMedia(
     aid: number,
-    mode: "append" | "replace",
-    filePaths: string[] | MediaPartOptions[],
-    options: MediaOptions,
-    api: "client" | "web" = "client"
+    filePaths: string[] | MediaPartOptions[] = [],
+    options: Partial<MediaOptions> = {},
+    mode: "append" | "replace" = "append",
+    api: {
+      uploader: "web";
+      submit: "web" | "client";
+    } = {
+      uploader: "web",
+      submit: "client",
+    }
   ) {
     this.client.authLogin();
     const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
@@ -202,34 +215,31 @@ export default class Platform {
       }
     );
 
-    // const uploader = new WebVideoUploader(this.request, mediaOptions);
-    // const videos = await uploader.upload();
-
-    // if (api === "client") {
-    //   const res = await addMediaClient(
-    //     this.request,
-    //     videos,
-    //     this.client.accessToken,
-    //     options
-    //   );
-    //   return res;
-    // } else if (api === "web") {
-    //   const res = await addMediaWeb(
-    //     this.request,
-    //     videos,
-    //     this.client.cookie,
-    //     options
-    //   );
-    //   return res;
-    // } else {
-    //   throw new Error("You can only set api as client or web");
-    // }
+    const videos = [];
+    for (let i = 0; i < mediaOptions.length; i++) {
+      const uploader = new WebVideoUploader(this.request);
+      const video = await uploader.upload(mediaOptions[i].path);
+      videos.push(video);
+    }
+    if (api.submit === "client") {
+      throw new Error("You can only set api as web");
+    } else if (api.submit === "web") {
+      const res = await this.editMediaWebApi(
+        videos,
+        { aid: aid, ...options },
+        mode
+      );
+      return res;
+    } else {
+      throw new Error("You can only set api as client or web");
+    }
   }
 
-  async _addMediaClientApi(
-    request: Request,
+  /**
+   * 通过client api投稿视频
+   */
+  async addMediaClientApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
-    accessKey: string,
     options: MediaOptions
   ): Promise<
     CommonResponse<{
@@ -237,6 +247,7 @@ export default class Platform {
       bvid: string;
     }>
   > {
+    this.client.authLogin(["client"]);
     this.checkOptions(options);
     const data = {
       copyright: 1,
@@ -259,21 +270,28 @@ export default class Platform {
       ...options,
     };
 
-    console.log("submit", data);
-    this.client.authLogin(["client"]);
+    if (options.cover && !options.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(options.cover);
+      data["cover"] = coverRes.data.url;
+    }
 
-    return request.post("http://member.bilibili.com/x/vu/client/add", data, {
-      params: {
-        access_key: accessKey,
-      },
-    });
+    console.log("submit", data);
+
+    return this.request.post(
+      "http://member.bilibili.com/x/vu/client/add",
+      data,
+      {
+        params: {
+          access_key: this.client.accessToken,
+        },
+      }
+    );
   }
 
   /**
    * 通过web api投稿视频
    */
-  async _addMediaWebApi(
-    request: Request,
+  async addMediaWebApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: MediaOptions
   ): Promise<
@@ -308,10 +326,14 @@ export default class Platform {
       ...options,
     };
 
-    console.log("submit", data);
-    this.client.authLogin();
+    if (options.cover && !options.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(options.cover);
+      data["cover"] = coverRes.data.url;
+    }
 
-    return request.post("https://member.bilibili.com/x/vu/web/add", data, {
+    console.log("submit", data);
+
+    return this.request.post("https://member.bilibili.com/x/vu/web/add", data, {
       params: {
         t: Date.now(),
         csrf: csrf,
@@ -322,10 +344,10 @@ export default class Platform {
   /**
    * 通过web api接口编辑视频
    */
-  async _editMediaWebApi(
-    request: Request,
+  async editMediaWebApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
-    options: MediaOptions & { aid: number }
+    options: Partial<MediaOptions> & { aid: number },
+    mode: "append" | "replace"
   ): Promise<
     CommonResponse<{
       aid: number;
@@ -333,40 +355,48 @@ export default class Platform {
     }>
   > {
     this.client.authLogin();
-    this.checkOptions(options);
+    const archive = (
+      await this.getArchive({
+        aid: options.aid,
+      })
+    ).data;
+
     const csrf = this.client.cookieObj.bili_jct;
-    const data = {
-      copyright: 1,
-      tid: 124,
-      desc_format_id: 9999,
-      desc: "",
-      recreate: -1,
-      dynamic: "",
-      interactive: 0,
-      videos: videos,
-      act_reserve_create: 0,
-      no_disturbance: 0,
-      no_reprint: 1,
-      subtitle: { open: 0, lan: "" },
-      dolby: 0,
-      lossless_music: 0,
-      up_selection_reply: false,
-      up_close_reply: false,
-      up_close_danmu: false,
-      web_os: 1,
+    const data: MediaOptions & {
+      csrf: string;
+      videos: { cid: number; filename: string; title: string; desc?: string }[];
+    } = {
+      videos: [],
+      ...archive.archive,
       csrf: csrf,
       ...options,
     };
+    this.checkOptions(options);
+
+    if (options.cover && !options.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(options.cover);
+      data["cover"] = coverRes.data.url;
+    }
+    if (mode === "append") {
+      data.videos = [...archive.videos, ...videos];
+    } else if (mode === "replace") {
+      data.videos = videos;
+    } else {
+      throw new Error("mode can only be append or replace");
+    }
 
     console.log("edit submit", data);
-    this.client.authLogin();
 
-    return request.post("https://member.bilibili.com/x/vu/web/edit", data, {
-      params: {
-        t: Date.now(),
-        csrf: csrf,
-      },
-    });
+    return this.request.post(
+      "https://member.bilibili.com/x/vu/web/edit",
+      data,
+      {
+        params: {
+          t: Date.now(),
+          csrf: csrf,
+        },
+      }
+    );
   }
 
   /**
@@ -417,10 +447,16 @@ export default class Platform {
     });
   }
 
-  checkOptions(options: MediaOptions) {
+  checkOptions(options: Partial<MediaOptions>) {
     if (!options.title) throw new Error("title is required");
     if (!options.tag) throw new Error("tag is required");
     if (!options.tid) throw new Error("tid is required");
+    if (options.copyright === 2) {
+      if (!options.source)
+        throw new Error("source is required when you set copyrigth as 2");
+      if (options.source.length > 200)
+        throw new Error("source can not be longer than 200 characters");
+    }
     return true;
   }
 }

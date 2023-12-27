@@ -1,11 +1,21 @@
 # 0.6.0
 
-1. 增加分区查询接口
-2. 重构 types 导出
-3. 增加 WebQrcodeLogin 登录参数
-4. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
-5. 无需登录接口中的 buvid3 改为随机值
-6. 修复 getMyInfo 返回类型错误的 bug
+## Breaking
+
+1. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
+2. `getArchive` 参数修改，支持 bvid
+
+## Feature
+
+1. 增加 WebQrcodeLogin 登录参数
+2. 增加分区查询接口
+3. 重构 types 导出
+4. 增加编辑投稿接口
+
+## Bug fix
+
+1. 修复 getMyInfo 返回类型错误的 bug
+2. 一些无需登录接口中的 buvid3 改为随机值
 
 # 0.5.0
 

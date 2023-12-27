@@ -75,7 +75,7 @@ interface Archive {
   reject_reason_url: string;
   tag: string;
   duration: number;
-  copyright: number;
+  copyright: 1 | 2;
   no_reprint: number;
   ugcpay: number;
   order_id: number;
@@ -111,8 +111,8 @@ interface Archive {
   dynamic_video: number;
   no_public: number;
   is_360: number;
-  is_dolby: number;
-  lossless_music: number;
+  is_dolby: 0 | 1;
+  lossless_music: 0 | 1;
   bs_editor: number;
   up_from: number;
   desc_v2: any; // replace with the actual type if available

@@ -1,8 +1,8 @@
 # 介绍
 
-bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，具体文档之后会补。  
-示例可参考[example](https://github.com/renmu123/biliAPI/blob/master/example.js)
-更新记录参考[CHANGELOG](https://github.com/renmu123/biliAPI/blob/master/CHANGELOG.md)
+bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，部分接口参数和返回值参考接口说明  
+示例可参考 [example](https://github.com/renmu123/biliAPI/blob/master/example.js)
+更新记录参考 [CHANGELOG](https://github.com/renmu123/biliAPI/blob/master/CHANGELOG.md)
 
 ## 安装
 
@@ -145,6 +145,7 @@ tv.on("end", res => {
 ### 添加投稿
 
 使用`client`提交接口需要`accessToken`
+分区可以通过 `client.common.getAreas()` 获取
 
 ```js
 const client = new Client();
@@ -156,9 +157,27 @@ const res = await client.platform.uploadMedia(["test.mp4"], {
 });
 ```
 
+### 编辑投稿
+
+使用`client`提交接口需要`accessToken`
+分区可以通过 `client.common.getAreas()` 获取
+
+```js
+const client = new Client();
+await client.loadCookieFile("cookies.json");
+const res = await client.platform.editMedia(aid, ["test.mp4"], {}, mode);
+```
+
 ### 获取投稿详情
 
-`client.platorm.getArchive(aid)`
+`bvid`和`aid`任选一个传入
+
+```js
+client.platorm.getArchive({
+  bvid,
+  aid,
+});
+```
 
 ### 获取投稿列表
 
