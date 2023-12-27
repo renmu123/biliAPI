@@ -1,6 +1,8 @@
 import path from "node:path";
-import { isString, readFileAsBase64 } from "../utils";
+import PQueue from "p-queue";
+import EventEmitter from "events";
 
+import { isString, readFileAsBase64 } from "../utils";
 import { WebVideoUploader } from "./upload";
 
 import type {
@@ -93,12 +95,13 @@ export default class Platform {
 
   /**
    * 投稿视频，推荐submit使用client参数
+   * on("completed", data => {})可以监听上传完成
    * @param filePaths 文件路径
    * @param options
    * @param api
    * @returns
    */
-  async uploadMedia(
+  uploadMedia(
     filePaths: string[] | MediaPartOptions[],
     options: MediaOptions,
     api: {
@@ -108,7 +111,7 @@ export default class Platform {
       uploader: "web",
       submit: "client",
     }
-  ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
+  ): EventEmitter {
     this.client.authLogin([api.submit, api.uploader]);
     this.checkOptions(options);
 
@@ -131,23 +134,75 @@ export default class Platform {
         }
       }
     );
+    const queue = new PQueue({ concurrency: 1 });
+    const emitter = new EventEmitter();
 
     console.log(mediaOptions);
-    const videos = [];
     for (let i = 0; i < mediaOptions.length; i++) {
       const uploader = new WebVideoUploader(this.request);
-      const video = await uploader.upload(mediaOptions[i].path);
-      videos.push(video);
+      queue.add(() => uploader.upload(mediaOptions[i].path));
     }
-    if (api.submit === "client") {
-      const res = await this.addMediaClientApi(videos, options);
-      return res;
-    } else if (api.submit === "web") {
-      const res = await this.addMediaWebApi(videos, options);
-      return res;
-    } else {
-      throw new Error("You can only set api as client or web");
+
+    const videos: {
+      cid: number;
+      filename: string;
+      title: string;
+    }[] = [];
+    queue.on("completed", data => {
+      const beforeLength = videos.length;
+      videos.push(data);
+      const progress = videos.length / beforeLength;
+      console.log("completed", data);
+      emitter.emit("progress", {
+        progress: progress,
+        data: data,
+      });
+    });
+    queue.on("error", err => {
+      emitter.emit("error", err);
+    });
+    queue.on("idle", async () => {
+      if (api.submit === "client") {
+        // const res = await this.addMediaClientApi(videos, options);
+        emitter.emit("completed", videos);
+      } else if (api.submit === "web") {
+        // const res = await this.addMediaWebApi(videos, options);
+        emitter.emit("completed", videos);
+      } else {
+        emitter.emit("error", "You can only set api as client or web");
+        throw new Error("You can only set api as client or web");
+      }
+    });
+
+    return emitter;
+  }
+  /**
+   * 投稿视频，推荐submit使用client参数
+   * @param filePaths 文件路径
+   * @param options
+   * @param api
+   * @returns
+   */
+  async onUploadMedia(
+    filePaths: string[] | MediaPartOptions[],
+    options: MediaOptions,
+    api: {
+      uploader: "web";
+      submit: "web" | "client";
+    } = {
+      uploader: "web",
+      submit: "client",
     }
+  ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
+    return new Promise((resolve, reject) => {
+      const task = this.uploadMedia(filePaths, options, api);
+      task.on("completed", res => {
+        resolve(res);
+      });
+      task.on("error", err => {
+        reject(err);
+      });
+    });
   }
   /**
    * 投稿视频详情，bvid和aid必须传一个

@@ -4,6 +4,7 @@
 
 1. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
 2. `getArchive` 参数修改，支持 bvid
+3. 上传接口修改`onUploadMedia`
 
 ## Feature
 

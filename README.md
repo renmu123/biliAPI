@@ -148,12 +148,26 @@ tv.on("end", res => {
 分区可以通过 `client.common.getAreas()` 获取
 
 ```js
-const client = new Client();
-await client.loadCookieFile("cookies.json");
-const res = await client.platform.uploadMedia(["test.mp4"], {
+const res = await client.platform.onUploadMedia(["test.mp4"], {
   title: "测试",
   tid: 138,
   tag: "测试",
+});
+```
+
+或者
+
+```js
+const task = client.platform.onUploadMedia(["test.mp4"], {
+  title: "测试",
+  tid: 138,
+  tag: "测试",
+});
+task.on("completed", res => {
+  console.log("completed upload", res);
+});
+task.on("progress", res => {
+  console.log("progress", res);
 });
 ```
 

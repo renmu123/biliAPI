@@ -127,6 +127,9 @@ export class WebVideoUploader {
       headers: {
         "X-Upos-Auth": auth,
       },
+      onUploadProgress: (progressEvent: any) => {
+        console.log("llllllllllllllll", progressEvent.loaded);
+      },
     });
     return params;
   }
@@ -180,7 +183,6 @@ export class WebVideoUploader {
       });
 
       queue.on("idle", () => {
-        console.log("All done!");
         resolve(parts);
       });
     });
@@ -224,11 +226,9 @@ export class WebVideoUploader {
       event: "preuplad-end",
       progress: 0,
     });
-    console.log("preupload", data);
 
     const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
     const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
-    console.log("url", url);
 
     this.emitter.emit("progress", {
       event: "getUploadInfo-start",
