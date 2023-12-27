@@ -90,3 +90,7 @@ export function fakeBuvid3() {
   )}-${Array.from({ length: 17 }, () => randomStr()).join("")}`;
   return str + "infoc";
 }
+
+export function sum(arr: number[]) {
+  return arr.reduce((prev, curr) => prev + curr, 0);
+}

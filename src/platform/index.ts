@@ -4,6 +4,7 @@ import EventEmitter from "events";
 
 import { isString, readFileAsBase64 } from "../utils";
 import { WebVideoUploader } from "./upload";
+import { getFileSize, sum } from "../utils/index";
 
 import type {
   Request,
@@ -94,27 +95,17 @@ export default class Platform {
   }
 
   /**
-   * 投稿视频，推荐submit使用client参数
-   * on("completed", data => {})可以监听上传完成
-   * @param filePaths 文件路径
-   * @param options
-   * @param api
-   * @returns
+   * 上传
    */
-  uploadMedia(
-    filePaths: string[] | MediaPartOptions[],
-    options: MediaOptions,
-    api: {
-      uploader: "web";
-      submit: "web" | "client";
-    } = {
-      uploader: "web",
-      submit: "client",
-    }
-  ): EventEmitter {
-    this.client.authLogin([api.submit, api.uploader]);
-    this.checkOptions(options);
-
+  private async _upload(filePaths: string[] | MediaPartOptions[]): Promise<{
+    emitter: EventEmitter;
+    queue: PQueue;
+    videos: {
+      cid: number;
+      filename: string;
+      title: string;
+    }[];
+  }> {
     const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
       filePath => {
         if (isString(filePath)) {
@@ -137,11 +128,36 @@ export default class Platform {
     const queue = new PQueue({ concurrency: 1 });
     const emitter = new EventEmitter();
 
-    console.log(mediaOptions);
+    const uploadTasks = [];
     for (let i = 0; i < mediaOptions.length; i++) {
       const uploader = new WebVideoUploader(this.request);
-      queue.add(() => uploader.upload(mediaOptions[i].path));
+      uploadTasks.push(uploader);
+      queue.add(() => uploader.upload(mediaOptions[i]));
     }
+
+    const totalSize = sum(
+      await Promise.all(
+        mediaOptions.map(option => option.path).map(getFileSize)
+      )
+    );
+    let totalUploaded: {
+      [key: number]: number;
+    } = {};
+    uploadTasks.map((uploader, index) => {
+      uploader.emitter.on("progress", (progress: any) => {
+        if (progress.event !== "uploading") return;
+
+        const { loaded } = progress.data;
+        totalUploaded[index] = loaded;
+        const totalUploadedSize = sum(Object.values(totalUploaded));
+
+        emitter.emit("progress", {
+          progress: totalUploadedSize / totalSize,
+          totalUploadedSize: totalUploadedSize,
+          totalSize: totalSize,
+        });
+      });
+    });
 
     const videos: {
       cid: number;
@@ -149,18 +165,43 @@ export default class Platform {
       title: string;
     }[] = [];
     queue.on("completed", data => {
-      const beforeLength = videos.length;
       videos.push(data);
-      const progress = videos.length / beforeLength;
-      console.log("completed", data);
-      emitter.emit("progress", {
-        progress: progress,
-        data: data,
-      });
     });
+
     queue.on("error", err => {
       emitter.emit("error", err);
     });
+
+    return {
+      emitter: emitter,
+      queue: queue,
+      videos,
+    };
+  }
+  /**
+   * 投稿视频，推荐submit使用client参数
+   * on("completed", data => {})可以监听上传完成
+   * @param filePaths 文件路径
+   * @param options
+   * @param api
+   * @returns
+   */
+  async addMedia(
+    filePaths: string[] | MediaPartOptions[],
+    options: MediaOptions,
+    api: {
+      uploader: "web";
+      submit: "web" | "client";
+    } = {
+      uploader: "web",
+      submit: "client",
+    }
+  ): Promise<EventEmitter> {
+    this.client.authLogin([api.submit, api.uploader]);
+    this.checkOptions(options);
+
+    const { emitter, queue, videos } = await this._upload(filePaths);
+
     queue.on("idle", async () => {
       if (api.submit === "client") {
         // const res = await this.addMediaClientApi(videos, options);
@@ -183,7 +224,7 @@ export default class Platform {
    * @param api
    * @returns
    */
-  async onUploadMedia(
+  async onAddMedia(
     filePaths: string[] | MediaPartOptions[],
     options: MediaOptions,
     api: {
@@ -194,8 +235,8 @@ export default class Platform {
       submit: "client",
     }
   ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
-    return new Promise((resolve, reject) => {
-      const task = this.uploadMedia(filePaths, options, api);
+    return new Promise(async (resolve, reject) => {
+      const task = await this.addMedia(filePaths, options, api);
       task.on("completed", res => {
         resolve(res);
       });
@@ -250,44 +291,57 @@ export default class Platform {
     }
   ) {
     this.client.authLogin();
-    const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
-      filePath => {
-        if (isString(filePath)) {
-          return {
-            path: filePath as string,
-            title: path.parse(filePath as string).name,
-          };
-        } else {
-          if (!(filePath as MediaPartOptions).title) {
-            return {
-              path: (filePath as MediaPartOptions).path,
-              title: path.parse(filePath as string).name,
-            };
-          } else {
-            return filePath as MediaPartOptions;
-          }
-        }
-      }
-    );
+    const { emitter, queue, videos } = await this._upload(filePaths);
 
-    const videos = [];
-    for (let i = 0; i < mediaOptions.length; i++) {
-      const uploader = new WebVideoUploader(this.request);
-      const video = await uploader.upload(mediaOptions[i].path);
-      videos.push(video);
+    queue.on("idle", async () => {
+      if (api.submit === "client") {
+        // const res = await this.addMediaClientApi(videos, options);
+        throw new Error("You can only set api as web");
+      } else if (api.submit === "web") {
+        const res = await this.editMediaWebApi(
+          videos,
+          { aid: aid, ...options },
+          mode
+        );
+        emitter.emit("completed", res);
+      } else {
+        emitter.emit("error", "You can only set api as client or web");
+        throw new Error("You can only set api as client or web");
+      }
+    });
+    return emitter;
+  }
+
+  /**
+   * 编辑视频，推荐使用client api
+   * @param aid 视频id
+   * @param mode 编辑模式，append是追加，replace是替换
+   * @param filePaths 文件路径
+   * @param options
+   * @param api
+   */
+  async onEditMedia(
+    aid: number,
+    filePaths: string[] | MediaPartOptions[] = [],
+    options: Partial<MediaOptions> = {},
+    mode: "append" | "replace" = "append",
+    api: {
+      uploader: "web";
+      submit: "web" | "client";
+    } = {
+      uploader: "web",
+      submit: "client",
     }
-    if (api.submit === "client") {
-      throw new Error("You can only set api as web");
-    } else if (api.submit === "web") {
-      const res = await this.editMediaWebApi(
-        videos,
-        { aid: aid, ...options },
-        mode
-      );
-      return res;
-    } else {
-      throw new Error("You can only set api as client or web");
-    }
+  ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
+    return new Promise(async (resolve, reject) => {
+      const task = await this.editMedia(aid, filePaths, options, mode, api);
+      task.on("completed", res => {
+        resolve(res);
+      });
+      task.on("error", err => {
+        reject(err);
+      });
+    });
   }
 
   /**

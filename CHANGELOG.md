@@ -4,7 +4,7 @@
 
 1. 获取投稿详情接口函数名从`getMediaDetail`修改为`getArchive`
 2. `getArchive` 参数修改，支持 bvid
-3. 上传接口修改`onUploadMedia`
+3. 上传接口修改`onAddMedia`
 
 ## Feature
 
@@ -12,6 +12,8 @@
 2. 增加分区查询接口
 3. 重构 types 导出
 4. 增加编辑投稿接口
+5. 增加 `addMedia` 方法
+6. 增加 `editMedia` 和 `onEditMedia` 方法
 
 ## Bug fix
 

@@ -158,7 +158,7 @@ const res = await client.platform.onUploadMedia(["test.mp4"], {
 或者
 
 ```js
-const task = client.platform.onUploadMedia(["test.mp4"], {
+const task = await client.platform.uploadMedia(["test.mp4"], {
   title: "测试",
   tid: 138,
   tag: "测试",

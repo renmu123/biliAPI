@@ -73,7 +73,6 @@ export default class User {
       // @ts-ignore
       params.offset = offset;
     }
-    console.log(params);
     const signParams = await this.client.WbiSign(params);
     return this.request.get(
       `https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?${signParams}`,
