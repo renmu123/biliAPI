@@ -105,6 +105,9 @@ export default class Platform {
       filename: string;
       title: string;
     }[];
+    pause: () => void;
+    start: () => void;
+    cancel: () => void;
   }> {
     const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
       filePath => {
@@ -128,7 +131,7 @@ export default class Platform {
     const queue = new PQueue({ concurrency: 1 });
     const emitter = new EventEmitter();
 
-    const uploadTasks = [];
+    const uploadTasks: WebVideoUploader[] = [];
     for (let i = 0; i < mediaOptions.length; i++) {
       const uploader = new WebVideoUploader(this.request);
       uploadTasks.push(uploader);
@@ -143,6 +146,7 @@ export default class Platform {
     let totalUploaded: {
       [key: number]: number;
     } = {};
+
     uploadTasks.map((uploader, index) => {
       uploader.emitter.on("progress", (progress: any) => {
         if (progress.event !== "uploading") return;
@@ -172,10 +176,23 @@ export default class Platform {
       emitter.emit("error", err);
     });
 
+    const pause = () => {
+      uploadTasks.map(uploader => uploader.pause());
+    };
+    const start = () => {
+      uploadTasks.map(uploader => uploader.start());
+    };
+    const cancel = () => {
+      uploadTasks.map(uploader => uploader.cancel());
+    };
+
     return {
       emitter: emitter,
       queue: queue,
       videos,
+      pause,
+      start,
+      cancel,
     };
   }
   /**
@@ -196,26 +213,33 @@ export default class Platform {
       uploader: "web",
       submit: "client",
     }
-  ): Promise<EventEmitter> {
+  ) {
     this.client.authLogin([api.submit, api.uploader]);
     this.checkOptions(options);
 
-    const { emitter, queue, videos } = await this._upload(filePaths);
+    const { emitter, queue, videos, pause, start, cancel } = await this._upload(
+      filePaths
+    );
 
     queue.on("idle", async () => {
       if (api.submit === "client") {
-        // const res = await this.addMediaClientApi(videos, options);
-        emitter.emit("completed", videos);
+        const res = await this.addMediaClientApi(videos, options);
+        emitter.emit("completed", res);
       } else if (api.submit === "web") {
-        // const res = await this.addMediaWebApi(videos, options);
-        emitter.emit("completed", videos);
+        const res = await this.addMediaWebApi(videos, options);
+        emitter.emit("completed", res);
       } else {
         emitter.emit("error", "You can only set api as client or web");
         throw new Error("You can only set api as client or web");
       }
     });
 
-    return emitter;
+    return {
+      ...emitter,
+      pause,
+      start,
+      cancel,
+    };
   }
   /**
    * 投稿视频，推荐submit使用client参数
@@ -291,7 +315,9 @@ export default class Platform {
     }
   ) {
     this.client.authLogin();
-    const { emitter, queue, videos } = await this._upload(filePaths);
+    const { emitter, queue, videos, pause, start, cancel } = await this._upload(
+      filePaths
+    );
 
     queue.on("idle", async () => {
       if (api.submit === "client") {
@@ -309,7 +335,12 @@ export default class Platform {
         throw new Error("You can only set api as client or web");
       }
     });
-    return emitter;
+    return {
+      ...emitter,
+      pause,
+      start,
+      cancel,
+    };
   }
 
   /**

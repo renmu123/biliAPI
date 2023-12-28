@@ -158,7 +158,7 @@ const res = await client.platform.onUploadMedia(["test.mp4"], {
 或者
 
 ```js
-const task = await client.platform.uploadMedia(["test.mp4"], {
+const task = await client.platform.addMedia(["test.mp4"], {
   title: "测试",
   tid: 138,
   tag: "测试",
@@ -169,6 +169,13 @@ task.on("completed", res => {
 task.on("progress", res => {
   console.log("progress", res);
 });
+
+// 暂停任务
+task.pause();
+// 继续任务
+task.start();
+// 取消任务
+task.cancel();
 ```
 
 ### 编辑投稿
@@ -179,7 +186,8 @@ task.on("progress", res => {
 ```js
 const client = new Client();
 await client.loadCookieFile("cookies.json");
-const res = await client.platform.editMedia(aid, ["test.mp4"], {}, mode);
+const task = await client.platform.editMedia(aid, ["test.mp4"], {}, mode);
+// 其余功能参考新投稿
 ```
 
 ### 获取投稿详情

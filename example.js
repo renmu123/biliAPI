@@ -5,12 +5,24 @@ import fs from "fs";
 async function upload() {
   const client = new Client();
   await client.loadCookieFile("cookies.json");
-  const res = await client.platform.uploadMedia(["test.mp4"], {
+  const task = await client.platform.addMedia(["test.mp4"], {
     title: "测试",
     tid: 138,
     tag: "测试",
   });
-  console.log(res);
+  task.on("completed", res => {
+    console.log("completed upload", res);
+  });
+  task.on("progress", res => {
+    console.log("progress", res);
+  });
+
+  // 暂停任务
+  task.pause();
+  // 继续任务
+  task.start();
+  // 取消任务
+  task.cancel();
 }
 
 // 二维码登录

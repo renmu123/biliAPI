@@ -14,6 +14,7 @@
 4. 增加编辑投稿接口
 5. 增加 `addMedia` 方法
 6. 增加 `editMedia` 和 `onEditMedia` 方法
+7. 上传和编辑投稿接口支持`pause`,`start`,`cancel`三种控制方法
 
 ## Bug fix
 

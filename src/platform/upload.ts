@@ -6,11 +6,28 @@ import { getFileSize, readBytesFromFile, sum } from "../utils/index";
 
 import type { Request, MediaPartOptions } from "../types/index";
 
+interface UploadChunkTask {
+  filePath: string;
+  start: number;
+  chunk_size: number;
+  size: number;
+  auth: string;
+  url: string;
+  uploadId: string;
+  chunk: number;
+  chunks: number;
+  controller: AbortController;
+  status?: "pending" | "completed" | "running" | "error" | "abort";
+}
+
 export class WebVideoUploader {
   request: Request;
   queue: PQueue;
   emitter = new EventEmitter();
   progress: { [key: string]: number } = {};
+  chunkTasks: {
+    [key: number]: UploadChunkTask;
+  } = {};
   size: number = 0;
 
   constructor(request: Request) {
@@ -80,17 +97,7 @@ export class WebVideoUploader {
       },
     });
   }
-  async _uploadChunk(options: {
-    filePath: string;
-    start: number;
-    chunk_size: number;
-    size: number;
-    auth: string;
-    url: string;
-    uploadId: string;
-    chunk: number;
-    chunks: number;
-  }) {
+  async _uploadChunk(options: UploadChunkTask) {
     const {
       filePath,
       start,
@@ -119,31 +126,39 @@ export class WebVideoUploader {
       end: start + chunkData.length,
       total: size,
     };
-    // this.emitter.emit("progress", {
-    //   event: `uploadChunk-part#${params.partNumber}-start`,
-    //   progress: 0,
-    //   data: options,
-    // });
-    const res = await this.request.put(url, chunkData, {
-      params: params,
-      headers: {
-        "X-Upos-Auth": auth,
-      },
-      onUploadProgress: (progressEvent: any) => {
-        this.progress[params.partNumber] = progressEvent.loaded;
-        const progress = sum(Object.values(this.progress));
-        // console.log("llllllllllllllll", progress / size);
-        this.emitter.emit("progress", {
-          event: `uploading`,
-          progress: progress / size,
-          data: {
-            loaded: progress,
-            total: size,
-          },
-        });
-      },
-    });
-    return params;
+    this.chunkTasks[params.partNumber].status = "running";
+    try {
+      const res = await this.request.put(url, chunkData, {
+        params: params,
+        headers: {
+          "X-Upos-Auth": auth,
+        },
+        signal: options.controller.signal,
+        onUploadProgress: (progressEvent: any) => {
+          this.progress[params.partNumber] = progressEvent.loaded;
+          const progress = sum(Object.values(this.progress));
+          this.emitter.emit("progress", {
+            event: `uploading`,
+            progress: progress / size,
+            data: {
+              loaded: progress,
+              total: size,
+            },
+          });
+        },
+      });
+      return params;
+    } catch (e) {
+      console.log(e.name);
+      if (e.name == "CanceledError") {
+        this.chunkTasks[params.partNumber].status = "abort";
+        // console.log("upload abort", e);
+      } else {
+        this.chunkTasks[params.partNumber].status = "error";
+        // console.error("upload error", e);
+        throw e;
+      }
+    }
   }
 
   uploadChunk(
@@ -160,10 +175,12 @@ export class WebVideoUploader {
 
       const chunks = Math.ceil(size / chunk_size);
       const numberOfChunks = Math.ceil(size / chunk_size);
-      const chunkParams = [];
+      const chunkParams: UploadChunkTask[] = [];
       for (let i = 0; i < numberOfChunks; i++) {
         const start = i * chunk_size;
-        chunkParams.push({
+        const controller = new AbortController();
+        const partNumber = i + 1;
+        const data: UploadChunkTask = {
           filePath: filePath,
           start: start,
           chunk_size: chunk_size,
@@ -173,7 +190,11 @@ export class WebVideoUploader {
           uploadId,
           chunks,
           chunk: i,
-        });
+          status: "pending",
+          controller: controller,
+        };
+        chunkParams.push(data);
+        this.chunkTasks[partNumber] = data;
       }
 
       chunkParams.map(params => {
@@ -185,6 +206,7 @@ export class WebVideoUploader {
         eTag: "etag";
       }[] = [];
       queue.addListener("completed", ({ partNumber }) => {
+        this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
 
@@ -295,7 +317,7 @@ export class WebVideoUploader {
       progress: 1,
       data: params,
     });
-
+    console.log(this.chunkTasks);
     this.emitter.emit("completed", {
       cid: biz_id,
       filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
@@ -310,11 +332,28 @@ export class WebVideoUploader {
   }
   pause() {
     this.queue.pause();
+    Object.values(this.chunkTasks).map(task => {
+      task.controller.abort();
+    });
   }
   start() {
+    const abortTasks = Object.values(this.chunkTasks).filter(
+      task => task.status == "abort"
+    );
+    abortTasks.map(task => {
+      task.controller = new AbortController();
+      task.status = "pending";
+      this.queue.add(() => {
+        this._uploadChunk(task);
+      });
+    });
     this.queue.start();
+    console.log("开始上传", this.chunkTasks, this.queue.size);
   }
-  clear() {
+  cancel() {
+    Object.values(this.chunkTasks).map(task => {
+      task.controller.abort();
+    });
     this.queue.clear();
   }
   on(event: "start" | "completed" | "progress", callback: () => void) {
