@@ -209,3 +209,6 @@ export interface getArchivesReturnType {
     count: number;
   };
 }
+
+export type UploaderType = "web";
+export type SubmitType = "web" | "client" | "b-cut";

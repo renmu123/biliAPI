@@ -1,6 +1,8 @@
 # 介绍
 
-bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，部分接口参数和返回值参考接口说明  
+支持 WebQrcode,TvQrcode 登录方式，支持视频的上传与编辑，并支持监听进度以及暂停取消等操作。
+
+bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，部分接口参数和返回值参考接口说明。
 示例可参考 [example](https://github.com/renmu123/biliAPI/blob/master/example.js)
 更新记录参考 [CHANGELOG](https://github.com/renmu123/biliAPI/blob/master/CHANGELOG.md)
 
@@ -146,6 +148,7 @@ tv.on("end", res => {
 
 使用`client`提交接口需要`accessToken`
 分区可以通过 `client.common.getAreas()` 获取
+api.submit 支持`"web" | "client" | "b-cut"` 三种参数，各有优劣
 
 ```js
 const res = await client.platform.onUploadMedia(["test.mp4"], {

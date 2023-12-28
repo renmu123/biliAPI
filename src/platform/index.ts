@@ -16,6 +16,8 @@ import type {
 import {
   MediaDetailReturnType,
   getArchivesReturnType,
+  UploaderType,
+  SubmitType,
 } from "../types/platform";
 
 export default class Platform {
@@ -207,8 +209,8 @@ export default class Platform {
     filePaths: string[] | MediaPartOptions[],
     options: MediaOptions,
     api: {
-      uploader: "web";
-      submit: "web" | "client";
+      uploader: UploaderType;
+      submit: SubmitType;
     } = {
       uploader: "web",
       submit: "client",
@@ -227,6 +229,9 @@ export default class Platform {
         emitter.emit("completed", res);
       } else if (api.submit === "web") {
         const res = await this.addMediaWebApi(videos, options);
+        emitter.emit("completed", res);
+      } else if (api.submit === "b-cut") {
+        const res = await this.addMediaBCutApi(videos, options);
         emitter.emit("completed", res);
       } else {
         emitter.emit("error", "You can only set api as client or web");
@@ -252,8 +257,8 @@ export default class Platform {
     filePaths: string[] | MediaPartOptions[],
     options: MediaOptions,
     api: {
-      uploader: "web";
-      submit: "web" | "client";
+      uploader: UploaderType;
+      submit: SubmitType;
     } = {
       uploader: "web",
       submit: "client",
@@ -307,7 +312,7 @@ export default class Platform {
     options: Partial<MediaOptions> = {},
     mode: "append" | "replace" = "append",
     api: {
-      uploader: "web";
+      uploader: UploaderType;
       submit: "web" | "client";
     } = {
       uploader: "web",
@@ -357,7 +362,7 @@ export default class Platform {
     options: Partial<MediaOptions> = {},
     mode: "append" | "replace" = "append",
     api: {
-      uploader: "web";
+      uploader: UploaderType;
       submit: "web" | "client";
     } = {
       uploader: "web",
@@ -423,6 +428,67 @@ export default class Platform {
       {
         params: {
           access_key: this.client.accessToken,
+        },
+      }
+    );
+  }
+
+  /**
+   * 通过必剪 api投稿视频
+   */
+  async addMediaBCutApi(
+    videos: { cid: number; filename: string; title: string; desc?: string }[],
+    options: MediaOptions
+  ): Promise<
+    CommonResponse<{
+      aid: number;
+      bvid: string;
+    }>
+  > {
+    this.client.authLogin();
+    this.checkOptions(options);
+    const csrf = this.client.cookieObj.bili_jct;
+    const data = {
+      copyright: 1,
+      tid: 124,
+      desc_format_id: 9999,
+      desc: "",
+      recreate: -1,
+      dynamic: "",
+      interactive: 0,
+      videos: videos,
+      act_reserve_create: 0,
+      no_disturbance: 0,
+      no_reprint: 1,
+      subtitle: { open: 0, lan: "" },
+      dolby: 0,
+      lossless_music: 0,
+      up_selection_reply: false,
+      up_close_reply: false,
+      up_close_danmu: false,
+      web_os: 1,
+      csrf: csrf,
+      ...options,
+    };
+
+    if (options.cover && !options.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(options.cover);
+      data["cover"] = coverRes.data.url;
+    }
+
+    console.log("submit", data);
+
+    return this.request.post(
+      "https://member.bilibili.com/x/vu/mvp/pc/add",
+      data,
+      {
+        headers: {
+          "User-Agent": "bcut-pc build:12911853",
+        },
+        params: {
+          csrf: csrf,
+          platform: "BcutPc-windows",
+          build: "12911853",
         },
       }
     );

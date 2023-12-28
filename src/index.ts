@@ -100,11 +100,17 @@ class Client extends BaseRequest {
    * 登录验证
    * @param [api=["web"]] 用于验证web还是client api
    */
-  async authLogin(api: Array<"web" | "client"> = ["web"]) {
+  async authLogin(api: Array<"web" | "client" | "b-cut"> = ["web"]) {
     if (api.includes("web")) {
       const isLogin = !!this.cookie;
       if (!isLogin) {
         throw new Error("接口为web端接口，需要cookie");
+      }
+    }
+    if (api.includes("b-cut")) {
+      const isLogin = !!this.cookie;
+      if (!isLogin) {
+        throw new Error("接口为必剪pc端接口，需要cookie");
       }
     }
     if (api.includes("client")) {
