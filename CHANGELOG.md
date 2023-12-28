@@ -16,6 +16,7 @@
 6. 增加 `editMedia` 和 `onEditMedia` 方法
 7. 上传和编辑投稿接口支持`pause`,`start`,`cancel`三种控制方法
 8. 上传提交新增 `b-cut`，利用必剪进行上传
+9. 增加 `getRecommendTags` 和 `getTopic` 和 `editUploadTemplate`
 
 ## Bug fix
 

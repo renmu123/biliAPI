@@ -220,6 +220,18 @@ client.platorm.getArchive({
 
 `client.platform.getUploadTemplateList()`
 
+### 编辑上传模板
+
+`client.platform.editUploadTemplate(tid)`
+
+### 获取推荐标签
+
+`client.platform.getRecommendTags()`
+
+### 获取标签列表
+
+`client.platform.getTopic()`
+
 ## 搜索
 
 ### 综合搜索

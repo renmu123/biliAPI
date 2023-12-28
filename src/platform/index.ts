@@ -652,6 +652,44 @@ export default class Platform {
       },
     });
   }
+  /**
+   * 编辑上传模板
+   */
+  async editUploadTemplate(
+    /** 主键，列表接口获取 */
+    tid: number,
+    options: Partial<{
+      /** 模板名称 */
+      name: string;
+      /** 标题 */
+      title: string;
+      /** 标签 */
+      keywords: string;
+      /** 描述 */
+      description: string;
+      /** 分区id */
+      typeid: number;
+      /** Original: 自制，Copy: 转载 */
+      arctype: "Original" | "Copy";
+      /** 0: 不设为默认，1: 设置默认 */
+      is_default: 0 | 1;
+    }> = {}
+  ): Promise<CommonResponse<{}>> {
+    this.client.authLogin();
+    return this.request.post(
+      "https://member.bilibili.com/x/vupre/web/tpl/update",
+      {
+        tid: tid,
+        ...options,
+        crsf: this.client.cookieObj.bili_jct,
+      },
+      {
+        params: {
+          t: Date.now(),
+        },
+      }
+    );
+  }
 
   checkOptions(options: Partial<MediaOptions>) {
     if (!options.title) throw new Error("title is required");
@@ -664,5 +702,77 @@ export default class Platform {
         throw new Error("source can not be longer than 200 characters");
     }
     return true;
+  }
+  /**
+   * 获取推荐标签
+   * subtype,title,description三个参数对结果影响较大
+   */
+  async getRecommendTags(params?: {
+    /** 不知道是啥 */
+    upload_id?: string;
+    /** 分区id */
+    subtype?: number;
+    /** 视频标题 */
+    title?: string;
+    /** 分p的filename */
+    filenmae?: string;
+    /** 视频描述 */
+    description?: string;
+    /** 封面地址 */
+    cover_url?: string;
+  }): Promise<
+    CommonResponse<
+      {
+        tag: string;
+        checked: number;
+        request_id: string;
+      }[]
+    >
+  > {
+    this.client.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/tag/recommend",
+      {
+        params: params,
+      }
+    );
+  }
+
+  /**
+   * 查询话题
+   */
+  async getTopic(
+    params: {
+      /** 分区id */
+      type_id?: number;
+      /** 页码，从0开始 */
+      pn: number;
+      /** 个数 */
+      ps: number;
+      /** 视频标题 */
+      title?: string;
+    } = {
+      pn: 0,
+      ps: 20,
+    }
+  ): Promise<
+    CommonResponse<
+      {
+        topic_id: number;
+        topic_name: string;
+        description: string;
+        mission_id: number;
+        activity_text: string;
+        activity_description: string;
+      }[]
+    >
+  > {
+    this.client.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/topic/type",
+      {
+        params: params,
+      }
+    );
   }
 }
