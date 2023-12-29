@@ -240,7 +240,7 @@ export default class Platform {
     });
 
     return {
-      ...emitter,
+      emitter,
       pause,
       start,
       cancel,
@@ -265,11 +265,11 @@ export default class Platform {
     }
   ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
     return new Promise(async (resolve, reject) => {
-      const task = await this.addMedia(filePaths, options, api);
-      task.on("completed", res => {
+      const { emitter } = await this.addMedia(filePaths, options, api);
+      emitter.on("completed", res => {
         resolve(res);
       });
-      task.on("error", err => {
+      emitter.on("error", err => {
         reject(err);
       });
     });
@@ -341,7 +341,7 @@ export default class Platform {
       }
     });
     return {
-      ...emitter,
+      emitter,
       pause,
       start,
       cancel,
@@ -370,11 +370,17 @@ export default class Platform {
     }
   ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
     return new Promise(async (resolve, reject) => {
-      const task = await this.editMedia(aid, filePaths, options, mode, api);
-      task.on("completed", res => {
+      const { emitter } = await this.editMedia(
+        aid,
+        filePaths,
+        options,
+        mode,
+        api
+      );
+      emitter.on("completed", res => {
         resolve(res);
       });
-      task.on("error", err => {
+      emitter.on("error", err => {
         reject(err);
       });
     });

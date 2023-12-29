@@ -166,10 +166,10 @@ const task = await client.platform.addMedia(["test.mp4"], {
   tid: 138,
   tag: "测试",
 });
-task.on("completed", res => {
+task.emitter.on("completed", res => {
   console.log("completed upload", res);
 });
-task.on("progress", res => {
+task.emitter.on("progress", res => {
   console.log("progress", res);
 });
 
