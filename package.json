@@ -1,6 +1,6 @@
 {
   "name": "@renmu/bili-api",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "bilibili 接口的 node 包装库",
   "homepage": "https://github.com/renmu123/biliAPI",
@@ -41,9 +41,9 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/node": "^18.19.3",
-    "axios": "^1.6.2",
+    "axios": "^1.6.3",
     "p-queue": "^8.0.1",
-    "rollup": "^4.9.0",
+    "rollup": "^4.9.1",
     "rollup-plugin-dts": "^6.1.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"

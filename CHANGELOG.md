@@ -1,3 +1,15 @@
+# 0.7.0
+
+## Breaking
+
+## Feature
+
+## Bug Fix
+
+## Other
+
+1. 依赖更新
+
 # 0.6.0
 
 ## Breaking
