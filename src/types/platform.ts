@@ -76,7 +76,7 @@ interface Archive {
   tag: string;
   duration: number;
   copyright: 1 | 2;
-  no_reprint: number;
+  no_reprint: 0 | 1;
   ugcpay: number;
   order_id: number;
   order_name: string;
@@ -110,7 +110,7 @@ interface Archive {
   no_background: number;
   dynamic_video: number;
   no_public: number;
-  is_360: number;
+  is_360: -1 | 1;
   is_dolby: 0 | 1;
   lossless_music: 0 | 1;
   bs_editor: number;

@@ -223,19 +223,24 @@ export default class Platform {
       filePaths
     );
 
+    const submitApiObj = {
+      client: this.addMediaClientApi.bind(this),
+      web: this.addMediaWebApi.bind(this),
+      "b-cut": this.addMediaBCutApi.bind(this),
+    };
+    const submitApi = submitApiObj[api.submit];
+
     queue.on("idle", async () => {
-      if (api.submit === "client") {
-        const res = await this.addMediaClientApi(videos, options);
-        emitter.emit("completed", res);
-      } else if (api.submit === "web") {
-        const res = await this.addMediaWebApi(videos, options);
-        emitter.emit("completed", res);
-      } else if (api.submit === "b-cut") {
-        const res = await this.addMediaBCutApi(videos, options);
-        emitter.emit("completed", res);
-      } else {
-        emitter.emit("error", "You can only set api as client or web");
-        throw new Error("You can only set api as client or web");
+      try {
+        const res = await submitApi(videos, options);
+        if (res.code !== 0) {
+          throw new Error(res.message);
+        } else {
+          emitter.emit("completed", res);
+        }
+      } catch (error) {
+        emitter.emit("error", String(error));
+        throw new Error(String(error));
       }
     });
 
@@ -279,17 +284,15 @@ export default class Platform {
    * @param bvid 视频bvid
    * @param aid 视频aid
    */
-  async getArchive({
-    bvid,
-    aid,
-  }: {
-    bvid?: string;
-    aid?: number;
-  }): Promise<CommonResponse<MediaDetailReturnType>> {
-    const params = {
-      bvid: bvid,
-      aid: aid,
-    };
+  async getArchive(
+    params:
+      | {
+          bvid: string;
+        }
+      | {
+          aid: number;
+        }
+  ): Promise<CommonResponse<MediaDetailReturnType>> {
     return this.request.get(
       `https://member.bilibili.com/x/vupre/web/archive/view`,
       {
@@ -301,9 +304,9 @@ export default class Platform {
   /**
    * 编辑视频，推荐使用client api
    * @param aid 视频id
-   * @param mode 编辑模式，append是追加，replace是替换
    * @param filePaths 文件路径
    * @param options
+   * @param mode 编辑模式，append是追加，replace是替换
    * @param api
    */
   async editMedia(
@@ -320,24 +323,28 @@ export default class Platform {
     }
   ) {
     this.client.authLogin();
+    const submitApiObj = {
+      client: this.editMediaClientApi.bind(this),
+      web: this.editMediaWebApi.bind(this),
+    };
+    const submitApi = submitApiObj[api.submit];
+
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
       filePaths
     );
-
+    // TODO:需要考虑queue为空的情况
     queue.on("idle", async () => {
-      if (api.submit === "client") {
-        // const res = await this.addMediaClientApi(videos, options);
-        throw new Error("You can only set api as web");
-      } else if (api.submit === "web") {
-        const res = await this.editMediaWebApi(
-          videos,
-          { aid: aid, ...options },
-          mode
-        );
-        emitter.emit("completed", res);
-      } else {
-        emitter.emit("error", "You can only set api as client or web");
-        throw new Error("You can only set api as client or web");
+      console.log("idle");
+      try {
+        const res = await submitApi(videos, { aid: aid, ...options }, mode);
+        if (res.code !== 0) {
+          throw new Error(res.message);
+        } else {
+          emitter.emit("completed", res);
+        }
+      } catch (error) {
+        emitter.emit("error", String(error));
+        throw new Error(String(error));
       }
     });
     return {
@@ -403,7 +410,7 @@ export default class Platform {
     const data = {
       copyright: 1,
       tid: 124,
-      desc_format_id: 9999,
+      desc_format_id: 0,
       desc: "",
       recreate: -1,
       dynamic: "",
@@ -418,6 +425,7 @@ export default class Platform {
       up_selection_reply: false,
       up_close_reply: false,
       up_close_danmu: false,
+      mission_id: 0,
       ...options,
     };
 
@@ -457,7 +465,7 @@ export default class Platform {
     const data = {
       copyright: 1,
       tid: 124,
-      desc_format_id: 9999,
+      desc_format_id: 0,
       desc: "",
       recreate: -1,
       dynamic: "",
@@ -473,6 +481,7 @@ export default class Platform {
       up_close_reply: false,
       up_close_danmu: false,
       web_os: 1,
+      mission_id: 0,
       csrf: csrf,
       ...options,
     };
@@ -518,7 +527,7 @@ export default class Platform {
     const data = {
       copyright: 1,
       tid: 124,
-      desc_format_id: 9999,
+      desc_format_id: 0,
       desc: "",
       recreate: -1,
       dynamic: "",
@@ -534,6 +543,7 @@ export default class Platform {
       up_close_reply: false,
       up_close_danmu: false,
       web_os: 1,
+      mission_id: 0,
       csrf: csrf,
       ...options,
     };
@@ -577,16 +587,20 @@ export default class Platform {
     const data: MediaOptions & {
       csrf: string;
       videos: { cid: number; filename: string; title: string; desc?: string }[];
+      aid: number;
     } = {
       videos: [],
       ...archive.archive,
       csrf: csrf,
       ...options,
     };
-    this.checkOptions(options);
+    this.checkOptions(data);
 
-    if (options.cover && !options.cover.startsWith("http")) {
-      const coverRes = await this.uploadCover(options.cover);
+    data.aid = Number(data.aid);
+    // @ts-ignore
+    delete data.recreate;
+    if (data.cover && !data.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(data.cover);
       data["cover"] = coverRes.data.url;
     }
     if (mode === "append") {
@@ -606,6 +620,62 @@ export default class Platform {
         params: {
           t: Date.now(),
           csrf: csrf,
+        },
+      }
+    );
+  }
+
+  /**
+   * 通过client api接口编辑视频
+   */
+  async editMediaClientApi(
+    videos: { cid: number; filename: string; title: string; desc?: string }[],
+    options: Partial<MediaOptions> & { aid: number },
+    mode: "append" | "replace"
+  ): Promise<
+    CommonResponse<{
+      aid: number;
+      bvid: string;
+    }>
+  > {
+    this.client.authLogin(["client"]);
+    const archive = (
+      await this.getArchive({
+        aid: options.aid,
+      })
+    ).data;
+
+    const data: MediaOptions & {
+      videos: { cid: number; filename: string; title: string; desc?: string }[];
+      aid: number;
+    } = {
+      videos: [],
+      ...archive.archive,
+      ...options,
+    };
+    this.checkOptions(data);
+
+    data.aid = Number(data.aid);
+    // @ts-ignore
+    delete data.recreate;
+    if (data.cover && !data.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(data.cover);
+      data["cover"] = coverRes.data.url;
+    }
+    if (mode === "append") {
+      data.videos = [...archive.videos, ...videos];
+    } else if (mode === "replace") {
+      data.videos = videos;
+    } else {
+      throw new Error("mode can only be append or replace");
+    }
+
+    return this.request.post(
+      "http://member.bilibili.com/x/vu/client/edit",
+      data,
+      {
+        params: {
+          access_key: this.client.accessToken,
         },
       }
     );
@@ -776,6 +846,51 @@ export default class Platform {
     this.client.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/topic/type",
+      {
+        params: params,
+      }
+    );
+  }
+  /**
+   * 话题搜索
+   */
+  async searchTopic(
+    params: {
+      page_size: number;
+      offset: number;
+      /** 关键字 */
+      keyword?: string;
+    } = {
+      page_size: 0,
+      offset: 20,
+    }
+  ): Promise<
+    CommonResponse<{
+      result: {
+        has_create_jurisdiction: boolean;
+        is_new_topic: boolean;
+        tips: string;
+        page_info: {
+          has_more: boolean;
+          offset: number;
+          page_number: number;
+        };
+        topics: {
+          act_protocol: string;
+          activity_sign: string;
+          description: string;
+          id: number;
+          mission_id: number;
+          name: string;
+          state: number;
+          uname: string;
+        }[];
+      }[];
+    }>
+  > {
+    this.client.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/topic/search",
       {
         params: params,
       }
