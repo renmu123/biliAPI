@@ -228,9 +228,13 @@ client.platorm.getArchive({
 
 `client.platform.getRecommendTags()`
 
-### 获取标签列表
+### 获取话题
 
 `client.platform.getTopic()`
+
+## 话题搜索
+
+`client.platform.searchTopic()`
 
 ## 搜索
 
