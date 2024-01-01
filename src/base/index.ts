@@ -18,7 +18,7 @@ export class BaseRequest {
   };
   constructor(options?: CreateAxiosDefaults) {
     const instance = axios.create({
-      timeout: 100000,
+      timeout: 1000000,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",

@@ -1,3 +1,13 @@
+# 0.6.2
+
+## Breaking
+
+## Feature
+
+## Bug Fix
+
+1. 修复取消上传稿件时仍进行视频合并的 bug
+
 # 0.6.1
 
 ## Breaking

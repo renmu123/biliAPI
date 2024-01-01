@@ -211,7 +211,12 @@ export class WebVideoUploader {
       });
 
       queue.on("idle", () => {
-        resolve(parts);
+        console.log("idle", parts.length, chunkParams.length);
+        if (parts.length === chunkParams.length) {
+          resolve(parts);
+        } else {
+          reject();
+        }
       });
     });
   }
@@ -317,7 +322,6 @@ export class WebVideoUploader {
       progress: 1,
       data: params,
     });
-    console.log(this.chunkTasks);
     this.emitter.emit("completed", {
       cid: biz_id,
       filename: uploadInfo.key.replaceAll("/", "").split(".")[0],
@@ -351,10 +355,10 @@ export class WebVideoUploader {
     console.log("开始上传", this.chunkTasks, this.queue.size);
   }
   cancel() {
+    this.queue.clear();
     Object.values(this.chunkTasks).map(task => {
       task.controller.abort();
     });
-    this.queue.clear();
   }
   on(event: "start" | "completed" | "progress", callback: () => void) {
     this.emitter.on(event, callback);
