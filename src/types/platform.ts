@@ -212,3 +212,88 @@ export interface getArchivesReturnType {
 
 export type UploaderType = "web";
 export type SubmitType = "web" | "client" | "b-cut";
+
+export interface getSeasonListReturnType {
+  play_type: 1 | number;
+  total: number;
+  seasons: {
+    checkin: {
+      season_status: 1 | number;
+      status: 1 | number;
+      status_reason: string;
+    };
+    part_episodes: {
+      id: number;
+      title: string;
+      aid: number;
+      bvid: string;
+      cid: number;
+      seasonId: number;
+      sectionId: number;
+      order: number;
+      videoTitle: string;
+      archiveTitle: string;
+      archiveState: number;
+      rejectReason: string;
+      state: number;
+      cover: string;
+      is_free: number;
+      aid_owner: boolean;
+    }[];
+    season: {
+      id: number;
+      title: string;
+      desc: string;
+      cover: string;
+      isEnd: number;
+      mid: number;
+      isAct: number;
+      is_pay: number;
+      state: number;
+      partState: number;
+      signState: number;
+      rejectReason: string;
+      ctime: number;
+      mtime: number;
+      no_section: number;
+      forbid: number;
+      protocol_id: string;
+      ep_num: number;
+      season_price: number;
+      is_opened: number;
+    };
+    seasonStat: {
+      view: number;
+      danmaku: number;
+      reply: number;
+      fav: number;
+      coin: number;
+      share: number;
+      nowRank: number;
+      hisRank: number;
+      like: number;
+      subscription: number;
+      vt: number;
+    };
+    sections: {
+      sections: {
+        id: number;
+        type: number;
+        seasonId: number;
+        title: string;
+        order: number;
+        state: number;
+        partState: number;
+        rejectReason: string;
+        ctime: number;
+        mtime: number;
+        epCount: number;
+        cover: string;
+      }[];
+    };
+  }[];
+  tip: {
+    title: string;
+    url: string;
+  };
+}

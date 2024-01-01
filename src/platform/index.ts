@@ -18,6 +18,7 @@ import {
   getArchivesReturnType,
   UploaderType,
   SubmitType,
+  getSeasonListReturnType,
 } from "../types/platform";
 
 export default class Platform {
@@ -893,6 +894,93 @@ export default class Platform {
       "https://member.bilibili.com/x/vupre/web/topic/search",
       {
         params: params,
+      }
+    );
+  }
+  /**
+   * 合集列表
+   */
+  async getSeasonList(
+    params: {
+      /** 页码，从1开始 */
+      pn: number;
+      /** 个数 */
+      ps: number;
+      /** 排序字段,ctime：创建时间，mtime：修改时间 */
+      order?: "ctime" | "mtime";
+      sort?: "desc" | "asc";
+    } = {
+      pn: 1,
+      ps: 30,
+    }
+  ): Promise<CommonResponse<getSeasonListReturnType>> {
+    this.client.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x2/creative/web/seasons",
+      {
+        params: params,
+      }
+    );
+  }
+  /**
+   * 合集内添加内容
+   */
+  async addSeasonMedia(params: {
+    /** 合集id */
+    sectionId: number;
+    /** aid: 视频id, cid:分p id */
+    episodes: { aid: number; cid: number; title: string }[];
+  }): Promise<CommonResponse<{}>> {
+    this.client.authLogin();
+    return this.request.post(
+      "https://member.bilibili.com/x2/creative/web/season/section/episodes/add",
+      {
+        ...params,
+        csrf: this.client.cookieObj.bili_jct,
+      },
+      {
+        params: {
+          t: Date.now(),
+          csrf: this.client.cookieObj.bili_jct,
+        },
+      }
+    );
+  }
+  /**
+   * aid反查合集id
+   */
+  async getSessionId(aid: number): Promise<
+    CommonResponse<{
+      // 合集id
+      id: number;
+      title: string;
+      desc: string;
+      cover: string;
+      isEnd: number;
+      mid: number;
+      isAct: number;
+      is_pay: number;
+      state: number;
+      partState: number;
+      signState: number;
+      rejectReason: string;
+      ctime: number;
+      mtime: number;
+      no_section: number;
+      forbid: number;
+      protocol_id: string;
+      ep_num: number;
+      season_price: number;
+      is_opened: number;
+    }>
+  > {
+    this.client.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x2/creative/web/season/aid",
+      {
+        params: {
+          id: aid,
+        },
       }
     );
   }

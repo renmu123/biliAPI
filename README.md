@@ -236,6 +236,18 @@ client.platorm.getArchive({
 
 `client.platform.searchTopic()`
 
+## 合集列表
+
+`client.platform.getSeasonList()`
+
+## 合集内添加稿件
+
+`client.platform.addSeasonMedia()`
+
+## aid 反查合集 id
+
+`client.platform.getSessionId()`
+
 ## 搜索
 
 ### 综合搜索
