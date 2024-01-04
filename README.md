@@ -260,6 +260,53 @@ client.platorm.getArchive({
 
 `client.search.type({keyword:"测试",search_type:"video"})`
 
+## 视频详情
+
+视频详情页相关的接口，可以通过以下两种方式创建实例。
+如果设置了 aid，那么以下所有接口的 aid 都可以无需再传，你也可以传递 aid 进行覆盖。
+
+```js
+const video = client.video;
+// const video = client.newVideo(aid)
+//
+// video.setAid(aid);
+video.like({
+  like: true,
+});
+```
+
+### 获取视频信息
+
+`video.getInfo()`
+
+### 设置 aid
+
+`video.setAid(aid)`
+
+### 点赞
+
+`video.like`
+
+### 投币
+
+`video.coin()`
+
+### 列出收藏夹
+
+`video.listFavoriteBox()`
+
+### 处理收藏夹内容
+
+`video.editFavoriteBox()`
+
+### 增加分享次数
+
+`video.addShare()`
+
+### 一键三连
+
+`video.likeCoinShare()`
+
 ## 通用
 
 ### 获取分区

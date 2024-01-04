@@ -8,6 +8,7 @@ import Platform from "./platform";
 import { WebVideoUploader } from "./platform/upload";
 import Search from "./search/index";
 import User from "./user/index";
+import Video from "./video/index";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 
@@ -45,6 +46,11 @@ class Client extends BaseRequest {
   platform = new Platform(this);
   search = new Search(this);
   common = new Common(this);
+  video = new Video(this);
+
+  async newVideo(aid: number) {
+    return new Video(this, aid);
+  }
 
   /**
    * 加载cookie文件，仅限TvQrcodeLogin返回的参数

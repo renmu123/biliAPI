@@ -29,9 +29,11 @@ export class WebVideoUploader {
     [key: number]: UploadChunkTask;
   } = {};
   size: number = 0;
+  concurrency: number = 3;
 
-  constructor(request: Request) {
+  constructor(request: Request, concurrency: number = 3) {
     this.request = request;
+    this.concurrency = concurrency;
   }
 
   async preupload(
@@ -133,6 +135,9 @@ export class WebVideoUploader {
         headers: {
           "X-Upos-Auth": auth,
         },
+        "axios-retry": {
+          retries: 2,
+        },
         signal: options.controller.signal,
         onUploadProgress: (progressEvent: any) => {
           this.progress[params.partNumber] = progressEvent.loaded;
@@ -170,7 +175,7 @@ export class WebVideoUploader {
     size: number
   ): Promise<{ partNumber: number; eTag: "etag" }[]> {
     return new Promise((resolve, reject) => {
-      const queue = new PQueue({ concurrency: 3 });
+      const queue = new PQueue({ concurrency: this.concurrency });
       this.queue = queue;
 
       const chunks = Math.ceil(size / chunk_size);

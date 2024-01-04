@@ -2,6 +2,7 @@ import url from "node:url";
 
 import axios from "axios";
 import { encWbi, getWbiKeys } from "./sign";
+import axiosRetry from "axios-retry";
 
 import type { CreateAxiosDefaults } from "axios";
 import type { Request } from "../types/index";
@@ -45,6 +46,7 @@ export class BaseRequest {
         }
       }
     );
+    axiosRetry(instance, { retries: 0 });
     this.request = instance;
   }
   // 获取最新的 img_key 和 sub_key
