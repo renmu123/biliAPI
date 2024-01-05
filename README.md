@@ -193,6 +193,10 @@ const task = await client.platform.editMedia(aid, ["test.mp4"], {}, mode);
 // 其余功能参考新投稿
 ```
 
+### 单独上传分 p
+
+如果你想动态添加分 p，可以尝试使用`WebVideoUploader`来单独处理视频的上传，并调用`addMediaClientApi`,`addMediaWebApi`,`addMediaBCutApi`来进行提交。或调用`editMediaClientApi`,`editMediaWebApi`来进行编辑
+
 ### 获取投稿详情
 
 `bvid`和`aid`任选一个传入
