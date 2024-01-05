@@ -1,20 +1,11 @@
-import { fakeBuvid3 } from "../utils/index";
+import Reply from "./reply";
 
 import type { Request, CommonResponse, Client } from "../types/index";
-import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
-
-type VideoId =
-  | {
-      bvid: string;
-    }
-  | {
-      aid: number;
-    };
 
 export default class Video {
   request: Request;
   client: Client;
-  aid: number;
+  aid?: number;
 
   constructor(client: Client, aid?: number) {
     this.request = client.request;
@@ -195,5 +186,99 @@ export default class Video {
     return this.request.get(url, {
       params: data,
     });
+  }
+  private authAid() {
+    if (!this.aid) {
+      throw new Error("aid is should be set");
+    }
+  }
+  /**
+   * 创建评论对象，操作评论的方法需要传递rpid
+   * @param rpid 回复的评论id
+   */
+  createReply(rpid?: number) {
+    const replyParams: {
+      oid: number;
+      type: number;
+      plat: 1;
+      rpid: number;
+    } = {
+      oid: this.aid,
+      type: 1,
+      plat: 1,
+      rpid: rpid,
+    };
+    const _reply = new Reply(this.client, this.aid);
+
+    return {
+      /**
+       * 设置oid
+       * @param oid 视频aid
+       */
+      setOid: (oid: number) => {
+        replyParams.oid = oid;
+      },
+      /**
+       * 添加评论
+       * @param root 根评论id
+       * @param parent 父评论id
+       * @param message 评论内容
+       */
+      add: (params: { root?: number; parent?: number; message: string }) => {
+        this.authAid();
+        return _reply.add({ ...replyParams, ...params });
+      },
+      /**
+       * 评论点赞
+       * @param rpid 评论id
+       * @param action 1: 点赞, 0: 取消点赞
+       */
+      like: (params: { rpid?: number; action: 1 | 0 }) => {
+        this.authAid();
+        return _reply.like({ ...replyParams, ...params });
+      },
+      /**
+       * 评论点踩
+       * @param rpid 评论id
+       * @param action 1: 点踩, 0: 取消点踩
+       */
+      hate: (params: { rpid?: number; action: 1 | 0 }) => {
+        this.authAid();
+        return _reply.hate({ ...replyParams, ...params });
+      },
+      /**
+       * 评论删除
+       * @param rpid 评论id
+       * @param action 1: 点踩, 0: 取消点踩
+       */
+      delete: (params?: { rpid?: number }) => {
+        this.authAid();
+        return _reply.delete({
+          ...replyParams,
+          ...params,
+        });
+      },
+      /**
+       * 举报评论
+       * @param rpid 评论id
+       * @param action 1: 点踩, 0: 取消点踩
+       */
+      report: (params: { rpid?: number; reason: number }) => {
+        this.authAid();
+        return _reply.report({
+          ...replyParams,
+          ...params,
+        });
+      },
+      /**
+       * 置顶评论
+       * @param rpid 评论id
+       * @param action 1: 点踩, 0: 取消点踩
+       */
+      top: (params: { rpid?: number; action: 1 | 0 }) => {
+        this.authAid();
+        return _reply.top({ ...replyParams, ...params });
+      },
+    };
   }
 }

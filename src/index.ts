@@ -9,6 +9,7 @@ import { WebVideoUploader } from "./platform/upload";
 import Search from "./search/index";
 import User from "./user/index";
 import Video from "./video/index";
+import Reply from "./video/reply";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 
@@ -47,9 +48,23 @@ class Client extends BaseRequest {
   search = new Search(this);
   common = new Common(this);
   video = new Video(this);
+  reply = new Reply(this);
 
+  /**
+   * 创建一个新的视频对象
+   * @param aid 视频aid
+   */
   async newVideo(aid: number) {
     return new Video(this, aid);
+  }
+
+  /**
+   * 创建一个新的评论区对象
+   * @param oid 评论区oid
+   * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
+   */
+  async newReply(oid: number, type: number) {
+    return new Reply(this, oid, type);
   }
 
   /**

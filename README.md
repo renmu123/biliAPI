@@ -311,6 +311,50 @@ video.like({
 
 `video.likeCoinShare()`
 
+### 评论
+
+`const reply = client.video.createReply(rpid)`
+
+其他可用接口见评论接口
+
+## 评论
+
+```js
+const reply = client.reply;
+// 这样设置后不用每次传递oid与type
+// const reply = client.newReply(oid,type)
+// reply.setOid(oid);
+// reply.setType(type);
+```
+
+### 列表
+
+`reply.list()`
+
+### 添加
+
+`reply.add()`
+
+### 点赞
+
+`reply.like()`
+
+### 点踩
+
+`reply.hate()`
+
+### 删除
+
+`reply.delete()`
+
+### 置顶
+
+`reply.top()`
+
+### 举报
+
+`reply.report()`
+
 ## 通用
 
 ### 获取分区
