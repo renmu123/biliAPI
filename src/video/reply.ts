@@ -70,7 +70,7 @@ export default class Reply extends BaseRequest {
    * @param oid 目标评论区id,如果是稿件则为aid
    * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
    */
-  async count(params: { oid?: number; type?: number }): Promise<{
+  async count(params: { oid?: number; type?: number } = {}): Promise<{
     count: number;
   }> {
     const url = `https://api.bilibili.com/x/v2/reply/count`;

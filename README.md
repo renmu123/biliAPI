@@ -375,6 +375,10 @@ const reply = client.reply;
 
 `reply.list()`
 
+### 个数
+
+`reply.count()`
+
 ### 添加
 
 `reply.add()`
