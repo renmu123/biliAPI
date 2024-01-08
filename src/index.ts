@@ -27,8 +27,11 @@ class Client {
   /**
    * @param noAuthUseCookie 无需登录的接口是否使用cookie
    */
-  constructor(noAuthUseCookie = false) {
+  constructor(auth?: Auth, noAuthUseCookie = false) {
     this.useCookie = noAuthUseCookie;
+    if (auth) {
+      this.auth = auth;
+    }
     // super(undefined, useCookie);
   }
   get live() {
