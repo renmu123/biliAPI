@@ -2,16 +2,13 @@ import path from "node:path";
 import PQueue from "p-queue";
 import EventEmitter from "events";
 
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 import { isString, readFileAsBase64 } from "../utils";
 import { WebVideoUploader } from "./upload";
 import { getFileSize, sum } from "../utils/index";
 
-import type {
-  Request,
-  Client,
-  MediaOptions,
-  MediaPartOptions,
-} from "../types/index";
+import type { MediaOptions, MediaPartOptions } from "../types/index";
 import {
   MediaDetailReturnType,
   getArchivesReturnType,
@@ -20,13 +17,9 @@ import {
   getSeasonListReturnType,
 } from "../types/platform";
 
-export default class Platform {
-  request: Request;
-  client: Client;
-
-  constructor(client: Client) {
-    this.request = client.request;
-    this.client = client;
+export default class Platform extends BaseRequest {
+  constructor(auth: Auth) {
+    super(auth);
   }
   /**
    * 获取投稿列表
@@ -52,7 +45,7 @@ export default class Platform {
     tid?: number;
     order?: "click" | "stow" | "dm_count" | "scores";
   }): Promise<getArchivesReturnType> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const defaultParams = {
       pn: 1,
       ps: 20,
@@ -87,7 +80,7 @@ export default class Platform {
       content: string;
     };
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       `https://member.bilibili.com/x/vupre/web/topic/tag/check`,
       {
@@ -140,7 +133,7 @@ export default class Platform {
 
     const uploadTasks: WebVideoUploader[] = [];
     for (let i = 0; i < mediaOptions.length; i++) {
-      const uploader = new WebVideoUploader(this.request);
+      const uploader = new WebVideoUploader(this.auth);
       uploadTasks.push(uploader);
       queue.add(() => uploader.upload(mediaOptions[i]));
     }
@@ -221,7 +214,7 @@ export default class Platform {
       submit: "client",
     }
   ) {
-    this.client.authLogin([api.submit, api.uploader]);
+    this.auth.authLogin([api.submit, api.uploader]);
     this.checkOptions(options);
 
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
@@ -327,7 +320,7 @@ export default class Platform {
       submit: "client",
     }
   ) {
-    this.client.authLogin();
+    this.auth.authLogin();
     const submitApiObj = {
       client: this.editMediaClientApi.bind(this),
       web: this.editMediaWebApi.bind(this),
@@ -408,7 +401,7 @@ export default class Platform {
     aid: number;
     bvid: string;
   }> {
-    this.client.authLogin(["client"]);
+    this.auth.authLogin(["client"]);
     this.checkOptions(options);
     const data = {
       copyright: 1,
@@ -444,7 +437,7 @@ export default class Platform {
       data,
       {
         params: {
-          access_key: this.client.accessToken,
+          access_key: this.auth.accessToken,
         },
       }
     );
@@ -460,9 +453,9 @@ export default class Platform {
     aid: number;
     bvid: string;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     this.checkOptions(options);
-    const csrf = this.client.cookieObj.bili_jct;
+    const csrf = this.auth.cookieObj.bili_jct;
     const data = {
       copyright: 1,
       tid: 124,
@@ -520,9 +513,9 @@ export default class Platform {
     aid: number;
     bvid: string;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     this.checkOptions(options);
-    const csrf = this.client.cookieObj.bili_jct;
+    const csrf = this.auth.cookieObj.bili_jct;
     const data = {
       copyright: 1,
       tid: 124,
@@ -573,12 +566,12 @@ export default class Platform {
     aid: number;
     bvid: string;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const archive = await this.getArchive({
       aid: options.aid,
     });
 
-    const csrf = this.client.cookieObj.bili_jct;
+    const csrf = this.auth.cookieObj.bili_jct;
     const data: MediaOptions & {
       csrf: string;
       videos: { cid: number; filename: string; title: string; desc?: string }[];
@@ -631,7 +624,7 @@ export default class Platform {
     aid: number;
     bvid: string;
   }> {
-    this.client.authLogin(["client"]);
+    this.auth.authLogin(["client"]);
     const archive = await this.getArchive({
       aid: options.aid,
     });
@@ -666,7 +659,7 @@ export default class Platform {
       data,
       {
         params: {
-          access_key: this.client.accessToken,
+          access_key: this.auth.accessToken,
         },
       }
     );
@@ -677,13 +670,13 @@ export default class Platform {
    * @param filePath 文件路径
    */
   async uploadCover(filePath: string): Promise<{ url: string }> {
-    this.client.authLogin();
+    this.auth.authLogin();
 
     return this.request.post(
       "https://member.bilibili.com/x/vu/web/cover/up",
       {
         cover: await readFileAsBase64(filePath),
-        csrf: this.client.cookieObj.bili_jct,
+        csrf: this.auth.cookieObj.bili_jct,
       },
       {
         params: { t: Date.now() },
@@ -708,7 +701,7 @@ export default class Platform {
     attribute: 0 | number;
     is_default: 0 | 1;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get("https://member.bilibili.com/x/vupre/web/tpls", {
       params: {
         t: Date.now(),
@@ -738,13 +731,13 @@ export default class Platform {
       is_default: 0 | 1;
     }> = {}
   ): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.post(
       "https://member.bilibili.com/x/vupre/web/tpl/update",
       {
         tid: tid,
         ...options,
-        crsf: this.client.cookieObj.bili_jct,
+        crsf: this.auth.cookieObj.bili_jct,
       },
       {
         params: {
@@ -790,7 +783,7 @@ export default class Platform {
       request_id: string;
     }[]
   > {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/tag/recommend",
       {
@@ -826,7 +819,7 @@ export default class Platform {
       activity_description: string;
     }[]
   > {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/topic/type",
       {
@@ -869,7 +862,7 @@ export default class Platform {
       }[];
     }[];
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/topic/search",
       {
@@ -894,7 +887,7 @@ export default class Platform {
       ps: 30,
     }
   ): Promise<getSeasonListReturnType> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x2/creative/web/seasons",
       {
@@ -911,17 +904,17 @@ export default class Platform {
     /** aid: 视频id, cid:分p id */
     episodes: { aid: number; cid: number; title: string }[];
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.post(
       "https://member.bilibili.com/x2/creative/web/season/section/episodes/add",
       {
         ...params,
-        csrf: this.client.cookieObj.bili_jct,
+        csrf: this.auth.cookieObj.bili_jct,
       },
       {
         params: {
           t: Date.now(),
-          csrf: this.client.cookieObj.bili_jct,
+          csrf: this.auth.cookieObj.bili_jct,
         },
       }
     );
@@ -952,7 +945,7 @@ export default class Platform {
     season_price: number;
     is_opened: number;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x2/creative/web/season/aid",
       {

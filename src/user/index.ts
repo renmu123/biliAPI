@@ -1,21 +1,21 @@
 import { fakeBuvid3 } from "../utils/index";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 
-import type { Request, Client } from "../types/index";
 import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 
-export default class User {
-  request: Request;
-  client: Client;
-
-  constructor(client: Client) {
-    this.request = client.request;
-    this.client = client;
+export default class User extends BaseRequest {
+  noAuthUseCookie: boolean;
+  constructor(auth?: Auth, useCookie: boolean = false) {
+    super(auth);
+    this.noAuthUseCookie = useCookie;
   }
   /**
    * 获取登录用户信息
    */
   async getMyInfo(): Promise<MyInfoV2ReturnType> {
-    this.client.authLogin();
+    console.log(this.auth);
+    this.auth.authLogin();
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
   /**
@@ -32,7 +32,7 @@ export default class User {
    * @param uid 用户id
    */
   async getUserInfo(uid: number): Promise<GetUserInfoReturnType> {
-    const signParams = await this.client.WbiSign({
+    const signParams = await this.WbiSign({
       mid: uid,
       token: "",
       platform: "web",
@@ -58,9 +58,8 @@ export default class User {
     mid: number,
     /** offset为分页参数，来自上一页返回接口的offset参数 */
     offset?: number,
-    useCookie?: string
+    useCookie: boolean = this.noAuthUseCookie
   ) {
-    let cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
     const params = {
       timezone_offset: -480,
       platform: "web",
@@ -71,13 +70,15 @@ export default class User {
       // @ts-ignore
       params.offset = offset;
     }
-    const signParams = await this.client.WbiSign(params);
+    const signParams = await this.WbiSign(params);
     return this.request.get(
       `https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?${signParams}`,
       {
         headers: {
-          cookie: cookie,
           "User-Agent": "Mozilla/5.0",
+        },
+        extra: {
+          useCookie,
         },
       }
     );
@@ -94,7 +95,7 @@ export default class User {
       keyword?: string;
       order?: "pubdate" | "click" | "stow";
     },
-    useCookie?: string
+    useCookie: boolean = this.noAuthUseCookie
   ): Promise<{
     [key: string]: any;
   }> {
@@ -108,12 +109,12 @@ export default class User {
       web_location: "1550101",
       order_avoided: "true",
     };
-    let cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
-    if (!cookie) {
+    let cookie = this.auth.cookie;
+    if (!useCookie) {
       cookie = `buvid3=${fakeBuvid3()}`;
     }
 
-    const signParams = await this.client.WbiSign({
+    const signParams = await this.WbiSign({
       ...defaultParams,
       ...params,
     });

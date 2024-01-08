@@ -1,4 +1,4 @@
-import { Client, TvQrcodeLogin } from "./dist/index.mjs";
+import { Client, TvQrcodeLogin, Auth, User } from "./dist/index.mjs";
 import fs from "fs";
 
 // 上传视频
@@ -52,10 +52,18 @@ async function qrcodeLogin() {
 // 获取登录用户信息
 async function getMyInfo() {
   const client = new Client();
-  await client.loadCookieFile("C:\\Users\\renmu\\biliAPI\\cookies.json");
+  await client.loadCookieFile("cookies.json");
   const data = await client.user.getMyInfo();
   console.log(data);
 }
+
+const getMyInfo2 = async () => {
+  const auth = new Auth();
+  await auth.loadCookieFile("cookies.json");
+  const user = new User(auth);
+  const res = await user.getMyInfo();
+  console.log(res);
+};
 
 // 获取用户信息
 async function getUserInfo() {

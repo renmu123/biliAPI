@@ -13,12 +13,44 @@ bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性�
 
 ## 使用
 
+### 无需登录的接口
+
 ```js
-import { Client, TvQrcodeLogin } from "@renmu/bili-api";
+import { Client } from "@renmu/bili-api";
 
 const client = new Client();
 const data = await client.live.getMasterInfo(3927637, false);
 console.log(data);
+```
+
+### 需要登录的接口
+
+如何登录参考下面的登录文档
+
+```js
+import { Client } from "@renmu/bili-api";
+
+// 获取登录用户信息
+async function getMyInfo() {
+  const client = new Client();
+  await client.loadCookieFile("cookies.json");
+  const data = await client.user.getMyInfo();
+  console.log(data);
+}
+```
+
+你也可用单独导出对应类
+
+```js
+import { User } from "@renmu/bili-api";
+
+const getMyInfo2 = async () => {
+  const auth = new Auth();
+  await auth.loadCookieFile("cookies.json");
+  const user = new User(auth);
+  const res = await user.getMyInfo();
+  console.log(res);
+};
 ```
 
 ## 衍生项目
@@ -32,7 +64,19 @@ console.log(data);
 ## 基础类
 
 ```js
-import { Client, TvQrcodeLogin } from "@renmu/bili-api";
+import {
+  Client,
+  TvQrcodeLogin,
+  WebVideoUploader,
+  Common,
+  Reply,
+  Video,
+  User,
+  Platform,
+  Search,
+  Live,
+  Auth,
+} from "@renmu/bili-api";
 
 // 默认无需登录的接口是不使用cookie，部分接口在登录与未登录态下返回参数不同，也在调用时单独传入是否使用cookie参数
 const client = new Client(false);
@@ -46,16 +90,6 @@ client.setAuth(
   },
   "1111"
 );
-```
-
-## 工具类
-
-```js
-import { utils } from "@renmu/bili-api";
-// 用于wbi接口签名, 返回的参数直接用于url拼接
-const query = await utils.WbiSign({
-  test: "111",
-});
 ```
 
 ## 登录
@@ -105,6 +139,16 @@ tv.on("end", res => {
 
 // 可用于中断任务，并清除所有监听器
 // tv.interrupt();
+```
+
+## 工具类
+
+```js
+import { utils } from "@renmu/bili-api";
+// 用于wbi接口签名, 返回的参数直接用于url拼接
+const query = await utils.WbiSign({
+  test: "111",
+});
 ```
 
 ## 用户

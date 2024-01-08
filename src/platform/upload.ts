@@ -2,6 +2,8 @@ import path from "node:path";
 import EventEmitter from "events";
 
 import PQueue from "p-queue";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 import { getFileSize, readBytesFromFile, sum } from "../utils/index";
 
 import type { Request, MediaPartOptions } from "../types/index";
@@ -20,8 +22,7 @@ interface UploadChunkTask {
   status?: "pending" | "completed" | "running" | "error" | "abort";
 }
 
-export class WebVideoUploader {
-  request: Request;
+export class WebVideoUploader extends BaseRequest {
   queue: PQueue;
   emitter = new EventEmitter();
   progress: { [key: string]: number } = {};
@@ -31,8 +32,8 @@ export class WebVideoUploader {
   size: number = 0;
   concurrency: number = 3;
 
-  constructor(request: Request, concurrency: number = 3) {
-    this.request = request;
+  constructor(auth: Auth, concurrency: number = 3) {
+    super(auth);
     this.concurrency = concurrency;
   }
 

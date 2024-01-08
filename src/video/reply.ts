@@ -1,17 +1,23 @@
-import type { Request, Client } from "../types/index";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
+
 import type { GenerateNumberRange } from "../types/utils";
 
-export default class Reply {
-  request: Request;
-  client: Client;
+export default class Reply extends BaseRequest {
   oid?: number;
   type?: number;
+  noAuthUseCookie: boolean;
 
-  constructor(client: Client, oid?: number, type?: number) {
-    this.request = client.request;
-    this.client = client;
+  constructor(
+    auth: Auth,
+    noAuthUseCookie?: boolean,
+    oid?: number,
+    type?: number
+  ) {
+    super(auth);
     this.oid = oid;
     this.type = type;
+    this.noAuthUseCookie = noAuthUseCookie;
   }
   /**
    * 设置评论区oid
@@ -52,7 +58,7 @@ export default class Reply {
       oid: this.oid,
       type: this.type,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.get(url, {
       params: data,
@@ -95,13 +101,13 @@ export default class Reply {
     message: string;
     plat: 1 | 2 | 3 | 4;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/add`;
     const data = {
       oid: this.oid,
       type: this.type,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -120,13 +126,13 @@ export default class Reply {
     rpid: number;
     action: 1 | 0;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/action`;
     const data = {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -145,13 +151,13 @@ export default class Reply {
     rpid: number;
     action: 1 | 0;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/hate`;
     const data = {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -168,13 +174,13 @@ export default class Reply {
     type?: number;
     rpid: number;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/del`;
     const data = {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -193,13 +199,13 @@ export default class Reply {
     rpid: number;
     action: 1 | 0;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/top`;
     const data = {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -220,13 +226,13 @@ export default class Reply {
     reason: number;
     content?: string;
   }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/report`;
     const data = {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,

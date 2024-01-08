@@ -1,12 +1,11 @@
-import type { Request, Client } from "../types/index";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 
-export default class Common {
-  request: Request;
-  client: Client;
-
-  constructor(client: Client) {
-    this.request = client.request;
-    this.client = client;
+export default class Common extends BaseRequest {
+  noAuthUseCookie: boolean;
+  constructor(auth?: Auth, noAuthUseCookie: boolean = false) {
+    super(auth);
+    this.noAuthUseCookie = noAuthUseCookie;
   }
   /**
    * 获取分区
@@ -28,7 +27,7 @@ export default class Common {
     };
     // https://api.bilibili.com/x/kv-frontend/namespace/data?appKey=333.1339&versionId=undefined&nscode=2
 
-    const res = await this.client.request.get(
+    const res = await this.request.get(
       `https://api.bilibili.com/x/kv-frontend/namespace/data`,
       {
         params: defaultParams,

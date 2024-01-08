@@ -1,7 +1,6 @@
-import url from "node:url";
-
 import axios from "axios";
 import { encWbi, getWbiKeys } from "./sign";
+import Auth from "./Auth";
 import axiosRetry from "axios-retry";
 
 import type { CreateAxiosDefaults } from "axios";
@@ -17,21 +16,29 @@ export class BaseRequest {
     buvid3: string;
     buvid: string;
   };
-  constructor(options?: CreateAxiosDefaults) {
+  auth: Auth;
+
+  constructor(auth?: Auth, axiosOptions: CreateAxiosDefaults = {}) {
+    this.auth = auth;
     const instance = axios.create({
       timeout: 1000000,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
       },
-      ...options,
+      ...axiosOptions,
     });
 
     instance.interceptors.request.use(config => {
+      config.headers["cookie"] = this.auth.cookie;
+      if (!config.extra?.useCookie) config.headers["cookie"] = undefined;
+
       if (!config.headers.host) {
-        config.headers["host"] = url.parse(config.url).hostname;
+        const url = new URL(config.url);
+        config.headers["host"] = url.hostname;
       }
 
+      console.log(config.headers);
       return config;
     });
     instance.interceptors.response.use(
@@ -55,8 +62,12 @@ export class BaseRequest {
         }
       }
     );
+
     axiosRetry(instance, { retries: 0 });
     this.request = instance;
+  }
+  setAuth(auth: Auth) {
+    this.auth = auth;
   }
   // 获取最新的 img_key 和 sub_key
   async getWbiKeys() {

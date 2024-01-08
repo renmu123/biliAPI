@@ -1,29 +1,33 @@
 import { fakeBuvid3 } from "../utils/index";
-
-import type { Request, Client } from "../types/index";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 import type { SearchTypeParams } from "../types/search";
 
-export default class Search {
-  request: Request;
-  client: Client;
-
-  constructor(client: Client) {
-    this.request = client.request;
-    this.client = client;
+export default class Search extends BaseRequest {
+  noAuthUseCookie: boolean;
+  constructor(auth?: Auth, useCookie: boolean = false) {
+    super(auth);
+    this.noAuthUseCookie = useCookie;
   }
-  async all(params: {
-    keyword: string;
-    page: number;
-    page_size: number;
-  }): Promise<{
+  async all(
+    params: {
+      keyword: string;
+      page: number;
+      page_size: number;
+    },
+    useCookie: boolean = this.noAuthUseCookie
+  ): Promise<{
     [key: string]: any;
   }> {
-    const signParams = await this.client.WbiSign(params);
-    const res = this.client.request.get(
+    const signParams = await this.WbiSign(params);
+    const res = this.request.get(
       `https://api.bilibili.com/x/web-interface/wbi/search/all/v2?${signParams}`,
       {
         headers: {
           cookie: `buvid3=${fakeBuvid3()}`,
+        },
+        extra: {
+          useCookie,
         },
       }
     );
@@ -33,15 +37,21 @@ export default class Search {
    * 分类搜索
    * @param {SearchTypeParams} params - 搜索参数
    */
-  async type(params: SearchTypeParams): Promise<{
+  async type(
+    params: SearchTypeParams,
+    useCookie: boolean = this.noAuthUseCookie
+  ): Promise<{
     [key: string]: any;
   }> {
-    const signParams = await this.client.WbiSign(params);
-    const res = this.client.request.get(
+    const signParams = await this.WbiSign(params);
+    const res = this.request.get(
       `https://api.bilibili.com/x/web-interface/wbi/search/type?${signParams}`,
       {
         headers: {
           cookie: `buvid3=${fakeBuvid3()}`,
+        },
+        extra: {
+          useCookie,
         },
       }
     );

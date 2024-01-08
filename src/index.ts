@@ -1,8 +1,5 @@
-import fs from "node:fs";
-import url from "node:url";
-
 import { TvQrcodeLogin, WebQrcodeLogin } from "./user/login";
-import { BaseRequest } from "./base/index";
+import Auth from "./base/Auth";
 import Live from "./live/index";
 import Platform from "./platform";
 import { WebVideoUploader } from "./platform/upload";
@@ -18,52 +15,50 @@ declare module "axios" {
     extra?: {
       wbiSign?: boolean;
       rawResponse?: boolean;
+      useCookie?: boolean;
     };
   }
 }
 
-class Client extends BaseRequest {
-  cookie: string;
-  cookieObj: {
-    bili_jct: string;
-    [key: string]: string;
-  };
-  accessToken?: string;
+class Client {
+  auth: Auth = new Auth();
   useCookie: boolean;
-  uid: number;
 
   /**
-   * @param useCookie 无需登录的接口是否使用cookie
+   * @param noAuthUseCookie 无需登录的接口是否使用cookie
    */
-  constructor(useCookie = false) {
-    super();
-    this.useCookie = useCookie;
-
-    this.request.interceptors.request.use(config => {
-      if (this.cookie && config.headers["cookie"] === undefined) {
-        config.headers["cookie"] = this.cookie;
-      }
-      if (!config.headers.host) {
-        config.headers["host"] = url.parse(config.url).hostname;
-      }
-
-      return config;
-    });
+  constructor(noAuthUseCookie = false) {
+    this.useCookie = noAuthUseCookie;
+    // super(undefined, useCookie);
   }
-  live = new Live(this);
-  user = new User(this);
-  platform = new Platform(this);
-  search = new Search(this);
-  common = new Common(this);
-  video = new Video(this);
-  reply = new Reply(this);
+  get live() {
+    return new Live(this.auth, this.useCookie);
+  }
+  get user() {
+    return new User(this.auth, this.useCookie);
+  }
+  get platform() {
+    return new Platform(this.auth);
+  }
+  get search() {
+    return new Search(this.auth, this.useCookie);
+  }
+  get common() {
+    return new Common(this.auth, this.useCookie);
+  }
+  get video() {
+    return new Video(this.auth, this.useCookie);
+  }
+  get reply() {
+    return new Reply(this.auth, this.useCookie);
+  }
 
   /**
    * 创建一个新的视频对象
    * @param aid 视频aid
    */
   async newVideo(aid: number) {
-    return new Video(this, aid);
+    return new Video(this.auth, this.useCookie, aid);
   }
 
   /**
@@ -72,7 +67,7 @@ class Client extends BaseRequest {
    * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
    */
   async newReply(oid: number, type: number) {
-    return new Reply(this, oid, type);
+    return new Reply(this.auth, this.useCookie, oid, type);
   }
 
   /**
@@ -80,27 +75,7 @@ class Client extends BaseRequest {
    * @param path cookie文件路径
    */
   async loadCookieFile(path: string) {
-    const cookie = await fs.promises.readFile(path, "utf-8");
-    const cookieObj = JSON.parse(cookie);
-
-    const cookieStr = cookieObj.cookie_info.cookies
-      .map(
-        (item: { name: string; value: string }) => `${item.name}=${item.value}`
-      )
-      .join("; ");
-    this.cookie = cookieStr;
-    this.cookieObj = cookieObj.cookie_info.cookies.reduce(
-      (
-        obj: { [key: string]: string },
-        item: { name: string; value: string }
-      ) => {
-        obj[item.name] = item.value;
-        return obj;
-      },
-      {}
-    );
-    this.accessToken = cookieObj.token_info.access_token;
-    this.uid = cookieObj.token_info.mid;
+    return this.auth.loadCookieFile(path);
   }
 
   /**
@@ -110,54 +85,12 @@ class Client extends BaseRequest {
     cookie?: {
       bili_jct: string;
       SESSDATA: string;
-      [key: string]: string;
+      DedeUserID: string | number;
+      [key: string]: string | number;
     },
-    accessToken?: string,
-    uid?: number
+    accessToken?: string
   ) {
-    if (cookie) {
-      this.cookieObj = cookie;
-      this.cookie = Object.entries(cookie)
-        .map(([key, value]) => {
-          return `${key}=${value}`;
-        })
-        .join("; ");
-    }
-
-    this.accessToken = accessToken;
-    if (uid) {
-      this.uid = uid;
-    } else {
-      const data = await this.user.getMyInfo();
-      this.uid = data.profile.mid;
-    }
-  }
-
-  /**
-   * 登录验证
-   * @param [api=["web"]] 用于验证web还是client api
-   */
-  async authLogin(api: Array<"web" | "client" | "b-cut"> = ["web"]) {
-    if (api.includes("web")) {
-      const isLogin = !!this.cookie;
-      if (!isLogin) {
-        throw new Error("接口为web端接口，需要cookie");
-      }
-    }
-    if (api.includes("b-cut")) {
-      const isLogin = !!this.cookie;
-      if (!isLogin) {
-        throw new Error("接口为必剪pc端接口，需要cookie");
-      }
-    }
-    if (api.includes("client")) {
-      const isLogin = !!this.accessToken;
-      if (!isLogin) {
-        throw new Error(
-          "接口为客户端接口，需要access_token，请使用客户端登录接口"
-        );
-      }
-    }
+    return this.auth.setAuth(cookie, accessToken);
   }
 }
 
@@ -178,4 +111,5 @@ export {
   Search,
   Platform,
   Live,
+  Auth,
 };

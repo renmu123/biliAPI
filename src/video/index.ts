@@ -1,17 +1,17 @@
 import Reply from "./reply";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 
-import type { Request, Client } from "../types/index";
 import type { GenerateNumberRange } from "../types/utils";
 
-export default class Video {
-  request: Request;
-  client: Client;
+export default class Video extends BaseRequest {
   aid?: number;
+  noAuthUseCookie: boolean;
+  constructor(auth?: Auth, noAuthUseCookie: boolean = false, aid?: number) {
+    super(auth);
 
-  constructor(client: Client, aid?: number) {
-    this.request = client.request;
-    this.client = client;
     this.aid = aid;
+    this.noAuthUseCookie = noAuthUseCookie;
   }
   /**
    * 设置视频aid
@@ -26,12 +26,12 @@ export default class Video {
    * @param like 点赞或取消点赞
    */
   async like(params: { aid?: number; like: boolean }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/archive/like`;
     const data = {
       aid: params.aid ?? this.aid,
       like: params.like ? "1" : "2",
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -43,12 +43,12 @@ export default class Video {
    * @param multiply 1: 1枚，2：2枚
    */
   async coin(params: { aid?: number; multiply: "1" | "2" }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/coin/add`;
     const data = {
       aid: this.aid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -72,12 +72,12 @@ export default class Video {
     }[];
     season: any;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const data = {
       rid: params.aid ?? this.aid,
-      up_mid: this.client.uid,
+      up_mid: this.auth.uid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     const url = `https://api.bilibili.com/x/v3/fav/folder/created/list-all`;
     return this.request.get(url, {
@@ -102,13 +102,13 @@ export default class Video {
     total_msg: string;
     success_num: number;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v3/fav/resource/deal`;
     const data = {
       rid: params.aid ?? this.aid,
-      up_mid: this.client.uid,
+      up_mid: this.auth.uid,
       ...params,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data: data,
@@ -119,11 +119,11 @@ export default class Video {
    * @param aid 视频aid
    */
   async addShare(params?: { aid?: number }): Promise<{}> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/share/add`;
     const data = {
       aid: params.aid ?? this.aid,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -142,11 +142,11 @@ export default class Video {
     gaia_res_type: number;
     gaia_data: any;
   }> {
-    this.client.authLogin();
+    this.auth.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/archive/like/triple`;
     const data = {
       aid: params.aid ?? this.aid,
-      csrf: this.client.cookieObj.bili_jct,
+      csrf: this.auth.cookieObj.bili_jct,
     };
     return this.request.post(url, {
       data,
@@ -190,7 +190,7 @@ export default class Video {
       plat: 1,
       rpid: rpid,
     };
-    const _reply = new Reply(this.client, this.aid);
+    const _reply = new Reply(this.auth, false, this.aid);
 
     return {
       /**

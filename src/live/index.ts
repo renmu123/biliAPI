@@ -1,23 +1,22 @@
-import type { Request, Client } from "../types/index";
+import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
+
 import type { getMasterInfoReturnType } from "../types/live";
 
-export default class Live {
-  request: Request;
-  client: Client;
-
-  constructor(client: Client) {
-    this.request = client.request;
-    this.client = client;
+export default class Live extends BaseRequest {
+  private noAuthUseCookie: boolean;
+  constructor(auth?: Auth, noAuthUseCookie: boolean = false) {
+    super(auth);
+    this.noAuthUseCookie = noAuthUseCookie;
   }
   /**
    * 获取房间信息
-   * code=0 表示成功; code!=0 message为失败详情
    * @param room_id 房间号
    * @returns
    */
   getRoomInfo(
     room_id: number,
-    useCookie: boolean = undefined
+    useCookie: boolean = this.noAuthUseCookie
   ): Promise<{
     /** 用户ID */
     uid: number; // 用户ID
@@ -66,16 +65,14 @@ export default class Live {
       master_list: any[];
     };
   }> {
-    const cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
-
     return this.request.get(
       `https://api.live.bilibili.com/room/v1/Room/get_info`,
       {
         params: {
           room_id: room_id,
         },
-        headers: {
-          cookie: cookie ? this.client.cookie : null,
+        extra: {
+          useCookie,
         },
       }
     );
@@ -97,17 +94,16 @@ export default class Live {
       page?: number;
       page_size?: number;
     },
-    useCookie: boolean = undefined
+    useCookie: boolean = this.noAuthUseCookie
   ): Promise<{
     [key: string]: any;
   }> {
-    const cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
     return this.request.get(
       `https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList`,
       {
         params: params,
-        headers: {
-          cookie: cookie ? this.client.cookie : null,
+        extra: {
+          useCookie,
         },
       }
     );
@@ -121,17 +117,16 @@ export default class Live {
    */
   getMasterInfo(
     uid: number,
-    useCookie: boolean = undefined
+    useCookie: boolean = this.noAuthUseCookie
   ): Promise<getMasterInfoReturnType> {
-    const cookie = useCookie !== undefined ? useCookie : this.client.useCookie;
     return this.request.get(
       "https://api.live.bilibili.com/live_user/v1/Master/info",
       {
         params: {
           uid: uid,
         },
-        headers: {
-          cookie: cookie ? this.client.cookie : null,
+        extra: {
+          useCookie,
         },
       }
     );

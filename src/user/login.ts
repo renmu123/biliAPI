@@ -1,6 +1,7 @@
 import EventEmitter from "node:events";
 
 import { BaseRequest } from "../base/index";
+import Auth from "../base/Auth";
 import { md5 } from "../utils/index";
 
 import type { CommonResponse } from "../types/index";
@@ -20,8 +21,9 @@ export class TvQrcodeLogin extends BaseRequest {
   private secretKey = "59b43e04ad6965f34319062b478f83dd";
   private timmer: NodeJS.Timeout | null = null;
   emitter = new EventEmitter();
+
   constructor() {
-    super({
+    super(undefined, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         cookie: null,
@@ -193,7 +195,7 @@ export class WebQrcodeLogin extends BaseRequest {
   private timmer: NodeJS.Timeout | null = null;
   emitter = new EventEmitter();
   constructor() {
-    super({
+    super(undefined, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         cookie: null,
