@@ -1,8 +1,5 @@
 import type { Request, CommonResponse, Client } from "../types/index";
-
-type GenerateNumberRange<Min extends number, Max extends number> = {
-  [K in Min | Max]: K;
-};
+import type { GenerateNumberRange } from "../types/utils";
 
 export default class Reply {
   request: Request;
@@ -34,19 +31,19 @@ export default class Reply {
    * 列表
    * @param oid 目标评论区id,如果是稿件则为aid
    * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
-   * @param sort 0: 按时间, 1: 按点赞数, 2: 按回复数
-   * @param nohot 是否显示热评 0: 显示, 1: 不显示
-   * @param pn 页码 从1开始
-   * @param ps 每页数量
+   * @param sort 0: 按时间, 1: 按点赞, 2: 按回复
+   * @param nohot 是否显示热评 0: 不显示, 1: 显示
+   * @param pn 页码，默认1
+   * @param ps 每页数量，默认20
    * @returns 参数太多，不想写了 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E6%9D%A1%E7%9B%AE%E5%AF%B9%E8%B1%A1
    */
   async list(params: {
     oid?: number;
     type?: number;
-    sort: 0 | 1 | 2;
+    sort?: 0 | 1 | 2;
     nohot?: 0 | 1;
-    pn: number;
-    ps: GenerateNumberRange<1, 20>;
+    pn?: number;
+    ps?: GenerateNumberRange<1, 20>;
   }): Promise<
     CommonResponse<{
       [key: string]: any;
@@ -58,6 +55,27 @@ export default class Reply {
       type: this.type,
       ...params,
       csrf: this.client.cookieObj.bili_jct,
+    };
+    return this.request.get(url, {
+      params: data,
+    });
+  }
+
+  /**
+   * 评论个数
+   * @param oid 目标评论区id,如果是稿件则为aid
+   * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
+   */
+  async count(params: { oid?: number; type?: number }): Promise<
+    CommonResponse<{
+      count: number;
+    }>
+  > {
+    const url = `https://api.bilibili.com/x/v2/reply/count`;
+    const data = {
+      oid: this.oid,
+      type: this.type,
+      ...params,
     };
     return this.request.get(url, {
       params: data,

@@ -1,6 +1,7 @@
 import Reply from "./reply";
 
 import type { Request, CommonResponse, Client } from "../types/index";
+import type { GenerateNumberRange } from "../types/utils";
 
 export default class Video {
   request: Request;
@@ -217,6 +218,27 @@ export default class Video {
        */
       setOid: (oid: number) => {
         replyParams.oid = oid;
+      },
+      /**
+       * 评论列表
+       * @param ps 每页数量，默认20
+       * @param pn 页码，默认1
+       * @param sort 排序方式, 0: 按时间, 1: 按点赞, 2: 按回复
+       * @param nohot 是否显示热门评论, 0: 不显示, 1: 显示
+       */
+      list: (params?: {
+        ps?: GenerateNumberRange<1, 20>;
+        pn?: number;
+        sort?: 0 | 1 | 2;
+        nohot?: 0 | 1;
+      }) => {
+        return _reply.list({ ...replyParams, ...params });
+      },
+      /**
+       * 评论个数
+       */
+      count: () => {
+        return _reply.count({ ...replyParams });
       },
       /**
        * 添加评论

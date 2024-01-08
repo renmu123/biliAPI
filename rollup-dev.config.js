@@ -17,6 +17,7 @@ export default [
         format: "cjs",
       },
     ],
+    // external: ["axios", "p-queue", "axios-retry"],
     plugins: [
       typescript(),
       nodeResolve({ browser: false }),
