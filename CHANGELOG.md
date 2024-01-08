@@ -1,3 +1,14 @@
+# 1.0.0
+
+## Breaking change
+
+1. `Client`类初始化参数变更
+2. 返回参数修改，直接返回 data
+
+## Feature
+
+1. 新增子类导出 `Common,Reply,Video,User,Search,Platform,Live1`
+
 # 0.7.0
 
 ## Feature
