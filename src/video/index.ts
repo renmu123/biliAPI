@@ -64,13 +64,8 @@ export default class Video {
    * 列出收藏夹
    * @param aid aid
    * @param type 收藏夹类型，默认2
-   * @param up_mid 用户id
    */
-  async listFavoriteBox(params?: {
-    aid?: number;
-    type: number;
-    up_mid: number;
-  }): Promise<
+  async listFavoriteBox(params?: { aid?: number; type: number }): Promise<
     CommonResponse<{
       count: number;
       list: {
@@ -88,6 +83,7 @@ export default class Video {
     this.client.authLogin();
     const data = {
       rid: params.aid ?? this.aid,
+      up_mid: this.client.uid,
       ...params,
       csrf: this.client.cookieObj.bili_jct,
     };
@@ -100,14 +96,12 @@ export default class Video {
    * 处理收藏夹内容
    * @param aid aid
    * @param type 收藏夹类型，默认2
-   * @param up_mid 用户id
    * @param add_media_ids 添加的视频id，英文逗号分隔
    * @param del_media_ids 删除的视频id，英文逗号分隔
    */
   async editFavoriteBox(params: {
     aid?: number;
     type: number;
-    up_mid: number;
     add_media_ids?: string;
     del_media_ids?: string;
   }): Promise<
@@ -122,6 +116,7 @@ export default class Video {
     const url = `https://api.bilibili.com/x/v3/fav/resource/deal`;
     const data = {
       rid: params.aid ?? this.aid,
+      up_mid: this.client.uid,
       ...params,
       csrf: this.client.cookieObj.bili_jct,
     };

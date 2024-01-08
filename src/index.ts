@@ -23,6 +23,7 @@ class Client extends BaseRequest {
   };
   accessToken?: string;
   useCookie: boolean;
+  uid: number;
 
   /**
    * @param useCookie 无需登录的接口是否使用cookie
@@ -92,18 +93,20 @@ class Client extends BaseRequest {
       {}
     );
     this.accessToken = cookieObj.token_info.access_token;
+    this.uid = cookieObj.token_info.mid;
   }
 
   /**
    * 设置登录相关参数
    */
-  setAuth(
+  async setAuth(
     cookie?: {
       bili_jct: string;
       SESSDATA: string;
       [key: string]: string;
     },
-    accessToken?: string
+    accessToken?: string,
+    uid?: number
   ) {
     if (cookie) {
       this.cookieObj = cookie;
@@ -115,6 +118,12 @@ class Client extends BaseRequest {
     }
 
     this.accessToken = accessToken;
+    if (uid) {
+      this.uid = uid;
+    } else {
+      const { data } = await this.user.getMyInfo();
+      this.uid = data.profile.mid;
+    }
   }
 
   /**
@@ -156,4 +165,11 @@ export {
   WebVideoUploader,
   WebQrcodeLogin,
   CommonResponse,
+  Common,
+  Reply,
+  Video,
+  User,
+  Search,
+  Platform,
+  Live,
 };
