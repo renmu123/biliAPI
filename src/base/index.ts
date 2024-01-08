@@ -36,7 +36,16 @@ export class BaseRequest {
     });
     instance.interceptors.response.use(
       response => {
-        return Promise.resolve(response.data);
+        const config = response.config;
+        if (config.extra?.rawResponse) {
+          return Promise.resolve(response.data);
+        } else {
+          if (response.data?.code !== 0) {
+            return Promise.reject(response.data.message);
+          } else {
+            return Promise.resolve(response.data?.data);
+          }
+        }
       },
       error => {
         if (error.response) {

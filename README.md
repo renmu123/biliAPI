@@ -17,8 +17,8 @@ bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性�
 import { Client, TvQrcodeLogin } from "@renmu/bili-api";
 
 const client = new Client();
-const res = await client.live.getMasterInfo(3927637, false);
-console.log(res);
+const data = await client.live.getMasterInfo(3927637, false);
+console.log(data);
 ```
 
 ## 衍生项目

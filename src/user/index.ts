@@ -1,6 +1,6 @@
 import { fakeBuvid3 } from "../utils/index";
 
-import type { Request, CommonResponse, Client } from "../types/index";
+import type { Request, Client } from "../types/index";
 import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 
 export default class User {
@@ -14,7 +14,7 @@ export default class User {
   /**
    * 获取登录用户信息
    */
-  async getMyInfo(): Promise<CommonResponse<MyInfoV2ReturnType>> {
+  async getMyInfo(): Promise<MyInfoV2ReturnType> {
     this.client.authLogin();
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
@@ -31,9 +31,7 @@ export default class User {
    * 获取用户信息
    * @param uid 用户id
    */
-  async getUserInfo(
-    uid: number
-  ): Promise<CommonResponse<GetUserInfoReturnType>> {
+  async getUserInfo(uid: number): Promise<GetUserInfoReturnType> {
     const signParams = await this.client.WbiSign({
       mid: uid,
       token: "",
@@ -97,7 +95,9 @@ export default class User {
       order?: "pubdate" | "click" | "stow";
     },
     useCookie?: string
-  ) {
+  ): Promise<{
+    [key: string]: any;
+  }> {
     const defaultParams = {
       ps: "30",
       tid: "0",

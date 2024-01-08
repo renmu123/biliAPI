@@ -3,7 +3,7 @@ import EventEmitter from "node:events";
 import { BaseRequest } from "../base/index";
 import { md5 } from "../utils/index";
 
-import type { Request, CommonResponse } from "../types/index";
+import type { CommonResponse } from "../types/index";
 
 const enum Event {
   start = "start",
@@ -32,12 +32,10 @@ export class TvQrcodeLogin extends BaseRequest {
   /**
    * 获取登录二维码
    */
-  async getQrcode(): Promise<
-    CommonResponse<{
-      url: string;
-      auth_code: string;
-    }>
-  > {
+  async getQrcode(): Promise<{
+    url: string;
+    auth_code: string;
+  }> {
     const params: {
       appkey: string;
       local_id: string;
@@ -84,15 +82,16 @@ export class TvQrcodeLogin extends BaseRequest {
         ttl: 1;
         data: any | null;
       }>
-    >("http://passport.bilibili.com/x/passport-tv-login/qrcode/poll", params);
+    >("http://passport.bilibili.com/x/passport-tv-login/qrcode/poll", params, {
+      extra: {
+        rawResponse: true,
+      },
+    });
   }
 
   async login() {
-    const res = await this.getQrcode();
-    if (res.code !== 0) {
-      throw new Error(res.message);
-    }
-    const auth_code = res.data.auth_code;
+    const data = await this.getQrcode();
+    const auth_code = data.auth_code;
 
     this.emitter.emit("start");
     let count = 0;
@@ -136,7 +135,7 @@ export class TvQrcodeLogin extends BaseRequest {
     }, 1000);
     this.timmer = timer;
 
-    return res.data.url;
+    return data.url;
   }
   /**
    * 中断任务，并清除所有监听器
@@ -205,12 +204,10 @@ export class WebQrcodeLogin extends BaseRequest {
   /**
    * 获取登录二维码
    */
-  async getQrcode(): Promise<
-    CommonResponse<{
-      url: string;
-      qrcode_key: string;
-    }>
-  > {
+  async getQrcode(): Promise<{
+    url: string;
+    qrcode_key: string;
+  }> {
     return this.request.get(
       "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
     );
@@ -234,6 +231,9 @@ export class WebQrcodeLogin extends BaseRequest {
       params: {
         qrcode_key: qrcode_key,
       },
+      extra: {
+        rawResponse: true,
+      },
     });
   }
 
@@ -249,11 +249,8 @@ export class WebQrcodeLogin extends BaseRequest {
       return result;
     }
 
-    const res = await this.getQrcode();
-    if (res.code !== 0) {
-      throw new Error(res.message);
-    }
-    const qrcode_key = res.data.qrcode_key;
+    const data = await this.getQrcode();
+    const qrcode_key = data.qrcode_key;
 
     this.emitter.emit("start");
     let count = 0;
@@ -303,7 +300,7 @@ export class WebQrcodeLogin extends BaseRequest {
     }, 1000);
     this.timmer = timer;
 
-    return res.data.url;
+    return data.url;
   }
   /**
    * 中断任务，并清除所有监听器

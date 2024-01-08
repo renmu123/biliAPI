@@ -53,20 +53,20 @@ async function qrcodeLogin() {
 async function getMyInfo() {
   const client = new Client();
   await client.loadCookieFile("C:\\Users\\renmu\\biliAPI\\cookies.json");
-  const res = await client.user.getMyInfo();
-  console.log(res);
+  const data = await client.user.getMyInfo();
+  console.log(data);
 }
 
 // 获取用户信息
 async function getUserInfo() {
   const client = new Client();
-  const res = await client.user.getUserInfo(10995238);
-  console.log(res);
+  const data = await client.user.getUserInfo(10995238);
+  console.log(data);
 }
 
 // 获取主播信息
 async function getMasterInfo() {
   const client = new Client();
-  const res = await client.live.getMasterInfo(10995238);
-  console.log(res);
+  const data = await client.live.getMasterInfo(10995238);
+  console.log(data);
 }

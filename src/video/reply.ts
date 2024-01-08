@@ -1,4 +1,4 @@
-import type { Request, CommonResponse, Client } from "../types/index";
+import type { Request, Client } from "../types/index";
 import type { GenerateNumberRange } from "../types/utils";
 
 export default class Reply {
@@ -44,11 +44,9 @@ export default class Reply {
     nohot?: 0 | 1;
     pn?: number;
     ps?: GenerateNumberRange<1, 20>;
-  }): Promise<
-    CommonResponse<{
-      [key: string]: any;
-    }>
-  > {
+  }): Promise<{
+    [key: string]: any;
+  }> {
     const url = `https://api.bilibili.com/x/v2/reply`;
     const data = {
       oid: this.oid,
@@ -66,11 +64,9 @@ export default class Reply {
    * @param oid 目标评论区id,如果是稿件则为aid
    * @param type @link https://socialsisteryi.github.io/bilibili-API-collect/docs/comment/#%E8%AF%84%E8%AE%BA%E5%8C%BA%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%A0%81
    */
-  async count(params: { oid?: number; type?: number }): Promise<
-    CommonResponse<{
-      count: number;
-    }>
-  > {
+  async count(params: { oid?: number; type?: number }): Promise<{
+    count: number;
+  }> {
     const url = `https://api.bilibili.com/x/v2/reply/count`;
     const data = {
       oid: this.oid,
@@ -98,7 +94,7 @@ export default class Reply {
     parent?: number;
     message: string;
     plat: 1 | 2 | 3 | 4;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/add`;
     const data = {
@@ -123,7 +119,7 @@ export default class Reply {
     type?: number;
     rpid: number;
     action: 1 | 0;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/action`;
     const data = {
@@ -148,7 +144,7 @@ export default class Reply {
     type?: number;
     rpid: number;
     action: 1 | 0;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/hate`;
     const data = {
@@ -171,7 +167,7 @@ export default class Reply {
     oid?: number;
     type?: number;
     rpid: number;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/del`;
     const data = {
@@ -196,7 +192,7 @@ export default class Reply {
     type?: number;
     rpid: number;
     action: 1 | 0;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/top`;
     const data = {
@@ -223,7 +219,7 @@ export default class Reply {
     rpid: number;
     reason: number;
     content?: string;
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/report`;
     const data = {

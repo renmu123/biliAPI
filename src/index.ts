@@ -13,7 +13,14 @@ import Reply from "./video/reply";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 
-import type { CommonResponse } from "./types";
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    extra?: {
+      wbiSign?: boolean;
+      rawResponse?: boolean;
+    };
+  }
+}
 
 class Client extends BaseRequest {
   cookie: string;
@@ -121,7 +128,7 @@ class Client extends BaseRequest {
     if (uid) {
       this.uid = uid;
     } else {
-      const { data } = await this.user.getMyInfo();
+      const data = await this.user.getMyInfo();
       this.uid = data.profile.mid;
     }
   }
@@ -164,7 +171,6 @@ export {
   utils,
   WebVideoUploader,
   WebQrcodeLogin,
-  CommonResponse,
   Common,
   Reply,
   Video,

@@ -8,7 +8,6 @@ import { getFileSize, sum } from "../utils/index";
 
 import type {
   Request,
-  CommonResponse,
   Client,
   MediaOptions,
   MediaPartOptions,
@@ -52,7 +51,7 @@ export default class Platform {
     interactive?: number;
     tid?: number;
     order?: "click" | "stow" | "dm_count" | "scores";
-  }): Promise<CommonResponse<getArchivesReturnType>> {
+  }): Promise<getArchivesReturnType> {
     this.client.authLogin();
     const defaultParams = {
       pn: 1,
@@ -80,18 +79,23 @@ export default class Platform {
    * @param tag 需要检查的tag
    * @returns
    */
-  async checkTag(tag: string): Promise<
-    CommonResponse<{
+  async checkTag(tag: string): Promise<{
+    code: number;
+    message: string;
+    data: {
       code: number;
-      message: string;
-    }>
-  > {
+      content: string;
+    };
+  }> {
     this.client.authLogin();
     return this.request.get(
       `https://member.bilibili.com/x/vupre/web/topic/tag/check`,
       {
         params: {
           tag: tag,
+        },
+        extra: {
+          rawResponse: true,
         },
       }
     );
@@ -269,7 +273,7 @@ export default class Platform {
       uploader: "web",
       submit: "client",
     }
-  ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
+  ): Promise<{ aid: number; bvid: string }> {
     return new Promise(async (resolve, reject) => {
       const { emitter } = await this.addMedia(filePaths, options, api);
       emitter.on("completed", res => {
@@ -293,7 +297,7 @@ export default class Platform {
       | {
           aid: number;
         }
-  ): Promise<CommonResponse<MediaDetailReturnType>> {
+  ): Promise<MediaDetailReturnType> {
     return this.request.get(
       `https://member.bilibili.com/x/vupre/web/archive/view`,
       {
@@ -376,7 +380,7 @@ export default class Platform {
       uploader: "web",
       submit: "client",
     }
-  ): Promise<CommonResponse<{ aid: number; bvid: string }>> {
+  ): Promise<{ aid: number; bvid: string }> {
     return new Promise(async (resolve, reject) => {
       const { emitter } = await this.editMedia(
         aid,
@@ -400,12 +404,10 @@ export default class Platform {
   async addMediaClientApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: MediaOptions
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
     this.client.authLogin(["client"]);
     this.checkOptions(options);
     const data = {
@@ -432,7 +434,7 @@ export default class Platform {
 
     if (options.cover && !options.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(options.cover);
-      data["cover"] = coverRes.data.url;
+      data["cover"] = coverRes.url;
     }
 
     console.log("submit", data);
@@ -454,12 +456,10 @@ export default class Platform {
   async addMediaBCutApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: MediaOptions
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
     this.client.authLogin();
     this.checkOptions(options);
     const csrf = this.client.cookieObj.bili_jct;
@@ -489,7 +489,7 @@ export default class Platform {
 
     if (options.cover && !options.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(options.cover);
-      data["cover"] = coverRes.data.url;
+      data["cover"] = coverRes.url;
     }
 
     console.log("submit", data);
@@ -516,12 +516,10 @@ export default class Platform {
   async addMediaWebApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: MediaOptions
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
     this.client.authLogin();
     this.checkOptions(options);
     const csrf = this.client.cookieObj.bili_jct;
@@ -551,7 +549,7 @@ export default class Platform {
 
     if (options.cover && !options.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(options.cover);
-      data["cover"] = coverRes.data.url;
+      data["cover"] = coverRes.url;
     }
 
     console.log("submit", data);
@@ -571,18 +569,14 @@ export default class Platform {
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: Partial<MediaOptions> & { aid: number },
     mode: "append" | "replace"
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
     this.client.authLogin();
-    const archive = (
-      await this.getArchive({
-        aid: options.aid,
-      })
-    ).data;
+    const archive = await this.getArchive({
+      aid: options.aid,
+    });
 
     const csrf = this.client.cookieObj.bili_jct;
     const data: MediaOptions & {
@@ -602,7 +596,7 @@ export default class Platform {
     delete data.recreate;
     if (data.cover && !data.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(data.cover);
-      data["cover"] = coverRes.data.url;
+      data["cover"] = coverRes.url;
     }
     if (mode === "append") {
       data.videos = [...archive.videos, ...videos];
@@ -633,18 +627,14 @@ export default class Platform {
     videos: { cid: number; filename: string; title: string; desc?: string }[],
     options: Partial<MediaOptions> & { aid: number },
     mode: "append" | "replace"
-  ): Promise<
-    CommonResponse<{
-      aid: number;
-      bvid: string;
-    }>
-  > {
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
     this.client.authLogin(["client"]);
-    const archive = (
-      await this.getArchive({
-        aid: options.aid,
-      })
-    ).data;
+    const archive = await this.getArchive({
+      aid: options.aid,
+    });
 
     const data: MediaOptions & {
       videos: { cid: number; filename: string; title: string; desc?: string }[];
@@ -661,7 +651,7 @@ export default class Platform {
     delete data.recreate;
     if (data.cover && !data.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(data.cover);
-      data["cover"] = coverRes.data.url;
+      data["cover"] = coverRes.url;
     }
     if (mode === "append") {
       data.videos = [...archive.videos, ...videos];
@@ -686,9 +676,7 @@ export default class Platform {
    * 上传封面
    * @param filePath 文件路径
    */
-  async uploadCover(
-    filePath: string
-  ): Promise<CommonResponse<{ url: string }>> {
+  async uploadCover(filePath: string): Promise<{ url: string }> {
     this.client.authLogin();
 
     return this.request.post(
@@ -709,19 +697,17 @@ export default class Platform {
   /**
    * 获取上传模板
    */
-  async getUploadTemplateList(): Promise<
-    CommonResponse<{
-      tid: number;
-      name: string;
-      typeid: number;
-      title: string;
-      tags: string;
-      description: string;
-      copyright: 1 | 2;
-      attribute: 0 | number;
-      is_default: 0 | 1;
-    }>
-  > {
+  async getUploadTemplateList(): Promise<{
+    tid: number;
+    name: string;
+    typeid: number;
+    title: string;
+    tags: string;
+    description: string;
+    copyright: 1 | 2;
+    attribute: 0 | number;
+    is_default: 0 | 1;
+  }> {
     this.client.authLogin();
     return this.request.get("https://member.bilibili.com/x/vupre/web/tpls", {
       params: {
@@ -751,7 +737,7 @@ export default class Platform {
       /** 0: 不设为默认，1: 设置默认 */
       is_default: 0 | 1;
     }> = {}
-  ): Promise<CommonResponse<{}>> {
+  ): Promise<{}> {
     this.client.authLogin();
     return this.request.post(
       "https://member.bilibili.com/x/vupre/web/tpl/update",
@@ -798,13 +784,11 @@ export default class Platform {
     /** 封面地址 */
     cover_url?: string;
   }): Promise<
-    CommonResponse<
-      {
-        tag: string;
-        checked: number;
-        request_id: string;
-      }[]
-    >
+    {
+      tag: string;
+      checked: number;
+      request_id: string;
+    }[]
   > {
     this.client.authLogin();
     return this.request.get(
@@ -833,16 +817,14 @@ export default class Platform {
       ps: 20,
     }
   ): Promise<
-    CommonResponse<
-      {
-        topic_id: number;
-        topic_name: string;
-        description: string;
-        mission_id: number;
-        activity_text: string;
-        activity_description: string;
-      }[]
-    >
+    {
+      topic_id: number;
+      topic_name: string;
+      description: string;
+      mission_id: number;
+      activity_text: string;
+      activity_description: string;
+    }[]
   > {
     this.client.authLogin();
     return this.request.get(
@@ -865,30 +847,28 @@ export default class Platform {
       page_size: 0,
       offset: 20,
     }
-  ): Promise<
-    CommonResponse<{
-      result: {
-        has_create_jurisdiction: boolean;
-        is_new_topic: boolean;
-        tips: string;
-        page_info: {
-          has_more: boolean;
-          offset: number;
-          page_number: number;
-        };
-        topics: {
-          act_protocol: string;
-          activity_sign: string;
-          description: string;
-          id: number;
-          mission_id: number;
-          name: string;
-          state: number;
-          uname: string;
-        }[];
+  ): Promise<{
+    result: {
+      has_create_jurisdiction: boolean;
+      is_new_topic: boolean;
+      tips: string;
+      page_info: {
+        has_more: boolean;
+        offset: number;
+        page_number: number;
+      };
+      topics: {
+        act_protocol: string;
+        activity_sign: string;
+        description: string;
+        id: number;
+        mission_id: number;
+        name: string;
+        state: number;
+        uname: string;
       }[];
-    }>
-  > {
+    }[];
+  }> {
     this.client.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/topic/search",
@@ -913,7 +893,7 @@ export default class Platform {
       pn: 1,
       ps: 30,
     }
-  ): Promise<CommonResponse<getSeasonListReturnType>> {
+  ): Promise<getSeasonListReturnType> {
     this.client.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x2/creative/web/seasons",
@@ -930,7 +910,7 @@ export default class Platform {
     sectionId: number;
     /** aid: 视频id, cid:分p id */
     episodes: { aid: number; cid: number; title: string }[];
-  }): Promise<CommonResponse<{}>> {
+  }): Promise<{}> {
     this.client.authLogin();
     return this.request.post(
       "https://member.bilibili.com/x2/creative/web/season/section/episodes/add",
@@ -949,31 +929,29 @@ export default class Platform {
   /**
    * aid反查合集id
    */
-  async getSessionId(aid: number): Promise<
-    CommonResponse<{
-      // 合集id
-      id: number;
-      title: string;
-      desc: string;
-      cover: string;
-      isEnd: number;
-      mid: number;
-      isAct: number;
-      is_pay: number;
-      state: number;
-      partState: number;
-      signState: number;
-      rejectReason: string;
-      ctime: number;
-      mtime: number;
-      no_section: number;
-      forbid: number;
-      protocol_id: string;
-      ep_num: number;
-      season_price: number;
-      is_opened: number;
-    }>
-  > {
+  async getSessionId(aid: number): Promise<{
+    // 合集id
+    id: number;
+    title: string;
+    desc: string;
+    cover: string;
+    isEnd: number;
+    mid: number;
+    isAct: number;
+    is_pay: number;
+    state: number;
+    partState: number;
+    signState: number;
+    rejectReason: string;
+    ctime: number;
+    mtime: number;
+    no_section: number;
+    forbid: number;
+    protocol_id: string;
+    ep_num: number;
+    season_price: number;
+    is_opened: number;
+  }> {
     this.client.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x2/creative/web/season/aid",

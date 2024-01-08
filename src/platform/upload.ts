@@ -70,6 +70,9 @@ export class WebVideoUploader {
         size: size,
         webVersion: "2.14.0",
       },
+      extra: {
+        rawResponse: true,
+      },
     });
   }
 
@@ -96,6 +99,9 @@ export class WebVideoUploader {
       },
       headers: {
         "X-Upos-Auth": auth,
+      },
+      extra: {
+        rawResponse: true,
       },
     });
   }
@@ -137,6 +143,9 @@ export class WebVideoUploader {
         },
         "axios-retry": {
           retries: 2,
+        },
+        extra: {
+          rawResponse: true,
         },
         signal: options.controller.signal,
         onUploadProgress: (progressEvent: any) => {
@@ -243,6 +252,9 @@ export class WebVideoUploader {
         params: params,
         headers: {
           "X-Upos-Auth": auth,
+        },
+        extra: {
+          rawResponse: true,
         },
       }
     );

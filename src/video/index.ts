@@ -1,6 +1,6 @@
 import Reply from "./reply";
 
-import type { Request, CommonResponse, Client } from "../types/index";
+import type { Request, Client } from "../types/index";
 import type { GenerateNumberRange } from "../types/utils";
 
 export default class Video {
@@ -25,10 +25,7 @@ export default class Video {
    * @param aid 视频aid
    * @param like 点赞或取消点赞
    */
-  async like(params: {
-    aid?: number;
-    like: boolean;
-  }): Promise<CommonResponse<{}>> {
+  async like(params: { aid?: number; like: boolean }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/archive/like`;
     const data = {
@@ -45,10 +42,7 @@ export default class Video {
    * @param aid 视频aid
    * @param multiply 1: 1枚，2：2枚
    */
-  async coin(params: {
-    aid?: number;
-    multiply: "1" | "2";
-  }): Promise<CommonResponse<{}>> {
+  async coin(params: { aid?: number; multiply: "1" | "2" }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/coin/add`;
     const data = {
@@ -65,21 +59,19 @@ export default class Video {
    * @param aid aid
    * @param type 收藏夹类型，默认2
    */
-  async listFavoriteBox(params?: { aid?: number; type: number }): Promise<
-    CommonResponse<{
-      count: number;
-      list: {
-        id: number;
-        fid: number;
-        mid: number;
-        attr: number;
-        title: string;
-        fav_state: number;
-        media_count: number;
-      }[];
-      season: any;
-    }>
-  > {
+  async listFavoriteBox(params?: { aid?: number; type: number }): Promise<{
+    count: number;
+    list: {
+      id: number;
+      fid: number;
+      mid: number;
+      attr: number;
+      title: string;
+      fav_state: number;
+      media_count: number;
+    }[];
+    season: any;
+  }> {
     this.client.authLogin();
     const data = {
       rid: params.aid ?? this.aid,
@@ -104,14 +96,12 @@ export default class Video {
     type: number;
     add_media_ids?: string;
     del_media_ids?: string;
-  }): Promise<
-    CommonResponse<{
-      prompt: boolean;
-      ga_data: any;
-      total_msg: string;
-      success_num: number;
-    }>
-  > {
+  }): Promise<{
+    prompt: boolean;
+    ga_data: any;
+    total_msg: string;
+    success_num: number;
+  }> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/v3/fav/resource/deal`;
     const data = {
@@ -128,7 +118,7 @@ export default class Video {
    * 增加分享次数
    * @param aid 视频aid
    */
-  async addShare(params?: { aid?: number }): Promise<CommonResponse<{}>> {
+  async addShare(params?: { aid?: number }): Promise<{}> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/share/add`;
     const data = {
@@ -143,17 +133,15 @@ export default class Video {
    * 一键三连
    * @param aid 视频aid
    */
-  async likeCoinShare(params?: { aid?: number }): Promise<
-    CommonResponse<{
-      like: boolean;
-      coin: boolean;
-      fav: boolean;
-      multiply: number;
-      id_risk: boolean;
-      gaia_res_type: number;
-      gaia_data: any;
-    }>
-  > {
+  async likeCoinShare(params?: { aid?: number }): Promise<{
+    like: boolean;
+    coin: boolean;
+    fav: boolean;
+    multiply: number;
+    id_risk: boolean;
+    gaia_res_type: number;
+    gaia_data: any;
+  }> {
     this.client.authLogin();
     const url = `https://api.bilibili.com/x/web-interface/archive/like/triple`;
     const data = {
@@ -170,11 +158,9 @@ export default class Video {
    * @param aid 视频aid
    * @param bvid 视频bvid
    */
-  async getInfo(params: { aid?: number; bvid?: string }): Promise<
-    CommonResponse<{
-      [key: string]: any;
-    }>
-  > {
+  async getInfo(params: { aid?: number; bvid?: string }): Promise<{
+    [key: string]: any;
+  }> {
     const url = `https://api.bilibili.com/x/web-interface/view`;
     const data = {
       aid: params.aid ?? this.aid,
