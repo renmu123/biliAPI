@@ -7,7 +7,11 @@
 
 ## Feature
 
-1. 新增子类导出 `Common,Reply,Video,User,Search,Platform,Live1`
+1. 新增子类导出 `Common,Reply,Video,User,Search,Platform,Live`
+
+## Other
+
+1. 重构`useCookie`的实现
 
 # 0.7.0
 
