@@ -6,7 +6,7 @@ import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 
 export default class User extends BaseRequest {
   noAuthUseCookie: boolean;
-  constructor(auth?: Auth, useCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), useCookie: boolean = false) {
     super(auth);
     this.noAuthUseCookie = useCookie;
   }
@@ -14,7 +14,6 @@ export default class User extends BaseRequest {
    * 获取登录用户信息
    */
   async getMyInfo(): Promise<MyInfoV2ReturnType> {
-    console.log(this.auth);
     this.auth.authLogin();
     return this.request.get("https://api.bilibili.com/x/space/v2/myinfo");
   }
@@ -31,18 +30,27 @@ export default class User extends BaseRequest {
    * 获取用户信息
    * @param uid 用户id
    */
-  async getUserInfo(uid: number): Promise<GetUserInfoReturnType> {
+  async getUserInfo(
+    uid: number,
+    useCookie = this.noAuthUseCookie
+  ): Promise<GetUserInfoReturnType> {
     const signParams = await this.WbiSign({
       mid: uid,
       token: "",
       platform: "web",
       web_location: "1550101",
     });
+
+    let cookie = this.auth.cookie;
+    if (!useCookie) {
+      cookie = `buvid3=${fakeBuvid3()}`;
+    }
+
     return this.request.get(
       `https://api.bilibili.com/x/space/wbi/acc/info?${signParams}`,
       {
         headers: {
-          cookie: `buvid3=${fakeBuvid3()}`,
+          cookie: cookie,
           origin: "https://space.bilibili.com",
           referer: `https://space.bilibili.com/${uid}`,
         },
@@ -108,6 +116,7 @@ export default class User extends BaseRequest {
       platform: "web",
       web_location: "1550101",
       order_avoided: "true",
+      ...this.dm,
     };
     let cookie = this.auth.cookie;
     if (!useCookie) {
@@ -123,7 +132,6 @@ export default class User extends BaseRequest {
       {
         headers: {
           cookie: cookie,
-          "User-Agent": "Mozilla/5.0",
           origin: "https://space.bilibili.com",
           "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
         },

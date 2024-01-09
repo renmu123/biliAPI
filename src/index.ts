@@ -9,6 +9,7 @@ import Video from "./video/index";
 import Reply from "./video/reply";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
+import { fakeBuvid3, fakeDmCoverImgStr } from "./utils";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -99,6 +100,8 @@ class Client {
 
 const utils = {
   WbiSign,
+  fakeBuvid3,
+  fakeDmCoverImgStr,
 };
 
 export {

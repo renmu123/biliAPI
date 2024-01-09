@@ -73,6 +73,21 @@ export function md5(data: any) {
   md5Hash.update(data);
   return md5Hash.digest("hex");
 }
+export const btoa = function (str: string) {
+  var s = Buffer.from(str).toString("base64");
+  return s;
+};
+
+/**
+ * 生成dm_cover_img_str
+ * @param str 比如：ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0XX)), SwiftShader driver)Google Inc. (Google)
+ */
+export function fakeDmCoverImgStr(str: string) {
+  var e = new TextEncoder().encode(str).buffer,
+    n = new Uint8Array(e),
+    r = btoa(String.fromCharCode.apply(null, n));
+  return r.substring(0, r.length - 2);
+}
 
 export function fakeBuvid3() {
   // 57ADE427-90A8-6E7D-F341-02E62CA23E1B39631infoc

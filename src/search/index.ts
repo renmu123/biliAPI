@@ -5,7 +5,7 @@ import type { SearchTypeParams } from "../types/search";
 
 export default class Search extends BaseRequest {
   noAuthUseCookie: boolean;
-  constructor(auth?: Auth, useCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), useCookie: boolean = false) {
     super(auth);
     this.noAuthUseCookie = useCookie;
   }

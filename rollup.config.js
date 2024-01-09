@@ -30,6 +30,7 @@ export default [
         format: "cjs",
       },
     ],
+    external: ["axios", "p-queue", "axios-retry"],
     plugins: [
       typescript(),
       nodeResolve({ browser: false }),
@@ -39,6 +40,7 @@ export default [
   },
   {
     input: "dist/types/index.d.ts",
+    external: ["axios", "p-queue", "axios-retry"],
     plugins: [
       dts({
         respectExternal: true,

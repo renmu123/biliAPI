@@ -18,7 +18,7 @@ import {
 } from "../types/platform";
 
 export default class Platform extends BaseRequest {
-  constructor(auth: Auth) {
+  constructor(auth: Auth = new Auth()) {
     super(auth);
   }
   /**

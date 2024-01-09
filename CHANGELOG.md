@@ -9,9 +9,14 @@
 
 1. 新增子类导出 `Common,Reply,Video,User,Search,Platform,Live`
 
+## Bug fix
+
+1. 修复投稿列表查询失败
+
 ## Other
 
 1. 重构`useCookie`的实现
+2. 打包增加依赖
 
 # 0.7.0
 

@@ -7,7 +7,11 @@ import type { GenerateNumberRange } from "../types/utils";
 export default class Video extends BaseRequest {
   aid?: number;
   noAuthUseCookie: boolean;
-  constructor(auth?: Auth, noAuthUseCookie: boolean = false, aid?: number) {
+  constructor(
+    auth: Auth = new Auth(),
+    noAuthUseCookie: boolean = false,
+    aid?: number
+  ) {
     super(auth);
 
     this.aid = aid;

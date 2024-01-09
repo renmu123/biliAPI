@@ -3,7 +3,7 @@ import Auth from "../base/Auth";
 
 export default class Common extends BaseRequest {
   noAuthUseCookie: boolean;
-  constructor(auth?: Auth, noAuthUseCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), noAuthUseCookie: boolean = false) {
     super(auth);
     this.noAuthUseCookie = noAuthUseCookie;
   }

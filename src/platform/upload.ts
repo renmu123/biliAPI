@@ -32,7 +32,7 @@ export class WebVideoUploader extends BaseRequest {
   size: number = 0;
   concurrency: number = 3;
 
-  constructor(auth: Auth, concurrency: number = 3) {
+  constructor(auth: Auth = new Auth(), concurrency: number = 3) {
     super(auth);
     this.concurrency = concurrency;
   }

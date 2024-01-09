@@ -9,7 +9,7 @@ export default class Reply extends BaseRequest {
   noAuthUseCookie: boolean;
 
   constructor(
-    auth: Auth,
+    auth: Auth = new Auth(),
     noAuthUseCookie?: boolean,
     oid?: number,
     type?: number
