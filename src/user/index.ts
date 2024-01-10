@@ -57,6 +57,11 @@ export default class User extends BaseRequest {
       }
     );
   }
+
+  /**
+   * 获取未登录情况下space可用的cookie
+   */
+  protected getSpaceCookie() {}
   /**
    * 获取用户动态
    * 返回值参考 @link : https://socialsisteryi.github.io/bilibili-API-collect/docs/dynamic/get_dynamic_detail.html

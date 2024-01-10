@@ -57,24 +57,28 @@ export class WebVideoUploader extends BaseRequest {
     upos_uri: string;
   }> {
     const { base } = path.parse(filePath);
-    return this.request.get("https://member.bilibili.com/preupload", {
-      params: {
-        zone: "cs",
-        upcdn: "bldsa",
-        probe_version: "20221109",
-        name: base,
-        r: "upos",
-        profile: "ugcfx/bup",
-        ssl: "0",
-        version: "",
-        build: "2140000",
-        size: size,
-        webVersion: "2.14.0",
-      },
-      extra: {
-        rawResponse: true,
-      },
-    });
+    const res = await this.request.get(
+      "https://member.bilibili.com/preupload",
+      {
+        params: {
+          zone: "cs",
+          upcdn: "bldsa",
+          probe_version: "20221109",
+          name: base,
+          r: "upos",
+          profile: "ugcfx/bup",
+          ssl: "0",
+          version: "",
+          build: "2140000",
+          size: size,
+          webVersion: "2.14.0",
+        },
+        extra: {
+          rawResponse: true,
+        },
+      }
+    );
+    return res.data;
   }
 
   async getUploadInfo(
@@ -89,7 +93,7 @@ export class WebVideoUploader extends BaseRequest {
     key: string;
     upload_id: string;
   }> {
-    return this.request.post(url, "", {
+    const res = await this.request.post(url, "", {
       params: {
         uploads: "",
         output: "json",
@@ -105,6 +109,7 @@ export class WebVideoUploader extends BaseRequest {
         rawResponse: true,
       },
     });
+    return res.data;
   }
   async _uploadChunk(options: UploadChunkTask) {
     const {
@@ -236,17 +241,19 @@ export class WebVideoUploader extends BaseRequest {
     });
   }
 
-  async mergeVideo(url: string, params: any, parts: any, auth: string) {
-    const res = await this.request.post<
-      never,
-      {
-        OK: number;
-        bucket: string;
-        etag: string;
-        key: string;
-        location: string;
-      }
-    >(
+  async mergeVideo(
+    url: string,
+    params: any,
+    parts: any,
+    auth: string
+  ): Promise<{
+    OK: number;
+    bucket: string;
+    etag: string;
+    key: string;
+    location: string;
+  }> {
+    const res = await this.request.post(
       url,
       {},
       {
@@ -260,7 +267,7 @@ export class WebVideoUploader extends BaseRequest {
       }
     );
     // console.log("mergeVideo", res);
-    return res;
+    return res.data;
   }
 
   sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

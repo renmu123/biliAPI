@@ -60,7 +60,7 @@ export class TvQrcodeLogin extends BaseRequest {
    * 轮询二维码状态
    * @param auth_code
    */
-  poll(auth_code: string) {
+  async poll(auth_code: string) {
     const params: {
       appkey: string;
       auth_code: string;
@@ -75,7 +75,7 @@ export class TvQrcodeLogin extends BaseRequest {
     };
 
     params.sign = this.generateSign(params);
-    return this.request.post<
+    const res = await this.request.post<
       never,
       CommonResponse<{
         /** 0：成功;86039: 二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
@@ -89,6 +89,7 @@ export class TvQrcodeLogin extends BaseRequest {
         rawResponse: true,
       },
     });
+    return res.data;
   }
 
   async login() {
@@ -218,25 +219,28 @@ export class WebQrcodeLogin extends BaseRequest {
    * 轮询二维码状态
    * @param auth_code
    */
-  poll(qrcode_key: string) {
-    return this.request.get<
-      never,
-      CommonResponse<{
-        url: string;
-        refresh_token: number;
-        timestamp: number;
-        /** 0：成功;86101:二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
-        code: 0 | 86101 | 86038 | 86090;
-        message: string;
-      }>
-    >("https://passport.bilibili.com/x/passport-login/web/qrcode/poll", {
-      params: {
-        qrcode_key: qrcode_key,
-      },
-      extra: {
-        rawResponse: true,
-      },
-    });
+  async poll(qrcode_key: string): Promise<
+    CommonResponse<{
+      url: string;
+      refresh_token: number;
+      timestamp: number;
+      /** 0：成功;86101:二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
+      code: 0 | 86101 | 86038 | 86090;
+      message: string;
+    }>
+  > {
+    const res = await this.request.get(
+      "https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
+      {
+        params: {
+          qrcode_key: qrcode_key,
+        },
+        extra: {
+          rawResponse: true,
+        },
+      }
+    );
+    return res.data;
   }
 
   async login() {

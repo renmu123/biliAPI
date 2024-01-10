@@ -61,7 +61,7 @@ export class BaseRequest {
       response => {
         const config = response.config;
         if (config.extra?.rawResponse) {
-          return Promise.resolve(response.data);
+          return Promise.resolve(response);
         } else {
           if (response.data?.code !== 0) {
             return Promise.reject(response.data.message);

@@ -81,7 +81,7 @@ export default class Platform extends BaseRequest {
     };
   }> {
     this.auth.authLogin();
-    return this.request.get(
+    const res = await this.request.get(
       `https://member.bilibili.com/x/vupre/web/topic/tag/check`,
       {
         params: {
@@ -92,6 +92,7 @@ export default class Platform extends BaseRequest {
         },
       }
     );
+    return res.data;
   }
 
   /**
