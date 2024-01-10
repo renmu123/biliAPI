@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 import { fakeBuvid3 } from "../utils/index";
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
@@ -6,6 +8,7 @@ import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 
 export default class User extends BaseRequest {
   noAuthUseCookie: boolean;
+  spaceCookie: string;
   constructor(auth: Auth = new Auth(), useCookie: boolean = false) {
     super(auth);
     this.noAuthUseCookie = useCookie;
@@ -61,7 +64,63 @@ export default class User extends BaseRequest {
   /**
    * 获取未登录情况下space可用的cookie
    */
-  protected getSpaceCookie() {}
+  protected async getSpaceCookie() {
+    if (this.spaceCookie) return this.spaceCookie;
+    const response = await this.request.get(
+      "https://space.bilibili.com/1/dynamic",
+      {
+        extra: {
+          useCookie: false,
+          rawResponse: true,
+        },
+      }
+    );
+    // 更新cookies
+    const spmPrefix = response.data.match(
+      /<meta name="spm_prefix" content="([^"]+?)">/
+    )[1];
+    const cookies = response.headers["set-cookie"]
+      .map(cookie => {
+        return cookie.split(";")[0];
+      })
+      .join("; ");
+
+    // 构建数据
+    const randPngEnd = Buffer.concat([
+      randomBytes(32),
+      Buffer.from([0, 0, 0, 0]),
+      Buffer.from("IEND"),
+      randomBytes(4),
+    ])
+      .toString("base64")
+      .slice(-50);
+    const ua = this.request.defaults.headers["User-Agent"] as string;
+    const data = {
+      "3064": 1,
+      "39c8": `${spmPrefix}.fp.risk`,
+      "3c43": {
+        adca: "Win32" || (ua && ua.includes("Windows")) ? "Win32" : "Linux",
+        bfe9: randPngEnd,
+      },
+    };
+
+    const json_data = {
+      payload: JSON.stringify(data),
+    };
+
+    // 发送第二个请求
+    await this.request.post(
+      "https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi",
+      json_data,
+      {
+        headers: {
+          cookie: cookies,
+        },
+      }
+    );
+    this.spaceCookie = cookies;
+    return this.spaceCookie;
+  }
   /**
    * 获取用户动态
    * 返回值参考 @link : https://socialsisteryi.github.io/bilibili-API-collect/docs/dynamic/get_dynamic_detail.html
@@ -78,20 +137,22 @@ export default class User extends BaseRequest {
       platform: "web",
       features: "itemOpusStyle,listOnlyfans,opusBigCover",
       host_mid: mid,
+      offset: offset,
     };
-    if (offset) {
-      // @ts-ignore
-      params.offset = offset;
+    if (offset === undefined) delete params.offset;
+    let cookies = this.auth.cookie;
+
+    if (!useCookie) {
+      const cookie = await this.getSpaceCookie();
+      cookies = cookie;
     }
+
     const signParams = await this.WbiSign(params);
     return this.request.get(
       `https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space?${signParams}`,
       {
         headers: {
-          "User-Agent": "Mozilla/5.0",
-        },
-        extra: {
-          useCookie,
+          cookie: cookies,
         },
       }
     );

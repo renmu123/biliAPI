@@ -54,7 +54,7 @@ export class BaseRequest {
         config.headers["host"] = url.hostname;
       }
 
-      console.log(config.headers);
+      // console.log(config.headers);
       return config;
     });
     instance.interceptors.response.use(
