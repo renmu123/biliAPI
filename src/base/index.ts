@@ -46,7 +46,8 @@ export class BaseRequest {
     instance.interceptors.request.use(config => {
       if (!config.headers["cookie"]) {
         config.headers["cookie"] = this.auth.cookie;
-        if (!config.extra?.useCookie) config.headers["cookie"] = undefined;
+        if (config.extra?.useCookie == false)
+          config.headers["cookie"] = undefined;
       }
 
       if (!config.headers.host) {
@@ -54,7 +55,7 @@ export class BaseRequest {
         config.headers["host"] = url.hostname;
       }
 
-      // console.log(config.headers);
+      // console.log(config.headers, this.auth.cookie);
       return config;
     });
     instance.interceptors.response.use(

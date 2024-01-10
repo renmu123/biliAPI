@@ -1,8 +1,12 @@
+import fs from "node:fs";
+import { spawn } from "node:child_process";
+
 import Reply from "./reply";
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
 
 import type { GenerateNumberRange } from "../types/utils";
+import type { VideoDetailReturnType, PlayUrlReturnType } from "../types/video";
 
 export default class Video extends BaseRequest {
   aid?: number;
@@ -38,9 +42,10 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频详细信息
    */
-  detail(params: { aid?: number; bvid?: string }): Promise<{
-    [key: string]: any;
-  }> {
+  detail(params: {
+    aid?: number;
+    bvid?: string;
+  }): Promise<VideoDetailReturnType> {
     const url = `https://api.bilibili.com/x/web-interface/view/detail`;
     return this.request.get(url, {
       params: params,
@@ -232,10 +237,140 @@ export default class Video extends BaseRequest {
       params: data,
     });
   }
+  /**
+   * 获取视频信息
+   */
+  async playurl(params: {
+    bvid?: string;
+    cid: number;
+    qn?: number;
+    fnval?: number;
+    fourk?: 0 | 1;
+    platform?: "pc" | "html5";
+  }): Promise<PlayUrlReturnType> {
+    const url = `https://api.bilibili.com/x/player/wbi/playurl`;
+    const data = {
+      fnver: 0,
+      ...params,
+    };
+    const signParams = await this.WbiSign(data);
+    return this.request.get(`${url}?${signParams}`);
+  }
   private authAid() {
     if (!this.aid) {
       throw new Error("aid is should be set");
     }
+  }
+  async _download(url: string, filePath: string) {
+    this.request({
+      method: "get",
+      url: url,
+      responseType: "stream",
+      headers: {
+        Referer: "https://www.bilibili.com/",
+      },
+      extra: {
+        rawResponse: true,
+      },
+      onDownloadProgress: progressEvent => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`下载进度: ${percentCompleted}%`);
+      },
+    })
+      .then(response => {
+        // 将流式响应保存为文件
+        response.data.pipe(fs.createWriteStream(filePath));
+
+        // 如果需要在文件保存完毕后执行一些操作，可以监听 'finish' 事件
+        response.data.on("finish", () => {
+          console.log("文件下载完成！");
+        });
+      })
+      .catch(error => {
+        console.error("下载文件时出错：", error);
+      });
+  }
+
+  /**
+   * 下载视频
+   * @param options
+   * @param options.aid 视频aid, 与bvid二选一
+   * @param options.bvid 视频bvid，与aid二选一
+   * @param options.cid 视频cid，与part二选一
+   * @param options.part 视频分p，从0开始计算，如果有cid，则优先cid，如果二者皆为空，下载第一个
+   * @param options.output 输出文件路径
+   * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频，默认使用环境变量中的ffmpeg
+   *
+   * @param mediaOptions
+   * @param mediaOptions.quality 视频质量，默认为最高质量 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
+   * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
+   * @param mediaOptions.audioQuality 音质，默认使用最高音质，30216：64k，30232：128k，30280：192k，30250：杜比全景声，30251：Hi-Res无损
+   */
+  async download(
+    options: {
+      aid?: number;
+      bvid?: string;
+      cid?: number;
+      part?: number;
+      output: string;
+      ffmpegBinPath?: string;
+    },
+    mediaOptions: {
+      videoCodec?: 7 | 12 | 13;
+      audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
+      quality?: number;
+    } = {}
+  ) {
+    const data = await this.detail({
+      aid: options.aid,
+      bvid: options.bvid,
+    });
+    const bvid = data.View.bvid;
+    const pages = data.View?.pages || [];
+    let page = pages[options.part || 0];
+    if (options.cid) {
+      page = pages.find((item: any) => item.cid === options.cid);
+    }
+    if (!page) throw new Error("视频不存在");
+
+    const cid = page.cid;
+    const media = await this.playurl({
+      bvid: bvid,
+      cid: cid,
+      fnval: 16 | 64 | 2048,
+    });
+    console.log(media.dash);
+  }
+
+  async mergeMedia(
+    mediaFilepaths: string[],
+    outputFilepath: string,
+    exArgs: string[] = [],
+    ffmpegBinPath = "ffmpeg"
+  ) {
+    return new Promise((resolve, reject) => {
+      let args = ["-v", "info"];
+      for (const mediaFilepath of mediaFilepaths) {
+        args.push("-i");
+        args.push(mediaFilepath);
+      }
+      args = [...args, "-c", "copy", ...exArgs, "-y", outputFilepath];
+      const ffmpeg = spawn(ffmpegBinPath, args);
+
+      ffmpeg.stdout.pipe(process.stdout);
+
+      ffmpeg.stderr.pipe(process.stderr);
+
+      ffmpeg.on("close", code => {
+        if (code === 0) {
+          resolve(true);
+        } else {
+          reject(false);
+        }
+      });
+    });
   }
   /**
    * 创建评论对象，操作评论的方法需要传递rpid

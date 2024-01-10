@@ -5,7 +5,6 @@ export default class Auth {
   cookieObj: {
     bili_jct: string;
     SESSDATA: string;
-    DedeUserID: string | number;
     [key: string]: string | number;
   };
   accessToken?: string;
@@ -46,9 +45,9 @@ export default class Auth {
     cookie: {
       bili_jct: string;
       SESSDATA: string;
-      DedeUserID: string | number;
       [key: string]: string | number;
     },
+    uid: number,
     accessToken?: string
   ) {
     if (cookie) {
@@ -61,7 +60,7 @@ export default class Auth {
     }
 
     this.accessToken = accessToken;
-    this.uid = Number(this.cookieObj?.DedeUserID);
+    this.uid = uid;
   }
 
   /**
