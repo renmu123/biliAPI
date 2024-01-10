@@ -27,11 +27,9 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频信息
    */
-  info(params?: { aid?: number; bvid?: string }): Promise<
-    CommonResponse<{
-      [key: string]: any;
-    }>
-  > {
+  info(params: { aid?: number; bvid?: string }): Promise<{
+    [key: string]: any;
+  }> {
     const url = `https://api.bilibili.com/x/web-interface/view`;
     return this.request.get(url, {
       params: params,
@@ -40,11 +38,9 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频详细信息
    */
-  detail(params?: { aid?: number; bvid?: string }): Promise<
-    CommonResponse<{
-      [key: string]: any;
-    }>
-  > {
+  detail(params: { aid?: number; bvid?: string }): Promise<{
+    [key: string]: any;
+  }> {
     const url = `https://api.bilibili.com/x/web-interface/view/detail`;
     return this.request.get(url, {
       params: params,
@@ -53,7 +49,7 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频简介
    */
-  desc(params?: { aid?: number; bvid?: string }): Promise<{
+  desc(params: { aid?: number; bvid?: string }): Promise<{
     code: number;
     message: string;
     ttl: number;
@@ -67,23 +63,21 @@ export default class Video extends BaseRequest {
   /**
    *查询视频分P列表 (aid/bvid转cid)
    */
-  pagelist(params?: { aid?: number; bvid?: string }): Promise<
-    CommonResponse<{
-      cid: number;
-      page: number;
-      from: string;
-      part: string;
-      duration: number;
-      vid: string;
-      weblink: string;
-      dimension: {
-        width: number;
-        height: number;
-        rotate: number;
-      };
-      first_frame: string;
-    }>
-  > {
+  pagelist(params: { aid?: number; bvid?: string }): Promise<{
+    cid: number;
+    page: number;
+    from: string;
+    part: string;
+    duration: number;
+    vid: string;
+    weblink: string;
+    dimension: {
+      width: number;
+      height: number;
+      rotate: number;
+    };
+    first_frame: string;
+  }> {
     const url = `https://api.bilibili.com/x/player/pagelist`;
     return this.request.get(url, {
       params: params,
