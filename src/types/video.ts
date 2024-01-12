@@ -183,6 +183,7 @@ export interface PlayUrlReturnType {
           mediaRange: string;
         }[];
       };
+      codecid: 7 | 12 | 13;
     }[];
     audio: {
       id: number;

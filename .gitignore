@@ -16,3 +16,6 @@ cookies.json
 cookie2.json
 test.flv
 .node-version
+
+*.mp3
+*.mp4

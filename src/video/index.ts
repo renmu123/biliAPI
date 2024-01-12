@@ -1,9 +1,14 @@
+import EventEmitter from "node:events";
 import fs from "node:fs";
-import { spawn } from "node:child_process";
+import os from "node:os";
+import path from "node:path";
 
 import Reply from "./reply";
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
+import Downloader from "../utils/downloader";
+import { mergeMedia } from "../utils/ffmpeg";
+import { uuid } from "../utils/index";
 
 import type { GenerateNumberRange } from "../types/utils";
 import type { VideoDetailReturnType, PlayUrlReturnType } from "../types/video";
@@ -261,37 +266,6 @@ export default class Video extends BaseRequest {
       throw new Error("aid is should be set");
     }
   }
-  async _download(url: string, filePath: string) {
-    this.request({
-      method: "get",
-      url: url,
-      responseType: "stream",
-      headers: {
-        Referer: "https://www.bilibili.com/",
-      },
-      extra: {
-        rawResponse: true,
-      },
-      onDownloadProgress: progressEvent => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        console.log(`下载进度: ${percentCompleted}%`);
-      },
-    })
-      .then(response => {
-        // 将流式响应保存为文件
-        response.data.pipe(fs.createWriteStream(filePath));
-
-        // 如果需要在文件保存完毕后执行一些操作，可以监听 'finish' 事件
-        response.data.on("finish", () => {
-          console.log("文件下载完成！");
-        });
-      })
-      .catch(error => {
-        console.error("下载文件时出错：", error);
-      });
-  }
 
   /**
    * 下载视频
@@ -302,6 +276,7 @@ export default class Video extends BaseRequest {
    * @param options.part 视频分p，从0开始计算，如果有cid，则优先cid，如果二者皆为空，下载第一个
    * @param options.output 输出文件路径
    * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频，默认使用环境变量中的ffmpeg
+   * @param options.cachePath 缓存路径，默认使用系统临时目录
    *
    * @param mediaOptions
    * @param mediaOptions.quality 视频质量，默认为最高质量 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
@@ -316,6 +291,7 @@ export default class Video extends BaseRequest {
       part?: number;
       output: string;
       ffmpegBinPath?: string;
+      cachePath?: string;
     },
     mediaOptions: {
       videoCodec?: 7 | 12 | 13;
@@ -323,6 +299,8 @@ export default class Video extends BaseRequest {
       quality?: number;
     } = {}
   ) {
+    const emitter = new EventEmitter();
+
     const data = await this.detail({
       aid: options.aid,
       bvid: options.bvid,
@@ -333,45 +311,131 @@ export default class Video extends BaseRequest {
     if (options.cid) {
       page = pages.find((item: any) => item.cid === options.cid);
     }
-    if (!page) throw new Error("视频不存在");
+    if (!page) throw new Error("不存在符合要求的视频");
 
     const cid = page.cid;
     const media = await this.playurl({
       bvid: bvid,
       cid: cid,
-      fnval: 16 | 64 | 2048,
+      fnval: 16 | 2048,
     });
-    console.log(media.dash);
-  }
+    const videos = (media.dash.video || []).filter(video => {
+      if (!mediaOptions.videoCodec) return true;
+      return video.codecid === mediaOptions.videoCodec;
+    });
+    const audios = media.dash.audio.filter(audio => {
+      if (!mediaOptions.audioQuality) return true;
+      return audio.id === mediaOptions.audioQuality;
+    });
 
-  async mergeMedia(
-    mediaFilepaths: string[],
-    outputFilepath: string,
-    exArgs: string[] = [],
-    ffmpegBinPath = "ffmpeg"
-  ) {
-    return new Promise((resolve, reject) => {
-      let args = ["-v", "info"];
-      for (const mediaFilepath of mediaFilepaths) {
-        args.push("-i");
-        args.push(mediaFilepath);
+    if (videos.length === 0) throw new Error("不存在符合要求的视频");
+    if (audios.length === 0) throw new Error("不存在符合要求的音频");
+
+    const video = videos[0];
+    const audio = audios[0];
+
+    const downloadedFile: string[] = [];
+    const cachePath = options.cachePath ?? os.tmpdir();
+
+    const videoDownloader = new Downloader({
+      url: video.baseUrl,
+      filePath: path.join(cachePath, `${uuid()}.mp4`),
+      axiosRequestConfig: {
+        headers: {
+          Referer: "https://www.bilibili.com/",
+          cookie: this.auth.cookie,
+        },
+      },
+      oncompleted: downloader => {
+        downloadedFile.push(downloader.filePath);
+        emitter.emit("download-completed", downloadedFile);
+      },
+      onprogress: progress => {
+        emitter.emit("progress", { event: "download", progress });
+      },
+      onerror: error => {
+        emitter.emit("error", { error: String(error) });
+        console.error(error);
+      },
+    });
+    const audioDownloader = new Downloader({
+      url: audio.baseUrl,
+      filePath: path.join(cachePath, `${uuid()}.mp3`),
+      axiosRequestConfig: {
+        headers: {
+          Referer: "https://www.bilibili.com/",
+          cookie: this.auth.cookie,
+        },
+      },
+      oncompleted: downloader => {
+        downloadedFile.push(downloader.filePath);
+        emitter.emit("download-completed", downloadedFile);
+      },
+      onprogress: progress => {
+        emitter.emit("progress", { event: "download", progress });
+      },
+      onerror: error => {
+        emitter.emit("error", { error: String(error) });
+        console.error(error);
+      },
+    });
+
+    const clean = () => {
+      try {
+        fs.promises.unlink(videoDownloader.filePath);
+        fs.promises.unlink(audioDownloader.filePath);
+      } catch (error) {
+        console.warn(error);
       }
-      args = [...args, "-c", "copy", ...exArgs, "-y", outputFilepath];
-      const ffmpeg = spawn(ffmpegBinPath, args);
+    };
 
-      ffmpeg.stdout.pipe(process.stdout);
-
-      ffmpeg.stderr.pipe(process.stderr);
-
-      ffmpeg.on("close", code => {
-        if (code === 0) {
-          resolve(true);
-        } else {
-          reject(false);
+    emitter.on("download-completed", async files => {
+      const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
+      console.log("download-completed", files);
+      if (files.length === 2) {
+        emitter.emit("progress", { event: "merge-start" });
+        try {
+          await mergeMedia(files, options.output, [], ffmpegBinPath);
+          emitter.emit("progress", { event: "merge-end" });
+          clean();
+          emitter.emit("completed", options.output);
+        } catch (error) {
+          emitter.emit("error", { error: String(error) });
         }
-      });
+      }
     });
+    emitter.on("error", () => {
+      clean();
+    });
+
+    videoDownloader.start();
+    audioDownloader.start();
+
+    const task = {
+      pause: () => {
+        videoDownloader.pause();
+        audioDownloader.pause();
+      },
+      start: () => {
+        videoDownloader.start();
+        audioDownloader.start();
+      },
+      cancel: () => {
+        videoDownloader.cancel();
+        audioDownloader.cancel();
+        clean();
+      },
+      on(
+        event: "progress" | "completed" | "error",
+        callback: (res: any) => void
+      ) {
+        this.emitter.on(event, callback);
+      },
+      emitter,
+    };
+    return task;
   }
+
   /**
    * 创建评论对象，操作评论的方法需要传递rpid
    * @param rpid 回复的评论id

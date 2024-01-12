@@ -1,8 +1,9 @@
 # 介绍
 
-支持 WebQrcode,TvQrcode 登录方式，支持视频的上传与编辑，并支持监听进度以及暂停取消等操作。
-
 bilibili 接口的 node 包装库，快速迭代中，不保证接口稳定性，部分接口参数和返回值参考接口说明。
+
+支持 WebQrcode,TvQrcode 登录方式，支持视频的上传与下载功能，并支持监听进度以及暂停取消等操作。
+
 示例可参考 [example](https://github.com/renmu123/biliAPI/blob/master/example.js)
 更新记录参考 [CHANGELOG](https://github.com/renmu123/biliAPI/blob/master/CHANGELOG.md)
 
@@ -326,6 +327,37 @@ video.like({
 ### 获取视频信息
 
 `video.getInfo()`
+
+### 获取视频播放信息
+
+`video.playurl()`
+
+### 下载
+
+下载需要传递`ffmpeg`地址，用于合并视频与音频，如果不传，默认使用环境变量。
+如果你在 electron 中使用，可能需要修复[path](https://github.com/sindresorhus/fix-path)
+
+```js
+const download = async () => {
+  const client = new Client();
+  await client.loadCookieFile("cookies.json");
+  const task = await client.video.download({
+    bvid: "BV1wc41127vK",
+    output: "test.mp4",
+  });
+  setTimeout(() => {
+    task.pause();
+  }, 3000);
+  setTimeout(() => {
+    task.start();
+  }, 5000);
+
+  task.on("progress", p => {
+    console.log(p);
+  });
+  // console.log(res);
+};
+```
 
 ### 设置 aid
 

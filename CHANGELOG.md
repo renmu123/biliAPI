@@ -8,6 +8,7 @@
 ## Feature
 
 1. 新增子类导出 `Common,Reply,Video,User,Search,Platform,Live`
+2. 增加下载视频相关接口
 
 ## Bug fix
 
