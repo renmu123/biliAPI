@@ -279,7 +279,7 @@ export default class Video extends BaseRequest {
    * @param options.cachePath 缓存路径，默认使用系统临时目录
    *
    * @param mediaOptions
-   * @param mediaOptions.quality 视频质量，默认为最高质量 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
+   * @param mediaOptions.resolution 分辨率宽度，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
    * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
    * @param mediaOptions.audioQuality 音质，默认使用最高音质，30216：64k，30232：128k，30280：192k，30250：杜比全景声，30251：Hi-Res无损
    */
@@ -296,7 +296,7 @@ export default class Video extends BaseRequest {
     mediaOptions: {
       videoCodec?: 7 | 12 | 13;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
-      quality?: number;
+      resolution?: number;
     } = {}
   ) {
     const emitter = new EventEmitter();
@@ -319,10 +319,14 @@ export default class Video extends BaseRequest {
       cid: cid,
       fnval: 16 | 2048,
     });
-    const videos = (media.dash.video || []).filter(video => {
+    let videos = (media.dash.video || []).filter(video => {
       if (!mediaOptions.videoCodec) return true;
       return video.codecid === mediaOptions.videoCodec;
     });
+    if (mediaOptions.resolution) {
+      videos = videos.filter(video => video.width === mediaOptions.resolution);
+    }
+
     const audios = media.dash.audio.filter(audio => {
       if (!mediaOptions.audioQuality) return true;
       return audio.id === mediaOptions.audioQuality;
@@ -337,6 +341,7 @@ export default class Video extends BaseRequest {
     const downloadedFile: string[] = [];
     const cachePath = options.cachePath ?? os.tmpdir();
 
+    // let loadedSize = 0;
     const videoDownloader = new Downloader({
       url: video.baseUrl,
       filePath: path.join(cachePath, `${uuid()}.mp4`),
@@ -351,7 +356,18 @@ export default class Video extends BaseRequest {
         emitter.emit("download-completed", downloadedFile);
       },
       onprogress: progress => {
-        emitter.emit("progress", { event: "download", progress });
+        const loaded =
+          videoDownloader.downloadedSize + audioDownloader.downloadedSize;
+        const total = videoDownloader.totalSize + audioDownloader.totalSize;
+        const data = {
+          event: "download",
+          progress: {
+            loaded: loaded,
+            total: total,
+            progress: loaded / total,
+          },
+        };
+        emitter.emit("progress", data);
       },
       onerror: error => {
         emitter.emit("error", { error: String(error) });
@@ -372,7 +388,18 @@ export default class Video extends BaseRequest {
         emitter.emit("download-completed", downloadedFile);
       },
       onprogress: progress => {
-        emitter.emit("progress", { event: "download", progress });
+        const loaded =
+          videoDownloader.downloadedSize + audioDownloader.downloadedSize;
+        const total = videoDownloader.totalSize + audioDownloader.totalSize;
+        const data = {
+          event: "download",
+          progress: {
+            loaded: loaded,
+            total: total,
+            progress: loaded / total,
+          },
+        };
+        emitter.emit("progress", data);
       },
       onerror: error => {
         emitter.emit("error", { error: String(error) });
@@ -391,7 +418,6 @@ export default class Video extends BaseRequest {
 
     emitter.on("download-completed", async files => {
       const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
-      console.log("download-completed", files);
       if (files.length === 2) {
         emitter.emit("progress", { event: "merge-start" });
         try {

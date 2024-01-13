@@ -61,18 +61,18 @@ class RangeDownloader {
   }
 
   async start(): Promise<void> {
-    console.log(
-      "start",
-      new Date(),
-      this.filePath,
-      this.downloadedSize,
-      this.status
-    );
+    // console.log(
+    //   "start",
+    //   new Date(),
+    //   this.filePath,
+    //   this.downloadedSize,
+    //   this.status
+    // );
 
     if (!["pending", "paused"].includes(this.status)) return;
 
     this.status = "running";
-    console.log("start2", new Date(), this.filePath, this.downloadedSize);
+    // console.log("start2", new Date(), this.filePath, this.downloadedSize);
 
     this.abortController = new AbortController();
     const _self = this;
@@ -114,14 +114,12 @@ class RangeDownloader {
       response.data.pipe(writableStream);
 
       writableStream.on("finish", () => {
-        console.log("writableStream finish", this.filePath);
         this.status = "completed";
         if (typeof _self.oncompleted === "function") {
           _self.oncompleted(_self);
         }
       });
       writableStream.on("error", error => {
-        console.log("writableStream error", this.filePath);
         throw error;
       });
 
@@ -149,13 +147,6 @@ class RangeDownloader {
 
     this.abortController !== null ? this.abortController.abort() : undefined;
     // this.downloadedSize = this.supportPartial ? this.downloadedSize : 0;
-    console.log(
-      "pause",
-      new Date(),
-      this.filePath,
-      this.downloadedSize,
-      this.abortController
-    );
   }
 
   cancel(): void {

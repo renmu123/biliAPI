@@ -171,7 +171,64 @@ export default class User extends BaseRequest {
     },
     useCookie: boolean = this.noAuthUseCookie
   ): Promise<{
-    [key: string]: any;
+    episodic_button: {
+      text: string;
+      uri: string;
+    };
+    gaia_data: any;
+    gaia_res_type: number;
+    is_risk: boolean;
+    list: {
+      slist: any[];
+      tlist: {
+        [key: string]: {
+          tid: number;
+          count: number;
+          name: string;
+        }[];
+      };
+      vlist: {
+        comment: number;
+        typeid: number;
+        play: number;
+        pic: string;
+        subtitle: string;
+        description: string;
+        copyright: string;
+        title: string;
+        review: number;
+        author: string;
+        mid: number;
+        created: number;
+        length: string;
+        video_review: number;
+        aid: number;
+        bvid: string;
+        hide_click: boolean;
+        is_pay: number;
+        is_union_video: number;
+        is_steins_gate: number;
+        is_live_playback: number;
+        is_lesson_video: number;
+        is_lesson_finished: number;
+        lesson_update_info: string;
+        jump_url: string;
+        meta: null | any; // You can replace 'any' with a more specific type if needed
+        is_avoided: number;
+        season_id: number;
+        attribute: number;
+        is_charging_arc: boolean;
+        vt: number;
+        enable_vt: number;
+        vt_display: string;
+        playback_position: number;
+      }[];
+    };
+    page: {
+      count: number;
+      num: number;
+      size: number;
+    };
   }> {
     const defaultParams = {
       ps: "30",

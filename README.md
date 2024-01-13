@@ -57,6 +57,7 @@ const getMyInfo2 = async () => {
 ## 衍生项目
 
 - [biliLive-tools](https://github.com/renmu123/biliLive-tools) B 站录播一站式工具
+- [bili-cli](https://github.com/renmu123/bili-cli) b 站命令行工具
 
 # 接口
 
@@ -354,6 +355,11 @@ const download = async () => {
 
   task.on("progress", p => {
     console.log(p);
+    // p.event = "download"|"merge-start"|"merge-end"
+    // 只有`p.event`=`download`才有`progress`相关参数，注意判断
+    // if (p.event === "download") {
+    //   const percentage = Math.floor(p.progress.progress * 100);
+    // }
   });
   // console.log(res);
 };
