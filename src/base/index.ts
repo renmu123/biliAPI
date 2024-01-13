@@ -45,7 +45,7 @@ export class BaseRequest {
 
     instance.interceptors.request.use(config => {
       if (!config.headers["cookie"]) {
-        config.headers["cookie"] = this.auth.cookie;
+        config.headers["cookie"] = this?.auth?.cookie;
         if (config.extra?.useCookie == false)
           config.headers["cookie"] = undefined;
       }

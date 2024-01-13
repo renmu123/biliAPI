@@ -86,15 +86,16 @@ class Client {
    * 设置登录相关参数
    */
   async setAuth(
-    cookie?: {
+    cookie: {
       bili_jct: string;
       SESSDATA: string;
       DedeUserID: string | number;
       [key: string]: string | number;
     },
+    uid: number,
     accessToken?: string
   ) {
-    return this.auth.setAuth(cookie, accessToken);
+    return this.auth.setAuth(cookie, uid, accessToken);
   }
 }
 
