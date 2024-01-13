@@ -14,6 +14,13 @@ export interface UploadResponse<T> {
   data: T;
 }
 
+export interface DescV2 {
+  raw_text: string;
+  /** 1：默认，2：@某人，biz_id为相应uid */
+  type: 1 | 2;
+  biz_id: string;
+}
+
 export interface MediaOptions {
   /** 封面，如果不是http:，会尝试上传 */
   cover?: string;
@@ -30,12 +37,7 @@ export interface MediaOptions {
   /** 简介 */
   desc?: string;
   /** 简介中的特殊效果 */
-  desc_v2?: {
-    raw_text: string;
-    /** 1：默认，2：@某人，biz_id为相应uid */
-    type: 1 | 2 | number;
-    biz_id: string;
-  }[];
+  desc_v2?: DescV2[];
   /** 动态 */
   dynamic?: string;
   /** 杜比音效 */

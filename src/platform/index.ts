@@ -8,7 +8,7 @@ import { isString, readFileAsBase64 } from "../utils";
 import { WebVideoUploader } from "./upload";
 import { getFileSize, sum } from "../utils/index";
 
-import type { MediaOptions, MediaPartOptions } from "../types/index";
+import type { MediaOptions, MediaPartOptions, DescV2 } from "../types/index";
 import {
   MediaDetailReturnType,
   getArchivesReturnType,
@@ -232,14 +232,10 @@ export default class Platform extends BaseRequest {
     queue.on("idle", async () => {
       try {
         const res = await submitApi(videos, options);
-        if (res.code !== 0) {
-          throw new Error(res.message);
-        } else {
-          emitter.emit("completed", res);
-        }
+        emitter.emit("completed", res);
       } catch (error) {
         emitter.emit("error", String(error));
-        throw new Error(String(error));
+        throw error;
       }
     });
 
@@ -333,17 +329,13 @@ export default class Platform extends BaseRequest {
     );
     // TODO:需要考虑queue为空的情况
     queue.on("idle", async () => {
-      console.log("idle");
       try {
         const res = await submitApi(videos, { aid: aid, ...options }, mode);
-        if (res.code !== 0) {
-          throw new Error(res.message);
-        } else {
-          emitter.emit("completed", res);
-        }
+        emitter.emit("completed", res);
       } catch (error) {
+        // console.log("error", error);
         emitter.emit("error", String(error));
-        throw new Error(String(error));
+        throw new Error(error);
       }
     });
     return {
@@ -556,6 +548,20 @@ export default class Platform extends BaseRequest {
     });
   }
 
+  convertDescV2ToDesc(descV2: DescV2[]): string {
+    return descV2
+      .map(item => {
+        if (item.type === 1) {
+          return item.raw_text;
+        } else if (item.type === 2) {
+          return `@${item.raw_text} `;
+        } else {
+          throw new Error(`不存在该type:${item.type}`);
+        }
+      })
+      .join("");
+  }
+
   /**
    * 通过web api接口编辑视频
    */
@@ -592,6 +598,9 @@ export default class Platform extends BaseRequest {
       const coverRes = await this.uploadCover(data.cover);
       data["cover"] = coverRes.url;
     }
+    if (data.desc_v2) {
+      data.desc = this.convertDescV2ToDesc(data.desc_v2);
+    }
     if (mode === "append") {
       data.videos = [...archive.videos, ...videos];
     } else if (mode === "replace") {
@@ -599,8 +608,6 @@ export default class Platform extends BaseRequest {
     } else {
       throw new Error("mode can only be append or replace");
     }
-
-    console.log("edit submit", data);
 
     return this.request.post(
       "https://member.bilibili.com/x/vu/web/edit",
@@ -647,6 +654,9 @@ export default class Platform extends BaseRequest {
       const coverRes = await this.uploadCover(data.cover);
       data["cover"] = coverRes.url;
     }
+    if (data.desc_v2) {
+      data.desc = this.convertDescV2ToDesc(data.desc_v2);
+    }
     if (mode === "append") {
       data.videos = [...archive.videos, ...videos];
     } else if (mode === "replace") {
@@ -654,7 +664,7 @@ export default class Platform extends BaseRequest {
     } else {
       throw new Error("mode can only be append or replace");
     }
-
+    // console.log("edit submit", data);
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/edit",
       data,
