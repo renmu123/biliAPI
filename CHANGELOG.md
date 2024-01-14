@@ -21,6 +21,17 @@
 1. 重构`useCookie`的实现
 2. 打包增加依赖
 
+# 0.7.2
+
+## Bug fix
+
+1. 修复上传和编辑视频取消后仍触发 completed 仍执行的 bug。
+2. 修复编辑稿件 mode="append"且视频参数为空时无法编辑的 bug
+
+## feature
+
+1. 为上传和编辑视频时的 filePaths 增加验证。
+
 # 0.7.1
 
 1. 更新 axios 依赖

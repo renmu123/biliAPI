@@ -231,7 +231,7 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       queue.on("idle", () => {
-        console.log("idle", parts.length, chunkParams.length);
+        // console.log("idle", parts.length, chunkParams.length);
         if (parts.length === chunkParams.length) {
           resolve(parts);
         } else {
