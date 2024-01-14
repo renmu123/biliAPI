@@ -218,6 +218,7 @@ export default class Platform {
     }
   ) {
     this.client.authLogin([api.submit, api.uploader]);
+    if (filePaths.length === 0) throw new Error("filePaths can not be empty");
     this.checkOptions(options);
 
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
@@ -232,6 +233,10 @@ export default class Platform {
     const submitApi = submitApiObj[api.submit];
 
     queue.on("idle", async () => {
+      if (videos.length !== filePaths.length) {
+        emitter.emit("error", "上传中止");
+        throw new Error("上传中止");
+      }
       try {
         const res = await submitApi(videos, options);
         if (res.code !== 0) {
@@ -333,9 +338,8 @@ export default class Platform {
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
       filePaths
     );
-    // TODO:需要考虑queue为空的情况
-    queue.on("idle", async () => {
-      console.log("idle");
+
+    const submit = async () => {
       try {
         const res = await submitApi(videos, { aid: aid, ...options }, mode);
         if (res.code !== 0) {
@@ -347,7 +351,20 @@ export default class Platform {
         emitter.emit("error", String(error));
         throw new Error(String(error));
       }
-    });
+    };
+    // 编辑视频时，且为append模式，运行不设置视频
+    if (filePaths.length === 0) {
+      await submit();
+    } else {
+      queue.on("idle", async () => {
+        if (videos.length !== filePaths.length) {
+          emitter.emit("error", "上传中止");
+          throw new Error("上传中止");
+        }
+        await submit();
+      });
+    }
+
     return {
       emitter,
       pause,
@@ -554,7 +571,7 @@ export default class Platform {
       data["cover"] = coverRes.data.url;
     }
 
-    console.log("submit", data);
+    // console.log("submit", data);
 
     return this.request.post("https://member.bilibili.com/x/vu/web/add", data, {
       params: {
@@ -667,6 +684,9 @@ export default class Platform {
       data.videos = [...archive.videos, ...videos];
     } else if (mode === "replace") {
       data.videos = videos;
+      if (data.videos.length === 0) {
+        throw new Error("videos can not be empty");
+      }
     } else {
       throw new Error("mode can only be append or replace");
     }

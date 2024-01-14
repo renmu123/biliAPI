@@ -216,7 +216,7 @@ export class WebVideoUploader {
       });
 
       queue.on("idle", () => {
-        console.log("idle", parts.length, chunkParams.length);
+        // console.log("idle", parts.length, chunkParams.length);
         if (parts.length === chunkParams.length) {
           resolve(parts);
         } else {
