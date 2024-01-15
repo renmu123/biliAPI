@@ -37,7 +37,7 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频信息
    */
-  info(params: { aid?: number; bvid?: string }): Promise<{
+  info(params: VideoId): Promise<{
     [key: string]: any;
   }> {
     const url = `https://api.bilibili.com/x/web-interface/view`;
@@ -48,10 +48,7 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频详细信息
    */
-  detail(params: {
-    aid?: number;
-    bvid?: string;
-  }): Promise<VideoDetailReturnType> {
+  detail(params: VideoId): Promise<VideoDetailReturnType> {
     const url = `https://api.bilibili.com/x/web-interface/view/detail`;
     return this.request.get(url, {
       params: params,
@@ -60,7 +57,7 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频简介
    */
-  desc(params: { aid?: number; bvid?: string }): Promise<{
+  desc(params: VideoId): Promise<{
     code: number;
     message: string;
     ttl: number;
@@ -74,7 +71,7 @@ export default class Video extends BaseRequest {
   /**
    *查询视频分P列表 (aid/bvid转cid)
    */
-  pagelist(params: { aid?: number; bvid?: string }): Promise<{
+  pagelist(params: VideoId): Promise<{
     cid: number;
     page: number;
     from: string;
@@ -232,7 +229,7 @@ export default class Video extends BaseRequest {
    * @param aid 视频aid
    * @param bvid 视频bvid
    */
-  async getInfo(params: { aid?: number; bvid?: string }): Promise<{
+  async getInfo(params: VideoId): Promise<{
     [key: string]: any;
   }> {
     const url = `https://api.bilibili.com/x/web-interface/view`;
@@ -246,15 +243,15 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频信息
    */
-  async playurl(params: {
-    aid?: number;
-    bvid?: string;
-    cid: number;
-    qn?: number;
-    fnval?: number;
-    fourk?: 0 | 1;
-    platform?: "pc" | "html5";
-  }): Promise<PlayUrlReturnType> {
+  async playurl(
+    params: {
+      cid: number;
+      qn?: number;
+      fnval?: number;
+      fourk?: 0 | 1;
+      platform?: "pc" | "html5";
+    } & VideoId
+  ): Promise<PlayUrlReturnType> {
     const url = `https://api.bilibili.com/x/player/wbi/playurl`;
     const data = {
       fnver: 0,
