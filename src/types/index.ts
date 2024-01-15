@@ -21,10 +21,20 @@ export interface DescV2 {
   biz_id: string;
 }
 
-export type VideoId = {
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
+  }[Keys];
+
+interface _VideoId {
   aid?: number;
   bvid?: string;
-};
+}
+
+export type VideoId = RequireAtLeastOne<_VideoId, "aid" | "bvid">;
 
 export interface MediaOptions {
   /** 封面，如果不是http:，会尝试上传 */
