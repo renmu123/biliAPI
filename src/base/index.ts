@@ -65,18 +65,14 @@ export class BaseRequest {
           return Promise.resolve(response);
         } else {
           if (response.data?.code !== 0) {
-            return Promise.reject(response.data.message);
+            return Promise.reject(response.data);
           } else {
             return Promise.resolve(response.data?.data);
           }
         }
       },
       error => {
-        if (error.response) {
-          return error.response;
-        } else {
-          return Promise.reject(error);
-        }
+        return Promise.reject(error);
       }
     );
 
