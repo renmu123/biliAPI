@@ -92,7 +92,9 @@ class RangeDownloader {
             _self.onprogress({
               loaded: _self.downloadedSize,
               total: _self.totalSize,
-              progress: Math.round(_self.downloadedSize / _self.totalSize),
+              progress: _self.totalSize
+                ? Math.round(_self.downloadedSize / _self.totalSize)
+                : 0,
             });
           }
         },

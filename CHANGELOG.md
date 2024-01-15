@@ -1,3 +1,9 @@
+# 1.1.0
+
+## Bug Fix
+
+1. 修复下载进度条可能出现无穷大的 bug
+
 # 1.0.0
 
 ## Breaking change
