@@ -11,6 +11,7 @@ import { mergeMedia } from "../utils/ffmpeg";
 import { uuid } from "../utils/index";
 
 import type { GenerateNumberRange } from "../types/utils";
+import type { VideoId } from "../types/index";
 import type { VideoDetailReturnType, PlayUrlReturnType } from "../types/video";
 
 export default class Video extends BaseRequest {
@@ -246,6 +247,7 @@ export default class Video extends BaseRequest {
    * 获取视频信息
    */
   async playurl(params: {
+    aid?: number;
     bvid?: string;
     cid: number;
     qn?: number;
@@ -261,6 +263,7 @@ export default class Video extends BaseRequest {
     const signParams = await this.WbiSign(data);
     return this.request.get(`${url}?${signParams}`);
   }
+
   private authAid() {
     if (!this.aid) {
       throw new Error("aid is should be set");
@@ -285,14 +288,12 @@ export default class Video extends BaseRequest {
    */
   async download(
     options: {
-      aid?: number;
-      bvid?: string;
       cid?: number;
       part?: number;
       output: string;
       ffmpegBinPath?: string;
       cachePath?: string;
-    },
+    } & VideoId,
     mediaOptions: {
       videoCodec?: 7 | 12 | 13;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
@@ -301,22 +302,27 @@ export default class Video extends BaseRequest {
   ) {
     const emitter = new EventEmitter();
 
-    const data = await this.detail({
-      aid: options.aid,
+    const info = {
       bvid: options.bvid,
-    });
-    const bvid = data.View.bvid;
-    const pages = data.View?.pages || [];
-    let page = pages[options.part || 0];
-    if (options.cid) {
-      page = pages.find((item: any) => item.cid === options.cid);
-    }
-    if (!page) throw new Error("不存在符合要求的视频");
+      cid: options.cid,
+    };
 
-    const cid = page.cid;
+    if (!info.cid) {
+      const data = await this.detail({
+        aid: options.aid,
+        bvid: options.bvid,
+      });
+      info.bvid = data.View.bvid;
+      const pages = data.View?.pages || [];
+      let page = pages[options.part || 0];
+      if (!page) throw new Error("不存在符合要求的视频");
+
+      info.cid = page.cid;
+    }
     const media = await this.playurl({
-      bvid: bvid,
-      cid: cid,
+      bvid: info.bvid,
+      aid: options.aid,
+      cid: info.cid,
       fnval: 16 | 2048,
     });
     let videos = (media.dash.video || []).filter(video => {

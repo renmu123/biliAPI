@@ -93,6 +93,9 @@ export class BaseRequest {
     return this.wbiKeys;
   }
   protected async WbiSign(params: any) {
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined) delete params[key];
+    });
     if (this.wbiKeys?.img_key === undefined) await this.getWbiKeys();
     return encWbi(params, this.wbiKeys.img_key, this.wbiKeys.sub_key);
   }

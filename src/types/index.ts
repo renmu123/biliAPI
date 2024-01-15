@@ -21,6 +21,11 @@ export interface DescV2 {
   biz_id: string;
 }
 
+export type VideoId = {
+  aid?: number;
+  bvid?: string;
+};
+
 export interface MediaOptions {
   /** 封面，如果不是http:，会尝试上传 */
   cover?: string;
