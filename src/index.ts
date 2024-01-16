@@ -10,6 +10,7 @@ import Reply from "./video/reply";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 import { fakeBuvid3, fakeDmCoverImgStr } from "./utils";
+import { protobufDecode, protoBufToXml } from "./utils/dm";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -103,6 +104,8 @@ const utils = {
   WbiSign,
   fakeBuvid3,
   fakeDmCoverImgStr,
+  protobufDecode,
+  protoBufToXml,
 };
 
 export {

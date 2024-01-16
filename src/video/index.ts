@@ -263,6 +263,41 @@ export default class Video extends BaseRequest {
     const signParams = await this.WbiSign(data);
     return this.request.get(`${url}?${signParams}`);
   }
+  /**
+   * 获取视频弹幕，为protobuf格式
+   * @param cid 视频cid
+   * @param aid 视频aid
+   * @param segment_index 弹幕分片序号，6min一包
+   * @param pull_mode 未知
+   * @param ps 未知
+   * @param pn 未知
+   */
+  async getDm(params: {
+    cid: number;
+    aid?: number;
+    segment_index?: number;
+    pull_mode?: number;
+    ps?: number;
+    pn?: number;
+  }): Promise<any> {
+    const url = `https://api.bilibili.com/x/v2/dm/wbi/web/seg.so`;
+    const options = {
+      type: 1,
+      oid: params.cid,
+      ...params,
+    };
+    if (!options.type) options.type = 1;
+
+    // TODO: 如果segment_index为空，则获取所有分片
+    const signParams = await this.WbiSign(options);
+    const res = await this.request.get(`${url}?${signParams}`, {
+      responseType: "arraybuffer",
+      extra: {
+        rawResponse: true,
+      },
+    });
+    return res.data;
+  }
 
   private authAid() {
     if (!this.aid) {

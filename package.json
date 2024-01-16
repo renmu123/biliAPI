@@ -37,7 +37,9 @@
   "dependencies": {
     "axios": "^1.6.5",
     "axios-retry": "^4.0.0",
-    "p-queue": "^8.0.1"
+    "fast-xml-parser": "^4.3.3",
+    "p-queue": "^8.0.1",
+    "protobufjs": "^7.2.5"
   },
   "devDependencies": {
     "@kineticcafe/rollup-plugin-delete": "3.0.0-beta.0",
@@ -47,6 +49,7 @@
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/node": "20.10.0",
     "rollup": "^4.9.2",
+    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-dts": "^6.1.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"

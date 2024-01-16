@@ -4,6 +4,10 @@
 
 1. 修复下载进度条可能出现无穷大的 bug
 
+## Feature
+
+1. proto 弹幕获取及转换为 xml 支持
+
 # 1.0.0
 
 ## Breaking change
