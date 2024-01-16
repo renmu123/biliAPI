@@ -1,5 +1,9 @@
 # 1.1.0
 
+## Feature
+
+1. `video.download`函数不传递`ffmpegBinPath`的情况下使用`web`模式，最高支持 720p，且 mediaOptions 参数不会生效
+
 ## Bug Fix
 
 1. 修复下载进度条可能出现无穷大的 bug

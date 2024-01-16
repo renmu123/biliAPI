@@ -10,6 +10,7 @@ import Reply from "./video/reply";
 import Common from "./common/index";
 import { WbiSign } from "./base/sign";
 import { fakeBuvid3, fakeDmCoverImgStr } from "./utils";
+import Downloader from "./utils/downloader";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -119,4 +120,5 @@ export {
   Platform,
   Live,
   Auth,
+  Downloader,
 };
