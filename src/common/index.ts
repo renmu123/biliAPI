@@ -27,19 +27,19 @@ export default class Common extends BaseRequest {
     };
     // https://api.bilibili.com/x/kv-frontend/namespace/data?appKey=333.1339&versionId=undefined&nscode=2
 
-    const res = await this.request.get(
+    const res: any = await this.request.get(
       `https://api.bilibili.com/x/kv-frontend/namespace/data`,
       {
         params: defaultParams,
       }
     );
     const areaData: any[] = [];
-    Object.entries(res.data.data).forEach(([key, value]: [string, string]) => {
+    Object.entries(res.data).forEach(([key, value]: [string, string]) => {
       if (JSON.parse(value).tid !== undefined) areaData.push(JSON.parse(value));
     });
     return {
-      versionId: res.data.versionId,
-      appVersionId: res.data.appVersionId,
+      versionId: res.versionId,
+      appVersionId: res.appVersionId,
       areaData,
     };
   }

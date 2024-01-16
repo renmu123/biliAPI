@@ -244,6 +244,36 @@ export default class Video extends BaseRequest {
     });
   }
   /**
+   * 获取弹幕，返回protobuf格式
+   * @param type 弹幕类型，1: 视频，2: 漫画
+   * @param oid 视频cid
+   * @param pid 视频aid
+   * @param segment_index 弹幕分片序号，从1开始，6分钟一个包
+   * @param pull_mode 未知
+   * @param ps 未知
+   * @param pe 未知
+   */
+  async getDanmaku(params: {
+    type?: number;
+    oid: number;
+    pid?: number;
+    segment_index: number;
+    pull_mode?: number;
+    ps?: number;
+    pe?: number;
+  }): Promise<{
+    [key: string]: any;
+  }> {
+    const url = `https://api.bilibili.com/x/v2/dm/wbi/web/seg.so`;
+    if (!params.type) params.type = 1;
+    const signParams = await this.WbiSign(params);
+    return this.request.get(`${url}?${signParams}`, {
+      extra: {
+        rawResponse: true,
+      },
+    });
+  }
+  /**
    * 获取视频信息
    */
   async playurl(params: {
