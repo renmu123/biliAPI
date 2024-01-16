@@ -4,6 +4,7 @@
 
 1. `Client`类初始化参数变更
 2. 返回参数修改，直接返回 data
+3. "axios", "p-queue", "axios-retry" 现在不会被打包进去
 
 ## Feature
 
@@ -19,7 +20,6 @@
 ## Other
 
 1. 重构`useCookie`的实现
-2. 打包增加依赖
 
 # 0.7.2
 
