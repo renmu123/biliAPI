@@ -1,8 +1,14 @@
 # 1.1.0
 
+## Feature
+
+1. `video.download`函数不传递`ffmpegBinPath`的情况下使用`web`模式，最高支持 720p，且 mediaOptions 参数除 qn 外不会生效
+2. 增加获取弹幕接口
+
 ## Bug Fix
 
 1. 修复下载进度条可能出现无穷大的 bug
+2. 修复`common.getAreas`失效的 bug
 
 ## Feature
 

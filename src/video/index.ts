@@ -244,6 +244,36 @@ export default class Video extends BaseRequest {
     });
   }
   /**
+   * 获取弹幕，返回protobuf格式
+   * @param type 弹幕类型，1: 视频，2: 漫画
+   * @param oid 视频cid
+   * @param pid 视频aid
+   * @param segment_index 弹幕分片序号，从1开始，6分钟一个包
+   * @param pull_mode 未知
+   * @param ps 未知
+   * @param pe 未知
+   */
+  async getDanmaku(params: {
+    type?: number;
+    oid: number;
+    pid?: number;
+    segment_index: number;
+    pull_mode?: number;
+    ps?: number;
+    pe?: number;
+  }): Promise<{
+    [key: string]: any;
+  }> {
+    const url = `https://api.bilibili.com/x/v2/dm/wbi/web/seg.so`;
+    if (!params.type) params.type = 1;
+    const signParams = await this.WbiSign(params);
+    return this.request.get(`${url}?${signParams}`, {
+      extra: {
+        rawResponse: true,
+      },
+    });
+  }
+  /**
    * 获取视频信息
    */
   async playurl(params: {
@@ -254,6 +284,7 @@ export default class Video extends BaseRequest {
     fnval?: number;
     fourk?: 0 | 1;
     platform?: "pc" | "html5";
+    high_quality?: 0 | 1;
   }): Promise<PlayUrlReturnType> {
     const url = `https://api.bilibili.com/x/player/wbi/playurl`;
     const data = {
@@ -306,20 +337,23 @@ export default class Video extends BaseRequest {
   }
 
   /**
-   * 下载视频
+   * 下载视频，如果不传递cid，会对视频详情接口进行一次请求。
    * @param options
    * @param options.aid 视频aid, 与bvid二选一
    * @param options.bvid 视频bvid，与aid二选一
    * @param options.cid 视频cid，与part二选一
    * @param options.part 视频分p，从0开始计算，如果有cid，则优先cid，如果二者皆为空，下载第一个
    * @param options.output 输出文件路径
-   * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频，默认使用环境变量中的ffmpeg
+   * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频
+   * 如果不传递默认使用web模式，最高720p分辨率，且mediaOptions参数除qn不会生效
+   * 如果传递，则使用dash模式，分辨率和账户相关，如果想使用环境变量中的可以传递ffmpeg
    * @param options.cachePath 缓存路径，默认使用系统临时目录
    *
    * @param mediaOptions
    * @param mediaOptions.resolution 分辨率宽度，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
    * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
    * @param mediaOptions.audioQuality 音质，默认使用最高音质，30216：64k，30232：128k，30280：192k，30250：杜比全景声，30251：Hi-Res无损
+   * @param mediaOptions.qn 视频质量，默认使用64，会下载支持的最高质量，6: 240p, 16: 260p, 32: 480p,64：720p，80：1080p，112：1080p60，116：4k
    */
   async download(
     options: {
@@ -333,33 +367,86 @@ export default class Video extends BaseRequest {
       videoCodec?: 7 | 12 | 13;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
       resolution?: number;
+      qn?: 16 | 32 | 64 | 80;
     } = {}
   ) {
-    const emitter = new EventEmitter();
-
-    const info = {
-      bvid: options.bvid,
-      cid: options.cid,
-    };
-
-    if (!info.cid) {
+    if (!options.cid) {
       const data = await this.detail({
         aid: options.aid,
         bvid: options.bvid,
       });
-      info.bvid = data.View.bvid;
+      options.bvid = data.View.bvid;
       const pages = data.View?.pages || [];
       let page = pages[options.part || 0];
       if (!page) throw new Error("不存在符合要求的视频");
 
-      info.cid = page.cid;
+      options.cid = page.cid;
     }
+
+    if (options.ffmpegBinPath) {
+      const _options = options as {
+        cid: number;
+        output: string;
+        ffmpegBinPath: string;
+        cachePath?: string;
+      } & VideoId;
+      return this.dashDownload(_options, mediaOptions);
+    } else {
+      const _options = options as {
+        cid: number;
+        output: string;
+        cachePath?: string;
+      } & VideoId;
+      return this.mp4Download(_options, mediaOptions);
+    }
+  }
+
+  /**
+   * dash下载视频
+   * @param options
+   * @param options.aid 视频aid, 与bvid二选一
+   * @param options.bvid 视频bvid，与aid二选一
+   * @param options.cid 视频cid
+   * @param options.output 输出文件路径
+   * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频
+   * 如果不传递默认使用web模式，最高720p分辨率，且mediaOptions参数不会生效
+   * 如果传递，则使用dash模式，分辨率和账户相关，如果想使用环境变量中的可以传递ffmpeg
+   * @param options.cachePath 缓存路径，默认使用系统临时目录
+   *
+   * @param mediaOptions
+   * @param mediaOptions.resolution 分辨率宽度，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
+   * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
+   * @param mediaOptions.audioQuality 音质，默认使用最高音质，30216：64k，30232：128k，30280：192k，30250：杜比全景声，30251：Hi-Res无损
+   */
+  async dashDownload(
+    options: {
+      cid: number;
+      output: string;
+      ffmpegBinPath: string;
+      cachePath?: string;
+    } & VideoId,
+    mediaOptions: {
+      videoCodec?: 7 | 12 | 13;
+      audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
+      resolution?: number;
+    } = {}
+  ) {
+    const emitter = new EventEmitter();
+
     const media = await this.playurl({
-      bvid: info.bvid,
+      bvid: options.bvid,
       aid: options.aid,
-      cid: info.cid,
+      cid: options.cid,
       fnval: 16 | 2048,
     });
+    // dash
+    // fnval: 16 | 2048,
+
+    // pc
+    // fnval: 1,
+    // platform: "pc",
+    // high_quality: 1,
+    // qn: 64,
     let videos = (media.dash.video || []).filter(video => {
       if (!mediaOptions.videoCodec) return true;
       return video.codecid === mediaOptions.videoCodec;
@@ -459,6 +546,7 @@ export default class Video extends BaseRequest {
 
     emitter.on("download-completed", async files => {
       const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
+      console.log("ffmpegBinPath", ffmpegBinPath);
       if (files.length === 2) {
         emitter.emit("progress", { event: "merge-start" });
         try {
@@ -490,6 +578,111 @@ export default class Video extends BaseRequest {
       cancel: () => {
         videoDownloader.cancel();
         audioDownloader.cancel();
+        clean();
+      },
+      on(
+        event: "progress" | "completed" | "error",
+        callback: (res: any) => void
+      ) {
+        this.emitter.on(event, callback);
+      },
+      emitter,
+    };
+    return task;
+  }
+
+  /**
+   * mp4下载视频，无需ffmpeg进行合并
+   * @param options
+   * @param options.aid 视频aid, 与bvid二选一
+   * @param options.bvid 视频bvid，与aid二选一
+   * @param options.cid 视频cid
+   * @param options.output 输出文件路径
+   *
+   * @param mediaOptions
+   * @param mediaOptions.qn 视频质量，默认使用64，6: 240p, 16: 260p, 32: 480p,64：720p，80：1080p，112：1080p60，116：4k
+   */
+  async mp4Download(
+    options: {
+      cid: number;
+      output: string;
+    } & VideoId,
+    mediaOptions: {
+      qn?: 16 | 32 | 64 | 80;
+    } = {
+      qn: 64,
+    }
+  ) {
+    const emitter = new EventEmitter();
+
+    const media = await this.playurl({
+      bvid: options.bvid,
+      aid: options.aid,
+      cid: options.cid,
+      fnval: 1,
+      platform: "html5",
+      high_quality: 1,
+      qn: mediaOptions.qn || 64,
+    });
+    let videoUrl = media.durl[0]?.url;
+    if (!videoUrl) {
+      throw new Error("没有可下载链接");
+    }
+
+    const videoDownloader = new Downloader({
+      url: videoUrl,
+      filePath: options.output,
+      axiosRequestConfig: {
+        headers: {
+          Referer: "https://www.bilibili.com/",
+          cookie: this.auth.cookie,
+        },
+      },
+      oncompleted: downloader => {
+        emitter.emit("completed", downloader.filePath);
+      },
+      onprogress: () => {
+        const loaded = videoDownloader.downloadedSize;
+        const total = videoDownloader.totalSize;
+        const data = {
+          event: "download",
+          progress: {
+            loaded: loaded,
+            total: total,
+            progress: loaded / total,
+          },
+        };
+        emitter.emit("progress", data);
+      },
+      onerror: error => {
+        emitter.emit("error", { error: String(error) });
+        console.error(error);
+      },
+    });
+
+    const clean = () => {
+      try {
+        fs.promises.unlink(videoDownloader.filePath);
+      } catch (error) {
+        console.warn(error);
+      }
+    };
+
+    emitter.on("error", () => {
+      clean();
+    });
+
+    videoDownloader.start();
+
+    const task = {
+      pause: () => {
+        videoDownloader.pause();
+      },
+      start: () => {
+        videoDownloader.start();
+      },
+      cancel: () => {
+        videoDownloader.cancel();
         clean();
       },
       on(
