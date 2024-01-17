@@ -494,7 +494,7 @@ export default class Video extends BaseRequest {
           progress: {
             loaded: loaded,
             total: total,
-            progress: loaded / total,
+            progress: total ? loaded / total : 0,
           },
         };
         emitter.emit("progress", data);
@@ -611,18 +611,8 @@ export default class Video extends BaseRequest {
       oncompleted: downloader => {
         emitter.emit("completed", downloader.filePath);
       },
-      onprogress: () => {
-        const loaded = videoDownloader.downloadedSize;
-        const total = videoDownloader.totalSize;
-        const data = {
-          event: "download",
-          progress: {
-            loaded: loaded,
-            total: total,
-            progress: loaded / total,
-          },
-        };
-        emitter.emit("progress", data);
+      onprogress: p => {
+        emitter.emit("progress", p);
       },
       onerror: error => {
         emitter.emit("error", { error: String(error) });
