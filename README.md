@@ -147,6 +147,10 @@ tv.on("end", res => {
 
 ```js
 import { utils } from "@renmu/bili-api";
+// fakeBuvid3, // 生成模拟buivd3
+// fakeDmCoverImgStr, // 生成模拟dmcoverimgstr
+// protobufDecode,  // prorobuf弹幕解析为json
+// protoBufToXml,  // prorobuf弹幕解析为兼容xml
 // 用于wbi接口签名, 返回的参数直接用于url拼接
 const query = await utils.WbiSign({
   test: "111",

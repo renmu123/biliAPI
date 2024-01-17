@@ -92,6 +92,8 @@ export default class Reply extends BaseRequest {
    * @param parent 评论父节点id
    * @param message 评论内容
    * @param plat 评论平台, 1: web, 2: 安卓, 3: ios, 4: wp
+   * @param at_name_to_mid 用户信息
+   * @param pictures 图片地址
    */
   async add(params: {
     oid?: number;
@@ -100,6 +102,8 @@ export default class Reply extends BaseRequest {
     parent?: number;
     message: string;
     plat: 1 | 2 | 3 | 4;
+    at_name_to_mid?: string;
+    pictures?: string;
   }): Promise<{}> {
     this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/add`;
@@ -111,6 +115,9 @@ export default class Reply extends BaseRequest {
     };
     return this.request.post(url, {
       data,
+      params: {
+        crsf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
   /**
