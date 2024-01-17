@@ -612,7 +612,10 @@ export default class Video extends BaseRequest {
         emitter.emit("completed", downloader.filePath);
       },
       onprogress: p => {
-        emitter.emit("progress", p);
+        emitter.emit("progress", {
+          event: "download",
+          progress: p,
+        });
       },
       onerror: error => {
         emitter.emit("error", { error: String(error) });

@@ -9,7 +9,8 @@
 ## Bug Fix
 
 1. 修复下载进度条可能出现无穷大的 bug
-2. 修复`common.getAreas`失效的 bug
+2. 修复下载重复添加字节的 bug
+3. 修复`common.getAreas`失效的 bug
 
 ## Feature
 

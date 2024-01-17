@@ -70,6 +70,11 @@ class RangeDownloader {
     // );
 
     if (!["pending", "paused"].includes(this.status)) return;
+    if (this.status === "pending") {
+      try {
+        await fs.promises.unlink(this.filePath);
+      } catch (error) {}
+    }
 
     this.status = "running";
     // console.log("start2", new Date(), this.filePath, this.downloadedSize);
@@ -93,7 +98,7 @@ class RangeDownloader {
               loaded: _self.downloadedSize,
               total: _self.totalSize,
               progress: _self.totalSize
-                ? Math.round(_self.downloadedSize / _self.totalSize)
+                ? _self.downloadedSize / _self.totalSize
                 : 0,
             });
           }
