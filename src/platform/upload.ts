@@ -169,7 +169,7 @@ export class WebVideoUploader extends BaseRequest {
       });
       return params;
     } catch (e) {
-      console.log(e.name);
+      // console.log(e.name);
       if (e.name == "CanceledError") {
         this.chunkTasks[params.partNumber].status = "abort";
         // console.log("upload abort", e);
@@ -377,7 +377,7 @@ export class WebVideoUploader extends BaseRequest {
       });
     });
     this.queue.start();
-    console.log("开始上传", this.chunkTasks, this.queue.size);
+    // console.log("开始上传", this.chunkTasks, this.queue.size);
   }
   cancel() {
     this.queue.clear();

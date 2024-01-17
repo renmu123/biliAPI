@@ -441,7 +441,7 @@ export default class Platform extends BaseRequest {
       data["cover"] = coverRes.url;
     }
 
-    console.log("submit", data);
+    // console.log("submit", data);
 
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/add",
@@ -496,7 +496,7 @@ export default class Platform extends BaseRequest {
       data["cover"] = coverRes.url;
     }
 
-    console.log("submit", data);
+    // console.log("submit", data);
 
     return this.request.post(
       "https://member.bilibili.com/x/vu/mvp/pc/add",
