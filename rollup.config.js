@@ -7,6 +7,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import dts from "rollup-plugin-dts";
 import { del } from "@kineticcafe/rollup-plugin-delete";
+import copy from "rollup-plugin-copy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,17 +31,32 @@ export default [
         format: "cjs",
       },
     ],
-    external: ["axios", "p-queue", "axios-retry"],
+    external: [
+      "axios",
+      "p-queue",
+      "axios-retry",
+      "protobufjs",
+      "fast-xml-parser",
+    ],
     plugins: [
       typescript(),
       nodeResolve({ browser: false }),
       commonjs(),
       json(),
+      copy({
+        targets: [{ src: "src/assets/*", dest: "dist/assets" }],
+      }),
     ],
   },
   {
     input: "dist/types/index.d.ts",
-    external: ["axios", "p-queue", "axios-retry"],
+    external: [
+      "axios",
+      "p-queue",
+      "axios-retry",
+      "protobufjs",
+      "fast-xml-parser",
+    ],
     plugins: [
       dts({
         respectExternal: true,
