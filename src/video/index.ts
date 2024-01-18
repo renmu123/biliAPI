@@ -19,7 +19,7 @@ export default class Video extends BaseRequest {
   noAuthUseCookie: boolean;
   constructor(
     auth: Auth = new Auth(),
-    noAuthUseCookie: boolean = false,
+    noAuthUseCookie: boolean = true,
     aid?: number
   ) {
     super(auth);

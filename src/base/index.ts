@@ -3,6 +3,7 @@ import { encWbi, getWbiKeys } from "./sign";
 import Auth from "./Auth";
 import axiosRetry from "axios-retry";
 import { fakeDmCoverImgStr } from "../utils";
+import { BiliResponseError } from "./Error";
 
 import type { CreateAxiosDefaults } from "axios";
 import type { Request } from "../types/index";
@@ -65,7 +66,15 @@ export class BaseRequest {
           return Promise.resolve(response);
         } else {
           if (response.data?.code !== 0) {
-            return Promise.reject(response.data);
+            const message = response?.data?.message || "no message";
+            const error = new BiliResponseError(`${message}`, {
+              statusCode: response.status,
+              code: response?.data?.code,
+              path: config.url,
+              method: config.method,
+              rawResponse: response,
+            });
+            return Promise.reject(error);
           } else {
             return Promise.resolve(response.data?.data);
           }

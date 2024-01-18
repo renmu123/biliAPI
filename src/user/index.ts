@@ -9,7 +9,7 @@ import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
 export default class User extends BaseRequest {
   noAuthUseCookie: boolean;
   spaceCookie: string;
-  constructor(auth: Auth = new Auth(), useCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), useCookie: boolean = true) {
     super(auth);
     this.noAuthUseCookie = useCookie;
   }
@@ -45,8 +45,12 @@ export default class User extends BaseRequest {
     });
 
     let cookie = this.auth.cookie;
-    if (!useCookie) {
+    if (!this.auth.cookie) {
       cookie = `buvid3=${fakeBuvid3()}`;
+    } else {
+      if (!useCookie) {
+        cookie = `buvid3=${fakeBuvid3()}`;
+      }
     }
 
     return this.request.get(
@@ -142,9 +146,12 @@ export default class User extends BaseRequest {
     if (offset === undefined) delete params.offset;
     let cookies = this.auth.cookie;
 
-    if (!useCookie) {
-      const cookie = await this.getSpaceCookie();
-      cookies = cookie;
+    if (!this.auth.cookie) {
+      cookies = await this.getSpaceCookie();
+    } else {
+      if (!useCookie) {
+        cookies = await this.getSpaceCookie();
+      }
     }
 
     const signParams = await this.WbiSign(params);
@@ -242,8 +249,12 @@ export default class User extends BaseRequest {
       ...this.dm,
     };
     let cookie = this.auth.cookie;
-    if (!useCookie) {
+    if (!this.auth.cookie) {
       cookie = `buvid3=${fakeBuvid3()}`;
+    } else {
+      if (!useCookie) {
+        cookie = `buvid3=${fakeBuvid3()}`;
+      }
     }
 
     const signParams = await this.WbiSign({

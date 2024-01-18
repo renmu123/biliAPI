@@ -1,5 +1,6 @@
 import { TvQrcodeLogin, WebQrcodeLogin } from "./user/login";
 import Auth from "./base/Auth";
+import { BiliResponseError } from "./base/Error";
 import Live from "./live/index";
 import Platform from "./platform";
 import { WebVideoUploader } from "./platform/upload";
@@ -28,7 +29,7 @@ class Client {
   /**
    * @param noAuthUseCookie 无需登录的接口是否使用cookie
    */
-  constructor(auth?: Auth, noAuthUseCookie = false) {
+  constructor(auth?: Auth, noAuthUseCookie = true) {
     this.useCookie = noAuthUseCookie;
     if (auth) {
       this.auth = auth;
@@ -119,4 +120,5 @@ export {
   Platform,
   Live,
   Auth,
+  BiliResponseError,
 };

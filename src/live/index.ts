@@ -5,7 +5,7 @@ import type { getMasterInfoReturnType } from "../types/live";
 
 export default class Live extends BaseRequest {
   private noAuthUseCookie: boolean;
-  constructor(auth: Auth = new Auth(), noAuthUseCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), noAuthUseCookie: boolean = true) {
     super(auth);
     this.noAuthUseCookie = noAuthUseCookie;
   }

@@ -1,3 +1,14 @@
+# 1.2.0
+
+## Breaking change
+
+1. 错误处理更改
+2. `noAuthUseCookie`参数默认值修改为 `true`，即在登录的情况下，默认使用 cookie 访问接口
+
+## Bug Fix
+
+1. 修改 useCookie 参数的实现更加人性化
+
 # 1.0.0
 
 ## Breaking change

@@ -5,7 +5,7 @@ import type { SearchTypeParams } from "../types/search";
 
 export default class Search extends BaseRequest {
   noAuthUseCookie: boolean;
-  constructor(auth: Auth = new Auth(), useCookie: boolean = false) {
+  constructor(auth: Auth = new Auth(), useCookie: boolean = true) {
     super(auth);
     this.noAuthUseCookie = useCookie;
   }
@@ -19,15 +19,20 @@ export default class Search extends BaseRequest {
   ): Promise<{
     [key: string]: any;
   }> {
+    let cookie = this.auth.cookie;
+    if (!this.auth.cookie) {
+      cookie = `buvid3=${fakeBuvid3()}`;
+    } else {
+      if (!useCookie) {
+        cookie = `buvid3=${fakeBuvid3()}`;
+      }
+    }
     const signParams = await this.WbiSign(params);
     const res = this.request.get(
       `https://api.bilibili.com/x/web-interface/wbi/search/all/v2?${signParams}`,
       {
         headers: {
-          cookie: `buvid3=${fakeBuvid3()}`,
-        },
-        extra: {
-          useCookie,
+          cookie: cookie,
         },
       }
     );
@@ -43,15 +48,21 @@ export default class Search extends BaseRequest {
   ): Promise<{
     [key: string]: any;
   }> {
+    let cookie = this.auth.cookie;
+    if (!this.auth.cookie) {
+      cookie = `buvid3=${fakeBuvid3()}`;
+    } else {
+      if (!useCookie) {
+        cookie = `buvid3=${fakeBuvid3()}`;
+      }
+    }
+
     const signParams = await this.WbiSign(params);
     const res = this.request.get(
       `https://api.bilibili.com/x/web-interface/wbi/search/type?${signParams}`,
       {
         headers: {
-          cookie: `buvid3=${fakeBuvid3()}`,
-        },
-        extra: {
-          useCookie,
+          cookie: cookie,
         },
       }
     );
