@@ -1,4 +1,4 @@
-import { Client, TvQrcodeLogin, Auth, User } from "./dist/index.mjs";
+import { Client, TvQrcodeLogin, Auth, User, utils } from "./dist/index.mjs";
 import fs from "fs";
 
 // 上传视频
@@ -78,3 +78,14 @@ async function getMasterInfo() {
   const data = await client.live.getMasterInfo(10995238);
   console.log(data);
 }
+
+// 下载弹幕
+const convertDm = async () => {
+  const client = new Client();
+  client.loadCookieFile("cookie2.json");
+  const data = await client.video.getDm({
+    cid: 1401310659,
+  });
+  const xmlContent = await utils.protoBufToXml(data);
+  fs.writeFileSync("aa.xml", xmlContent);
+};
