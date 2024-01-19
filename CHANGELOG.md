@@ -4,10 +4,12 @@
 
 1. 错误处理更改
 2. `noAuthUseCookie`参数默认值修改为 `true`，即在登录的情况下，默认使用 cookie 访问接口
+3. `video.download`函数增加参数区分使用 dash 还是普通模式，以及支持 dash 模式下视频轨和音轨分离
 
 ## Bug Fix
 
 1. 修改 useCookie 参数的实现更加人性化
+
 # 1.1.0
 
 ## Feature

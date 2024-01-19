@@ -106,7 +106,6 @@ export interface VideoDetailReturnType {
       name: string;
     };
   };
-  [key: string]: any;
 }
 
 export interface PlayUrlReturnType {
