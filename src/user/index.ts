@@ -4,7 +4,15 @@ import { fakeBuvid3 } from "../utils/index";
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
 
-import type { MyInfoV2ReturnType, GetUserInfoReturnType } from "../types/user";
+import type {
+  MyInfoV2ReturnType,
+  GetUserInfoReturnType,
+  Season,
+  Series,
+  SeriesMeta,
+  SeriesArchive,
+  SeasonMeta,
+} from "../types/user";
 
 export default class User extends BaseRequest {
   noAuthUseCookie: boolean;
@@ -270,6 +278,90 @@ export default class User extends BaseRequest {
           "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
         },
       }
+    );
+  }
+  /**
+   * 合集和视频列表
+   */
+  async getCollectionList(params: {
+    mid: number;
+    page_size?: number;
+    page_num?: number;
+  }): Promise<{
+    items_lists: {
+      page: {
+        total: number;
+        page_num: number;
+        page_size: number;
+      };
+      seasons_list: Season[];
+      series_list: Series[];
+    };
+  }> {
+    const signParams = await this.WbiSign(params);
+    return this.request.get(
+      `https://api.bilibili.com/x/space/collection/list?${signParams}`
+    );
+  }
+  /**
+   * 合集-视频列表
+   */
+  async getSeriesInfo(params: { series_id: number }): Promise<{
+    meta: SeriesMeta;
+    recent_aids: number[];
+  }> {
+    return this.request.get("https://api.bilibili.com/x/series/series", {
+      params,
+    });
+  }
+  /**
+   * 合集-视频列表-投稿列表
+   */
+  async getSeriesVideos(params: {
+    mid: number;
+    series_id: number;
+    only_normal?: boolean;
+    sort?: "asc" | "desc";
+    pn?: number;
+    ps?: number;
+    current_mid?: number;
+  }): Promise<{
+    aids: number[];
+    archives: SeriesArchive[];
+    page: {
+      total: number;
+      page_num: number;
+      page_size: number;
+    };
+  }> {
+    return this.request.get("https://api.bilibili.com/x/series/archives", {
+      params,
+    });
+  }
+
+  /**
+   * 合集-视频列表-合集投稿列表
+   */
+  async getSeasons(params: {
+    mid: number;
+    season_id: number;
+    sort_reverse?: boolean;
+    page_num?: number;
+    page_size?: number;
+    web_location?: string;
+  }): Promise<{
+    aids: number[];
+    archives: SeriesArchive[];
+    meta: SeasonMeta;
+    page: {
+      total: number;
+      page_num: number;
+      page_size: number;
+    };
+  }> {
+    const signParams = await this.WbiSign(params);
+    return this.request.get(
+      `https://api.bilibili.com/x/polymer/web-space/seasons_archives_list?${signParams}`
     );
   }
 }

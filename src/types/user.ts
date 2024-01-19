@@ -549,3 +549,76 @@ export interface GetUserInfoReturnType {
     is_follow_display: boolean;
   };
 }
+
+export interface SeriesArchive {
+  aid: number;
+  bvid: string;
+  ctime: number;
+  duration: number;
+  enabel_vt: boolean;
+  interactive_video: boolean;
+  pic: string;
+  playback_position: number;
+  pubdate: number;
+  stat: {
+    view: number;
+    vt: number;
+  };
+  state: number;
+  title: string;
+  ugc_pay: number;
+  vt_disable: string;
+}
+/**
+ * 视频合集通用
+ */
+interface CommonSeason {
+  archives: SeriesArchive[];
+  meta: SeasonMeta | SeriesMeta;
+  recent_aids: number[];
+}
+
+/**
+ * 合集meta
+ */
+export interface SeasonMeta {
+  category: 0;
+  cover: string;
+  description: string;
+  mid: number;
+  name: string;
+  ptime: number;
+  season_id: number;
+  total: number;
+}
+
+/**
+ * 视频合集
+ */
+export interface Season extends CommonSeason {
+  meta: SeasonMeta;
+}
+
+export interface SeriesMeta {
+  category: 1;
+  cover: string;
+  creator: string;
+  ctime: number;
+  description: string;
+  keywords: string[];
+  last_update_at: number;
+  mid: number;
+  mtime: number;
+  name: string;
+  raw_keywords: string;
+  series_id: number;
+  state: number;
+  total: number;
+}
+
+/**
+ * 视频列表
+ */
+export interface Series extends CommonSeason {
+  meta: SeriesMeta;
+}
