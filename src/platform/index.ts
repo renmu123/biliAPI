@@ -15,6 +15,8 @@ import {
   UploaderType,
   SubmitType,
   getSeasonListReturnType,
+  Season,
+  Section,
 } from "../types/platform";
 
 export default class Platform extends BaseRequest {
@@ -984,35 +986,56 @@ export default class Platform extends BaseRequest {
   /**
    * aid反查合集id
    */
-  async getSessionId(aid: number): Promise<{
-    // 合集id
-    id: number;
-    title: string;
-    desc: string;
-    cover: string;
-    isEnd: number;
-    mid: number;
-    isAct: number;
-    is_pay: number;
-    state: number;
-    partState: number;
-    signState: number;
-    rejectReason: string;
-    ctime: number;
-    mtime: number;
-    no_section: number;
-    forbid: number;
-    protocol_id: string;
-    ep_num: number;
-    season_price: number;
-    is_opened: number;
-  }> {
+  async getSessionId(aid: number): Promise<Season> {
     this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x2/creative/web/season/aid",
       {
         params: {
           id: aid,
+        },
+      }
+    );
+  }
+
+  /**
+   * 获取合集详情
+   * @param id 合集id
+   */
+  async getSeasonDetail(id: number): Promise<{
+    checkin: null;
+    course: null;
+    part_episodes: null;
+    season: Season;
+    seasonStat: null;
+    sections: {
+      sections: Section[];
+      total: number;
+    };
+  }> {
+    this.auth.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x2/creative/web/season",
+      {
+        params: {
+          id: id,
+        },
+      }
+    );
+  }
+  /**
+   * 获取合集小节详情
+   * @param id 小节id
+   */
+  async getSectionDetail(id: number): Promise<{
+    section: Section;
+  }> {
+    this.auth.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x2/creative/web/season/section",
+      {
+        params: {
+          id: id,
         },
       }
     );

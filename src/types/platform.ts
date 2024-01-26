@@ -222,46 +222,8 @@ export interface getSeasonListReturnType {
       status: 1 | number;
       status_reason: string;
     };
-    part_episodes: {
-      id: number;
-      title: string;
-      aid: number;
-      bvid: string;
-      cid: number;
-      seasonId: number;
-      sectionId: number;
-      order: number;
-      videoTitle: string;
-      archiveTitle: string;
-      archiveState: number;
-      rejectReason: string;
-      state: number;
-      cover: string;
-      is_free: number;
-      aid_owner: boolean;
-    }[];
-    season: {
-      id: number;
-      title: string;
-      desc: string;
-      cover: string;
-      isEnd: number;
-      mid: number;
-      isAct: number;
-      is_pay: number;
-      state: number;
-      partState: number;
-      signState: number;
-      rejectReason: string;
-      ctime: number;
-      mtime: number;
-      no_section: number;
-      forbid: number;
-      protocol_id: string;
-      ep_num: number;
-      season_price: number;
-      is_opened: number;
-    };
+    part_episodes: Episode[];
+    season: Season;
     seasonStat: {
       view: number;
       danmaku: number;
@@ -276,24 +238,70 @@ export interface getSeasonListReturnType {
       vt: number;
     };
     sections: {
-      sections: {
-        id: number;
-        type: number;
-        seasonId: number;
-        title: string;
-        order: number;
-        state: number;
-        partState: number;
-        rejectReason: string;
-        ctime: number;
-        mtime: number;
-        epCount: number;
-        cover: string;
-      }[];
+      sections: Section[];
     };
   }[];
   tip: {
     title: string;
     url: string;
   };
+}
+
+export interface Season {
+  /** 合集id */
+  id: number;
+  title: string;
+  desc: string;
+  cover: string;
+  isEnd: number;
+  mid: number;
+  isAct: number;
+  is_pay: number;
+  state: number;
+  partState: number;
+  signState: number;
+  rejectReason: string;
+  ctime: number;
+  mtime: number;
+  no_section: number;
+  forbid: number;
+  protocol_id: string;
+  ep_num: number;
+  season_price: number;
+  is_opened: number;
+}
+
+export interface Section {
+  cover: string;
+  ctime: number;
+  epCount: number;
+  id: number;
+  mtime: number;
+  order: number;
+  partState: number;
+  rejectReason: string;
+  seasonId: number;
+  state: number;
+  title: string;
+  type: number;
+}
+
+export interface Episode {
+  aid: number;
+  aid_owner: boolean;
+  archiveTitle: string;
+  archiveState: number;
+  bvid: string;
+  cid: number;
+  cover: string;
+  id: number;
+  is_free: number;
+  order: number;
+  partState: number;
+  rejectReason: string;
+  seasonId: number;
+  sectionId: number;
+  state: number;
+  title: string;
+  videoTitle: string;
 }
