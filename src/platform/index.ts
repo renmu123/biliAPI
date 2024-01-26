@@ -931,7 +931,7 @@ export default class Platform extends BaseRequest {
    * 合集内添加内容
    */
   async addSeasonMedia(params: {
-    /** 合集id */
+    /** 合集下的section_id */
     sectionId: number;
     /** aid: 视频id, cid:分p id */
     episodes: { aid: number; cid: number; title: string }[];
@@ -951,6 +951,36 @@ export default class Platform extends BaseRequest {
       }
     );
   }
+
+  /**
+   * 修改投稿视频合集
+   */
+  async editMediaSeason(params: {
+    /** 视频id */
+    aid: number;
+    /** 合集id,null就是从合集中移除 */
+    season_id: number | null;
+    /** 合集下section_id,null就是从合集中移除 */
+    section_id: number | null;
+    /** 视频标题 */
+    title: string;
+  }): Promise<{}> {
+    this.auth.authLogin();
+    return this.request.post(
+      "https://member.bilibili.com/x2/creative/web/season/switch",
+      {
+        ...params,
+        csrf: this.auth.cookieObj.bili_jct,
+      },
+      {
+        params: {
+          t: Date.now(),
+          csrf: this.auth.cookieObj.bili_jct,
+        },
+      }
+    );
+  }
+
   /**
    * aid反查合集id
    */
