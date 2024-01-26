@@ -932,7 +932,7 @@ export default class Platform extends BaseRequest {
   /**
    * 合集内添加内容
    */
-  async addSeasonMedia(params: {
+  async addMedia2Season(params: {
     /** 合集下的section_id */
     sectionId: number;
     /** aid: 视频id, cid:分p id */

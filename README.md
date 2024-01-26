@@ -176,6 +176,22 @@ const query = await utils.WbiSign({
 
 `client.user.getVideos({mid: uid})`
 
+### 获取用户 合集投稿列表
+
+`client.user.getCollectionList()`
+
+### 获取 合集-视频列表
+
+`client.user.getSeriesInfo()`
+
+### 获取 合集-视频列表-投稿列表
+
+`client.user.getSeriesVideos()`
+
+### 获取 合集-视频列表-合集列表
+
+`client.user.getSeasons()`
+
 ## 直播
 
 ### 获取房间信息
@@ -286,21 +302,33 @@ client.platorm.getArchive({
 
 `client.platform.getTopic()`
 
-## 话题搜索
+### 话题搜索
 
 `client.platform.searchTopic()`
 
-## 合集列表
+### 合集列表
 
 `client.platform.getSeasonList()`
 
-## 合集内添加稿件
+### 合集内添加稿件
 
-`client.platform.addSeasonMedia()`
+`client.platform.addMedia2Season()`
 
-## aid 反查合集 id
+### aid 反查合集 id
 
 `client.platform.getSessionId()`
+
+### 修改投稿视频合集
+
+`client.platform.editMediaSeason()`
+
+### 合集详情
+
+`client.platform.getSeasonDetail()`
+
+### 合集小节详情
+
+`client.platform.getSectionDetail()`
 
 ## 搜索
 

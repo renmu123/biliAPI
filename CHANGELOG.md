@@ -4,6 +4,7 @@
 
 1. 错误处理更改
 2. `noAuthUseCookie`参数默认值修改为 `true`，即在登录的情况下，默认使用 cookie 访问接口
+3. `platform.addSeasonMedia`修改为`platform.addMedia2Season`
 <!-- 3. `video.download`函数增加参数区分使用 dash 还是普通模式，以及支持 dash 模式下视频轨和音轨分离 -->
 
 ## Bug Fix
@@ -13,7 +14,7 @@
 ## Feature
 
 1. 增加用户合集列表，合集详情
-2. 增加修改稿件合集，合集详情，合集小节详情接口
+2. 创作中心-增加修改稿件合集，合集详情，合集小节详情接口
 
 # 1.1.0
 
