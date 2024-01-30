@@ -335,7 +335,8 @@ export default class Video extends BaseRequest {
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
       resolution?: number;
       qn?: 16 | 32 | 64 | 80;
-    } = {}
+    } = {},
+    autoStart: boolean = true
   ) {
     if (!options.cid) {
       const data = await this.detail({
@@ -357,14 +358,14 @@ export default class Video extends BaseRequest {
         ffmpegBinPath: string;
         cachePath?: string;
       } & VideoId;
-      return this.dashDownload(_options, mediaOptions);
+      return this.dashDownload(_options, mediaOptions, autoStart);
     } else {
       const _options = options as {
         cid: number;
         output: string;
         cachePath?: string;
       } & VideoId;
-      return this.mp4Download(_options, mediaOptions);
+      return this.mp4Download(_options, mediaOptions, autoStart);
     }
   }
 
@@ -396,7 +397,8 @@ export default class Video extends BaseRequest {
       videoCodec?: 7 | 12 | 13;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
       resolution?: number;
-    } = {}
+    } = {},
+    autoStart: boolean = true
   ) {
     const emitter = new EventEmitter();
 
@@ -530,8 +532,10 @@ export default class Video extends BaseRequest {
       clean();
     });
 
-    videoDownloader.start();
-    audioDownloader.start();
+    if (autoStart) {
+      videoDownloader.start();
+      audioDownloader.start();
+    }
 
     const task = {
       pause: () => {
@@ -578,7 +582,8 @@ export default class Video extends BaseRequest {
       qn?: 16 | 32 | 64 | 80;
     } = {
       qn: 64,
-    }
+    },
+    autoStart: boolean = true
   ) {
     const emitter = new EventEmitter();
 
@@ -632,7 +637,7 @@ export default class Video extends BaseRequest {
       clean();
     });
 
-    videoDownloader.start();
+    if (autoStart) videoDownloader.start();
 
     const task = {
       pause: () => {

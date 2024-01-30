@@ -1,3 +1,9 @@
+# 1.2.1
+
+## Feature
+
+1. 为 `video.download` 增加`autoStart`参数，用于控制初始化时是否进行下载
+
 # 1.2.0
 
 ## Breaking change
