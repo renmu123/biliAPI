@@ -1,3 +1,9 @@
+# 1.2.2
+
+## Bug Fix
+
+修复`video.download`的错误处理
+
 # 1.2.1
 
 ## Feature
