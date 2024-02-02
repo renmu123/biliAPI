@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { spawn } from "node:child_process";
+import type { SpawnOptionsWithoutStdio } from "node:child_process";
 
 export async function getFileSize(filePath: string) {
   try {
@@ -125,4 +127,29 @@ export function fakeBuvid3() {
 
 export function sum(arr: number[]) {
   return arr.reduce((prev, curr) => prev + curr, 0);
+}
+
+export async function spawnChild(
+  command: string,
+  args?: readonly string[],
+  options?: SpawnOptionsWithoutStdio
+) {
+  const child = spawn(command, args, options);
+
+  let data = "";
+  for await (const chunk of child.stdout) {
+    data += chunk;
+  }
+  let error = "";
+  for await (const chunk of child.stderr) {
+    error += chunk;
+  }
+  const exitCode = await new Promise((resolve, reject) => {
+    child.on("close", resolve);
+  });
+
+  if (exitCode) {
+    throw new Error(`subprocess error exit ${exitCode}, ${error}`);
+  }
+  return data;
 }

@@ -18,15 +18,17 @@ export function mergeMedia(
     args = [...args, "-c", "copy", ...exArgs, "-y", outputFilepath];
     const ffmpeg = spawn(ffmpegBinPath, args);
 
-    ffmpeg.stdout.pipe(process.stdout);
-
-    ffmpeg.stderr.pipe(process.stderr);
+    let error = "";
+    ffmpeg.stderr.on("data", chunk => {
+      error += chunk;
+    });
 
     ffmpeg.on("close", code => {
       if (code === 0) {
         resolve(true);
       } else {
-        reject(false);
+        console.error(`process error exit ${code}, ${error}`);
+        reject(`process error exit ${code}, ${error}`);
       }
     });
   });

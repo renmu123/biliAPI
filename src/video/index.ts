@@ -465,7 +465,7 @@ export default class Video extends BaseRequest {
         emitter.emit("progress", data);
       },
       onerror: error => {
-        emitter.emit("error", { error: String(error) });
+        emitter.emit("error", error);
         console.error(error);
       },
     });
@@ -497,7 +497,7 @@ export default class Video extends BaseRequest {
         emitter.emit("progress", data);
       },
       onerror: error => {
-        emitter.emit("error", { error: String(error) });
+        emitter.emit("error", error);
         console.error(error);
       },
     });
@@ -513,7 +513,6 @@ export default class Video extends BaseRequest {
 
     emitter.on("download-completed", async files => {
       const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
-      console.log("ffmpegBinPath", ffmpegBinPath);
       if (files.length === 2) {
         emitter.emit("progress", { event: "merge-start" });
         try {
@@ -522,7 +521,7 @@ export default class Video extends BaseRequest {
           clean();
           emitter.emit("completed", options.output);
         } catch (error) {
-          emitter.emit("error", { error: String(error) });
+          emitter.emit("error", error);
         }
       }
     });
@@ -615,7 +614,7 @@ export default class Video extends BaseRequest {
         });
       },
       onerror: error => {
-        emitter.emit("error", { error: String(error) });
+        emitter.emit("error", error);
         console.error(error);
       },
     });
