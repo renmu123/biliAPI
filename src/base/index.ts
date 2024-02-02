@@ -23,6 +23,7 @@ export class BaseRequest {
     dm_img_list: string;
     dm_img_str: string;
     dm_cover_img_str: string;
+    dm_img_inter: string;
   };
 
   constructor(auth?: Auth, axiosOptions: CreateAxiosDefaults = {}) {
@@ -33,6 +34,7 @@ export class BaseRequest {
       dm_cover_img_str: fakeDmCoverImgStr(
         "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0XX)), SwiftShader driver)Google Inc. (Google)"
       ),
+      dm_img_inter: '{"ds":[],"wh":[0,0,0],"of":[0,0,0]}',
     };
 
     const instance = axios.create({

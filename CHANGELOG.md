@@ -1,3 +1,13 @@
+# 1.2.1
+
+## Feature
+
+1. 为 `video.download` 增加`autoStart`参数，用于控制初始化时是否进行下载
+
+## Bug Fix
+
+1. 修复用户投稿接口的风控
+
 # 1.2.0
 
 ## Breaking change
