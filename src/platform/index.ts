@@ -239,7 +239,7 @@ export default class Platform extends BaseRequest {
       }
       try {
         const res = await submitApi(videos, options);
-        emitter.emit("completed", res);
+        emitter.emit("completed", res as { aid: number; bvid: string });
       } catch (error) {
         emitter.emit("error", String(error));
         throw error;
@@ -338,7 +338,7 @@ export default class Platform extends BaseRequest {
     const submit = async () => {
       try {
         const res = await submitApi(videos, { aid: aid, ...options }, mode);
-        emitter.emit("completed", res);
+        emitter.emit("completed", res as { aid: number; bvid: string });
       } catch (error) {
         // console.log("error", error);
         emitter.emit("error", String(error));
@@ -443,7 +443,7 @@ export default class Platform extends BaseRequest {
       data["cover"] = coverRes.url;
     }
 
-    console.log("submit", data);
+    // console.log("submit", data);
 
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/add",
@@ -498,7 +498,7 @@ export default class Platform extends BaseRequest {
       data["cover"] = coverRes.url;
     }
 
-    console.log("submit", data);
+    // console.log("submit", data);
 
     return this.request.post(
       "https://member.bilibili.com/x/vu/mvp/pc/add",
