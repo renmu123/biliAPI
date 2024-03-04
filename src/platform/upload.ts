@@ -216,7 +216,7 @@ export class WebVideoUploader extends BaseRequest {
         chunkParams.push(data);
         this.chunkTasks[partNumber] = data;
       }
-
+      // console.log("chunkParams", chunkParams.length);
       chunkParams.map(params => {
         return queue.add(() => this._uploadChunk(params));
       });
@@ -226,6 +226,7 @@ export class WebVideoUploader extends BaseRequest {
         eTag: "etag";
       }[] = [];
       queue.addListener("completed", ({ partNumber }) => {
+        // console.log("completed", partNumber);
         this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
@@ -361,23 +362,26 @@ export class WebVideoUploader extends BaseRequest {
   }
   pause() {
     this.queue.pause();
-    Object.values(this.chunkTasks).map(task => {
-      task.controller.abort();
-    });
+    // console.log("暂停上传", Object.values(this.chunkTasks).length);
+    Object.values(this.chunkTasks)
+      .filter(task => task.status === "running")
+      .map(task => {
+        task.controller.abort();
+      });
   }
   start() {
     const abortTasks = Object.values(this.chunkTasks).filter(
       task => task.status == "abort"
     );
+    // console.log("暂停上传", this.queue.size, abortTasks.length);
+
     abortTasks.map(task => {
       task.controller = new AbortController();
       task.status = "pending";
-      this.queue.add(() => {
-        this._uploadChunk(task);
-      });
+      this.queue.add(() => this._uploadChunk(task));
     });
     this.queue.start();
-    console.log("开始上传", this.chunkTasks, this.queue.size);
+    // console.log("开始上传", this.queue.size);
   }
   cancel() {
     this.queue.clear();

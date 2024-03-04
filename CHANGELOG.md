@@ -2,7 +2,8 @@
 
 ## Bug Fix
 
-修复`video.download`的错误处理
+1. 修复`video.download`的错误处理
+2. 修复上传暂停后无法继续上传的 bug
 
 # 1.2.1
 
