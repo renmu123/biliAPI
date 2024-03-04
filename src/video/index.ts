@@ -515,6 +515,7 @@ export default class Video extends BaseRequest {
 
     emitter.on("download-completed", async files => {
       const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
+      // console.log("ffmpegBinPath", ffmpegBinPath);
       if (files.length === 2) {
         emitter.emit("progress", { event: "merge-start" });
         try {

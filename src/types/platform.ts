@@ -149,6 +149,7 @@ export interface MediaDetailReturnType {
     reason: string;
   };
   archive: Archive;
+  /** 是否在合集中 */
   in_season: boolean;
   no_disturbance: number;
   origin_state: number;
