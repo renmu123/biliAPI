@@ -76,7 +76,7 @@ export interface MediaOptions {
   open_elec?: 0 | 1;
   /** 是否允许二创：1：允许，-1：不允许 */
   recreate?: 1 | -1;
-  /** 是否推送到动态：0：不推送，1：推送 */
+  /** 是否推送到动态：0：推送，1：不推送 */
   no_disturbance?: 0 | 1;
 }
 

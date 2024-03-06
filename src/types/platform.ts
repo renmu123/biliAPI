@@ -152,7 +152,7 @@ export interface MediaDetailReturnType {
   archive: Archive;
   /** 是否在合集中 */
   in_season: boolean;
-  /** 是否推送到动态：0：不推送，1：推送 */
+  /** 是否推送到动态：0：推送，1：不推送 */
   no_disturbance: 0 | 1;
   origin_state: number;
   reply: {
