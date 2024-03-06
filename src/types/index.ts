@@ -74,6 +74,10 @@ export interface MediaOptions {
   up_selection_reply?: boolean;
   /** 充电面板 0: 关闭，1: 开启，编辑应该不生效 */
   open_elec?: 0 | 1;
+  /** 是否允许二创：1：允许，-1：不允许 */
+  recreate?: 1 | -1;
+  /** 是否推送到动态：0：不推送，1：推送 */
+  no_disturbance?: 0 | 1;
 }
 
 export interface MediaPartOptions {

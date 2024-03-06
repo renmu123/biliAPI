@@ -122,7 +122,8 @@ interface Archive {
   topic_stat: number;
   premiere: number;
   is_ugcpay_v2: number;
-  recreate: any; // replace with the actual type if available
+  /** 是否允许二创：1：允许，-1：不允许 */
+  recreate: -1 | 1;
   political_media: number;
   political_editable: number;
   charging_pay: number;
@@ -151,7 +152,8 @@ export interface MediaDetailReturnType {
   archive: Archive;
   /** 是否在合集中 */
   in_season: boolean;
-  no_disturbance: number;
+  /** 是否推送到动态：0：不推送，1：推送 */
+  no_disturbance: 0 | 1;
   origin_state: number;
   reply: {
     aid: number;
