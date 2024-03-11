@@ -169,7 +169,7 @@ export class WebVideoUploader extends BaseRequest {
       });
       return params;
     } catch (e) {
-      console.log(e.name);
+      // console.log(e.name);
       if (e.name == "CanceledError") {
         this.chunkTasks[params.partNumber].status = "abort";
         // console.log("upload abort", e);
@@ -236,7 +236,7 @@ export class WebVideoUploader extends BaseRequest {
         if (parts.length === chunkParams.length) {
           resolve(parts);
         } else {
-          reject();
+          reject("上传失败");
         }
       });
     });

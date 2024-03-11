@@ -234,8 +234,8 @@ export default class Platform extends BaseRequest {
 
     queue.on("idle", async () => {
       if (videos.length !== filePaths.length) {
-        emitter.emit("error", "上传中止");
-        throw new Error("上传中止");
+        // emitter.emit("error", "上传中止");
+        return;
       }
       try {
         const res = await submitApi(videos, options);
@@ -351,8 +351,7 @@ export default class Platform extends BaseRequest {
     } else {
       queue.on("idle", async () => {
         if (videos.length !== filePaths.length) {
-          emitter.emit("error", "上传中止");
-          throw new Error("上传中止");
+          return;
         }
         await submit();
       });
