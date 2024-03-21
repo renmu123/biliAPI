@@ -1052,7 +1052,16 @@ export default class Platform extends BaseRequest {
   /**
    * 获取分区的简介相关信息
    */
-  getTypeDesc(typeid: number, copyright: 0 | 1 = 1): Promise<{}> {
+  getTypeDesc(
+    typeid: number,
+    copyright: 0 | 1 = 1
+  ): Promise<null | {
+    typeid: number;
+    id: number;
+    lang: 0;
+    copyright: 0 | 1;
+    components: string;
+  }> {
     this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/archive/desc/format",
