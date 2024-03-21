@@ -17,6 +17,7 @@ import {
   getSeasonListReturnType,
   Season,
   Section,
+  ArchivePreReturnType,
 } from "../types/platform";
 
 export default class Platform extends BaseRequest {
@@ -1035,6 +1036,31 @@ export default class Platform extends BaseRequest {
       {
         params: {
           id: id,
+        },
+      }
+    );
+  }
+  /**
+   * 获取投稿的相关活动及分区信息
+   */
+  async getArchivePre(): Promise<ArchivePreReturnType> {
+    this.auth.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/archive/pre"
+    );
+  }
+  /**
+   * 获取分区的简介相关信息
+   */
+  getTypeDesc(typeid: number, copyright: 0 | 1 = 1): Promise<{}> {
+    this.auth.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/archive/desc/format",
+      {
+        params: {
+          typeid: typeid,
+          copyright: copyright,
+          t: Date.now(),
         },
       }
     );

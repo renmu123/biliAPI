@@ -308,3 +308,27 @@ export interface Episode {
   title: string;
   videoTitle: string;
 }
+
+export interface ArchiveType {
+  copy_right: 0 | 1;
+  desc: string;
+  description: string;
+  id: number;
+  into_copy: string;
+  intro_original: string;
+  max_video_count: number;
+  name: string;
+  notice: string;
+  parent: number;
+  rank: number;
+  show: boolean;
+}
+
+interface ArchiveReturnType extends ArchiveType {
+  children: ArchiveType;
+}
+
+export interface ArchivePreReturnType {
+  [key: string]: any;
+  typelist: ArchiveReturnType[];
+}

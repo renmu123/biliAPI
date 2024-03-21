@@ -213,7 +213,7 @@ const query = await utils.WbiSign({
 ### 添加投稿
 
 使用`client`提交接口需要`accessToken`
-分区可以通过 `client.common.getAreas()` 获取
+分区可以通过 `client.platform.getArchivePre()` 获取
 api.submit 支持`"web" | "client" | "b-cut"` 三种参数，各有优劣
 
 ```js
@@ -250,7 +250,7 @@ task.cancel();
 ### 编辑投稿
 
 使用`client`提交接口需要`accessToken`
-分区可以通过 `client.common.getAreas()` 获取
+分区可以通过 `client.platform.getArchivePre()` 获取
 
 ```js
 const client = new Client();
@@ -329,6 +329,14 @@ client.platorm.getArchive({
 ### 合集小节详情
 
 `client.platform.getSectionDetail()`
+
+### 获取投稿分区相关信息
+
+`client.platform.getArchivePre()`
+
+### 获取分区简介信息
+
+`client.platform.getTypeDesc()`
 
 ## 搜索
 
