@@ -199,8 +199,8 @@ export interface getArchivesReturnType {
       title: string;
       tag: string;
       tid: number;
-      /* -30:审核中 0:审核通过 */
-      state: -30 | 0 | number;
+      /* -30:审核中 -6: 修改内容待审核 0:审核通过 */
+      state: -30 | -6 | 0 | number;
       [key: string]: any;
     };
     Videos: [];

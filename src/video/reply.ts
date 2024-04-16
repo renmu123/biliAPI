@@ -111,12 +111,13 @@ export default class Reply extends BaseRequest {
       oid: this.oid,
       type: this.type,
       ...params,
-      csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
       params: {
-        crsf: this.auth.cookieObj.bili_jct,
+        csrf: this.auth.cookieObj.bili_jct,
       },
     });
   }
@@ -141,8 +142,13 @@ export default class Reply extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      params: {
+        csrf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
   /**
@@ -166,8 +172,13 @@ export default class Reply extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      params: {
+        csrf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
   /**
@@ -189,8 +200,13 @@ export default class Reply extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      params: {
+        csrf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
   /**
@@ -214,8 +230,13 @@ export default class Reply extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      params: {
+        csrf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
   /**
@@ -239,10 +260,14 @@ export default class Reply extends BaseRequest {
       type: this.type,
       oid: this.oid,
       ...params,
-      csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      params: {
+        csrf: this.auth.cookieObj.bili_jct,
+      },
     });
   }
 }

@@ -104,8 +104,10 @@ export default class Video extends BaseRequest {
       like: params.like ? "1" : "2",
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
     });
   }
   /**
@@ -121,8 +123,10 @@ export default class Video extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
     });
   }
   /**
@@ -181,8 +185,10 @@ export default class Video extends BaseRequest {
       ...params,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data: data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
     });
   }
   /**
@@ -196,8 +202,10 @@ export default class Video extends BaseRequest {
       aid: params.aid ?? this.aid,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
     });
   }
   /**
@@ -219,8 +227,10 @@ export default class Video extends BaseRequest {
       aid: params.aid ?? this.aid,
       csrf: this.auth.cookieObj.bili_jct,
     };
-    return this.request.post(url, {
-      data,
+    return this.request.post(url, data, {
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
     });
   }
   /**
