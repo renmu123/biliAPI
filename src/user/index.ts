@@ -276,6 +276,7 @@ export default class User extends BaseRequest {
           cookie: cookie,
           origin: "https://space.bilibili.com",
           "accept-language": "en,zh-CN;q=0.9,zh;q=0.8",
+          referer: `https://space.bilibili.com/${params.mid}`,
         },
       }
     );
