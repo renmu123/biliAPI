@@ -2,6 +2,7 @@ import EventEmitter from "node:events";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { TypedEmitter } from "tiny-typed-emitter";
 
 import Reply from "./reply";
 import { BaseRequest } from "../base/index";
@@ -13,6 +14,22 @@ import { uuid } from "../utils/index";
 import type { GenerateNumberRange } from "../types/utils";
 import type { VideoId } from "../types/index";
 import type { VideoDetailReturnType, PlayUrlReturnType } from "../types/video";
+
+interface ProgressEvent {
+  event: "download" | "merge-start" | "merge-end";
+  progress?: {
+    loaded: number;
+    total: number;
+    progress: number;
+  };
+}
+
+interface EmitterEvents {
+  "download-completed": (response: string[]) => void;
+  progress: (response: ProgressEvent) => void;
+  error: (response: string) => void;
+  completed: (response: string) => void;
+}
 
 export default class Video extends BaseRequest {
   aid?: number;
@@ -410,7 +427,7 @@ export default class Video extends BaseRequest {
     } = {},
     autoStart: boolean = true
   ) {
-    const emitter = new EventEmitter();
+    const emitter = new EventEmitter() as TypedEmitter<EmitterEvents>;
 
     const media = await this.playurl({
       bvid: options.bvid,
@@ -466,7 +483,7 @@ export default class Video extends BaseRequest {
         const loaded =
           videoDownloader.downloadedSize + audioDownloader.downloadedSize;
         const total = videoDownloader.totalSize + audioDownloader.totalSize;
-        const data = {
+        const data: ProgressEvent = {
           event: "download",
           progress: {
             loaded: loaded,
@@ -477,7 +494,7 @@ export default class Video extends BaseRequest {
         emitter.emit("progress", data);
       },
       onerror: error => {
-        emitter.emit("error", error);
+        emitter.emit("error", error.message);
         console.error(error);
       },
     });
@@ -498,7 +515,7 @@ export default class Video extends BaseRequest {
         const loaded =
           videoDownloader.downloadedSize + audioDownloader.downloadedSize;
         const total = videoDownloader.totalSize + audioDownloader.totalSize;
-        const data = {
+        const data: ProgressEvent = {
           event: "download",
           progress: {
             loaded: loaded,
@@ -509,7 +526,7 @@ export default class Video extends BaseRequest {
         emitter.emit("progress", data);
       },
       onerror: error => {
-        emitter.emit("error", error);
+        emitter.emit("error", error.message);
         console.error(error);
       },
     });
@@ -595,7 +612,7 @@ export default class Video extends BaseRequest {
     },
     autoStart: boolean = true
   ) {
-    const emitter = new EventEmitter();
+    const emitter = new EventEmitter() as TypedEmitter<EmitterEvents>;
 
     const media = await this.playurl({
       bvid: options.bvid,
@@ -630,7 +647,7 @@ export default class Video extends BaseRequest {
         });
       },
       onerror: error => {
-        emitter.emit("error", error);
+        emitter.emit("error", error.message);
         console.error(error);
       },
     });

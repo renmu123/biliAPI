@@ -1,8 +1,8 @@
 import EventEmitter from "node:events";
 
 import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
 import { md5 } from "../utils/index";
+import { TypedEmitter } from "tiny-typed-emitter";
 
 import type { CommonResponse } from "../types/index";
 
@@ -13,6 +13,48 @@ const enum Event {
   error = "error",
   end = "end",
 }
+
+interface TvLoginResponse {
+  /** 0：成功;86039: 二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
+  code: 0 | 86039 | 86038 | 86090;
+  message: string;
+  ttl: 1;
+  data: any | null;
+}
+interface TvEmitterEvents {
+  [Event.start]: () => void;
+  [Event.scan]: (response: TvLoginResponse) => void;
+  [Event.completed]: (response: TvLoginResponse) => void;
+  [Event.error]: (response: TvLoginResponse) => void;
+  [Event.end]: (response: TvLoginResponse) => void;
+}
+
+type WebLoginResponse = CommonResponse<{
+  url: string;
+  refresh_token: string;
+  timestamp: number;
+  /** 0：成功;86101:二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
+  code: 0 | 86101 | 86038 | 86090;
+  message: string;
+}>;
+interface WebCompleteResponse {
+  DedeUserID: string;
+  DedeUserID__ckMd5: string;
+  Expires: string;
+  SESSDATA: string;
+  bili_jct: string;
+  gourl: string;
+  first_domain: string;
+  refresh_token: string;
+}
+interface WebEmitterEvents {
+  [Event.start]: () => void;
+  [Event.scan]: (response: WebLoginResponse) => void;
+  [Event.completed]: (response: WebCompleteResponse) => void;
+  [Event.error]: (response: WebLoginResponse) => void;
+  [Event.end]: (response: WebLoginResponse) => void;
+}
+
 /**
  * TV扫码登录
  */
@@ -20,7 +62,7 @@ export class TvQrcodeLogin extends BaseRequest {
   private appkey = "4409e2ce8ffd12b8";
   private secretKey = "59b43e04ad6965f34319062b478f83dd";
   private timmer: NodeJS.Timeout | null = null;
-  emitter = new EventEmitter();
+  emitter = new EventEmitter() as TypedEmitter<TvEmitterEvents>;
 
   constructor() {
     super(undefined, {
@@ -75,20 +117,15 @@ export class TvQrcodeLogin extends BaseRequest {
     };
 
     params.sign = this.generateSign(params);
-    const res = await this.request.post<
-      never,
-      CommonResponse<{
-        /** 0：成功;86039: 二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
-        code: 0 | 86039 | 86038 | 86090;
-        message: string;
-        ttl: 1;
-        data: any | null;
-      }>
-    >("http://passport.bilibili.com/x/passport-tv-login/qrcode/poll", params, {
-      extra: {
-        rawResponse: true,
-      },
-    });
+    const res = await this.request.post<never, CommonResponse<TvLoginResponse>>(
+      "http://passport.bilibili.com/x/passport-tv-login/qrcode/poll",
+      params,
+      {
+        extra: {
+          rawResponse: true,
+        },
+      }
+    );
     return res.data;
   }
 
@@ -96,7 +133,7 @@ export class TvQrcodeLogin extends BaseRequest {
     const data = await this.getQrcode();
     const auth_code = data.auth_code;
 
-    this.emitter.emit("start");
+    this.emitter.emit(Event.start);
     let count = 0;
     const timer = setInterval(async () => {
       const response = await this.poll(auth_code);
@@ -150,25 +187,25 @@ export class TvQrcodeLogin extends BaseRequest {
   /**
    * 监听事件
    */
-  on(event: keyof typeof Event, callback: (response: any) => void) {
+  on(event: keyof TvEmitterEvents, callback: (response: any) => void) {
     this.emitter.on(event, callback);
   }
   /**
    * 监听事件，只触发一次
    */
-  once(event: keyof typeof Event, callback: (response: any) => void) {
+  once(event: keyof TvEmitterEvents, callback: (response: any) => void) {
     this.emitter.once(event, callback);
   }
   /**
    * 移除监听事件
    */
-  off(event: keyof typeof Event, callback: (response: any) => void) {
+  off(event: keyof TvEmitterEvents, callback: (response: any) => void) {
     this.emitter.off(event, callback);
   }
   /**
    * 移除所有监听事件
    */
-  removeAllListeners(event?: keyof typeof Event) {
+  removeAllListeners(event?: keyof TvEmitterEvents) {
     if (event) {
       this.emitter.removeAllListeners(event);
     } else {
@@ -194,7 +231,7 @@ export class TvQrcodeLogin extends BaseRequest {
  */
 export class WebQrcodeLogin extends BaseRequest {
   private timmer: NodeJS.Timeout | null = null;
-  emitter = new EventEmitter();
+  emitter = new EventEmitter() as TypedEmitter<WebEmitterEvents>;
   constructor() {
     super(undefined, {
       headers: {
@@ -219,16 +256,7 @@ export class WebQrcodeLogin extends BaseRequest {
    * 轮询二维码状态
    * @param auth_code
    */
-  async poll(qrcode_key: string): Promise<
-    CommonResponse<{
-      url: string;
-      refresh_token: number;
-      timestamp: number;
-      /** 0：成功;86101:二维码尚未扫描;86038：二维码已失效;86090：二维码已扫码未确认 */
-      code: 0 | 86101 | 86038 | 86090;
-      message: string;
-    }>
-  > {
+  async poll(qrcode_key: string): Promise<WebLoginResponse> {
     const res = await this.request.get(
       "https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
       {
@@ -258,7 +286,7 @@ export class WebQrcodeLogin extends BaseRequest {
     const data = await this.getQrcode();
     const qrcode_key = data.qrcode_key;
 
-    this.emitter.emit("start");
+    this.emitter.emit(Event.start);
     let count = 0;
     const timer = setInterval(async () => {
       const res = await this.poll(qrcode_key);
@@ -268,7 +296,7 @@ export class WebQrcodeLogin extends BaseRequest {
         const data = {
           ...paramsToObject(url.searchParams.entries()),
           refresh_token: response.refresh_token,
-        };
+        } as WebCompleteResponse;
         this.emitter.emit(Event.completed, data);
         this.emitter.emit(Event.end, res);
         clearInterval(timer);
@@ -301,7 +329,7 @@ export class WebQrcodeLogin extends BaseRequest {
           data: null,
         });
         clearInterval(timer);
-        this.emitter.emit(Event.end, response);
+        this.emitter.emit(Event.end, res);
       }
     }, 1000);
     this.timmer = timer;
@@ -318,25 +346,25 @@ export class WebQrcodeLogin extends BaseRequest {
   /**
    * 监听事件
    */
-  on(event: keyof typeof Event, callback: (response: any) => void) {
+  on(event: keyof WebEmitterEvents, callback: (response: any) => void) {
     this.emitter.on(event, callback);
   }
   /**
    * 监听事件，只触发一次
    */
-  once(event: keyof typeof Event, callback: (response: any) => void) {
+  once(event: keyof WebEmitterEvents, callback: (response: any) => void) {
     this.emitter.once(event, callback);
   }
   /**
    * 移除监听事件
    */
-  off(event: keyof typeof Event, callback: (response: any) => void) {
+  off(event: keyof WebEmitterEvents, callback: (response: any) => void) {
     this.emitter.off(event, callback);
   }
   /**
    * 移除所有监听事件
    */
-  removeAllListeners(event?: keyof typeof Event) {
+  removeAllListeners(event?: keyof WebEmitterEvents) {
     if (event) {
       this.emitter.removeAllListeners(event);
     } else {
