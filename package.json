@@ -6,12 +6,12 @@
   "homepage": "https://github.com/renmu123/biliAPI",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
-  "types": "dist/index",
-  "typings": "dist/index",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": {
-        "default": "./dist/index"
+        "default": "./dist/index.d.ts"
       },
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
