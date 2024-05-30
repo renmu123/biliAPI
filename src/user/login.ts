@@ -22,11 +22,11 @@ interface TvLoginResponse {
   data: any | null;
 }
 interface TvEmitterEvents {
-  [Event.start]: () => void;
-  [Event.scan]: (response: TvLoginResponse) => void;
-  [Event.completed]: (response: TvLoginResponse) => void;
-  [Event.error]: (response: TvLoginResponse) => void;
-  [Event.end]: (response: TvLoginResponse) => void;
+  start: () => void;
+  scan: (response: TvLoginResponse) => void;
+  completed: (response: TvLoginResponse) => void;
+  error: (response: TvLoginResponse) => void;
+  end: (response: TvLoginResponse) => void;
 }
 
 type WebLoginResponse = CommonResponse<{
@@ -48,11 +48,11 @@ interface WebCompleteResponse {
   refresh_token: string;
 }
 interface WebEmitterEvents {
-  [Event.start]: () => void;
-  [Event.scan]: (response: WebLoginResponse) => void;
-  [Event.completed]: (response: WebCompleteResponse) => void;
-  [Event.error]: (response: WebLoginResponse) => void;
-  [Event.end]: (response: WebLoginResponse) => void;
+  start: () => void;
+  scan: (response: WebLoginResponse) => void;
+  completed: (response: WebCompleteResponse) => void;
+  error: (response: WebLoginResponse) => void;
+  end: (response: WebLoginResponse) => void;
 }
 
 /**
