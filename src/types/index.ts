@@ -62,6 +62,8 @@ export interface MediaOptions {
   desc_format_id?: number;
   /** 话题id */
   mission_id?: number;
+  /** topic_id，需要和mission_id一起使用，topic_name加在tag参数中 */
+  topic_id?: number;
   /** 自制声明 0: 允许转载，1：禁止转载 */
   no_reprint?: 0 | 1;
   /** 是否全景 */
