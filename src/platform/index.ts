@@ -117,17 +117,17 @@ export default class Platform extends BaseRequest {
       filePath => {
         if (isString(filePath)) {
           return {
-            path: filePath as string,
-            title: path.parse(filePath as string).name,
+            path: filePath,
+            title: path.parse(filePath).name,
           };
         } else {
-          if (!(filePath as MediaPartOptions).title) {
+          if (!filePath.title) {
             return {
-              path: (filePath as MediaPartOptions).path,
-              title: path.parse(filePath as string).name,
+              path: filePath.path,
+              title: path.parse(filePath.path).name,
             };
           } else {
-            return filePath as MediaPartOptions;
+            return filePath;
           }
         }
       }
@@ -181,13 +181,16 @@ export default class Platform extends BaseRequest {
     });
 
     const pause = () => {
-      uploadTasks.map(uploader => uploader.pause());
+      queue.pause();
+      uploadTasks.map(uploader => uploader.queue && uploader.pause());
     };
     const start = () => {
-      uploadTasks.map(uploader => uploader.start());
+      queue.start();
+      uploadTasks.map(uploader => uploader.queue && uploader.start());
     };
     const cancel = () => {
-      uploadTasks.map(uploader => uploader.cancel());
+      queue.clear();
+      uploadTasks.map(uploader => uploader.queue && uploader.cancel());
     };
 
     return {

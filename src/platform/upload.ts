@@ -362,14 +362,16 @@ export class WebVideoUploader extends BaseRequest {
   }
   pause() {
     this.queue.pause();
-    // console.log("暂停上传", Object.values(this.chunkTasks).length);
+    // console.log("暂停上传", this.chunkTasks);
     Object.values(this.chunkTasks)
       .filter(task => task.status === "running")
       .map(task => {
+        this.progress[task.chunk + 1] = 0;
         task.controller.abort();
       });
   }
   start() {
+    // console.log("继续上传", this.chunkTasks);
     const abortTasks = Object.values(this.chunkTasks).filter(
       task => task.status == "abort"
     );
