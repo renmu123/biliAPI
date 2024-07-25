@@ -153,6 +153,7 @@ export class WebVideoUploader extends BaseRequest {
         extra: {
           rawResponse: true,
         },
+        timeout: 1000000,
         signal: options.controller.signal,
         onUploadProgress: (progressEvent: any) => {
           this.progress[params.partNumber] = progressEvent.loaded;
