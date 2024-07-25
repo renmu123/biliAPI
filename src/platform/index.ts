@@ -872,10 +872,10 @@ export default class Platform extends BaseRequest {
       page_size: number;
       offset: number;
       /** 关键字 */
-      keyword?: string;
+      keywords?: string;
     } = {
-      page_size: 0,
-      offset: 20,
+      page_size: 20,
+      offset: 0,
     }
   ): Promise<{
     result: {
