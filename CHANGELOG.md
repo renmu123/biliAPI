@@ -1,3 +1,17 @@
+# 1.4.0
+
+1. 上传接口增加重试机制
+2. 修复`preuplaod-start`和`preupload-end`拼写错误
+3. `WebVideoUploader`参数签名修改，**不兼容**
+
+```js
+{
+  concurrency: number;
+  retryTimes: number;
+  retryDelay: number;
+}
+```
+
 # 1.3.6
 
 1. 修复 searchTopic 的参数名称以及默认参数错误

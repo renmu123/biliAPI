@@ -104,7 +104,9 @@ export default class Reply extends BaseRequest {
     plat: 1 | 2 | 3 | 4;
     at_name_to_mid?: string;
     pictures?: string;
-  }): Promise<{}> {
+  }): Promise<{
+    rpid: number;
+  }> {
     this.auth.authLogin();
     const url = `https://api.bilibili.com/x/v2/reply/add`;
     const data = {

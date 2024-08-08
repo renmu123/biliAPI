@@ -1,10 +1,10 @@
 import path from "node:path";
-import EventEmitter from "events";
+import EventEmitter from "node:events";
 
 import PQueue from "p-queue";
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
-import { getFileSize, readBytesFromFile, sum } from "../utils/index";
+import { getFileSize, readBytesFromFile, sum, retry } from "../utils/index";
 
 import type { Request, MediaPartOptions } from "../types/index";
 
@@ -30,14 +30,32 @@ export class WebVideoUploader extends BaseRequest {
     [key: number]: UploadChunkTask;
   } = {};
   size: number = 0;
-  concurrency: number = 3;
+  options: {
+    concurrency: number;
+    retryTimes: number;
+    retryDelay: number;
+  };
 
-  constructor(auth: Auth = new Auth(), concurrency: number = 3) {
+  constructor(
+    auth: Auth = new Auth(),
+    options: {
+      concurrency?: number;
+      retryTimes?: number;
+      retryDelay?: number;
+    } = {}
+  ) {
     super(auth);
-    this.concurrency = concurrency;
+    this.options = Object.assign(
+      {
+        concurrency: 3,
+        retryTimes: 3,
+        retryDelay: 3000,
+      },
+      options
+    );
   }
 
-  async preupload(
+  async preuploadApi(
     filePath: string,
     size: number
   ): Promise<{
@@ -111,7 +129,7 @@ export class WebVideoUploader extends BaseRequest {
     });
     return res.data;
   }
-  async _uploadChunk(options: UploadChunkTask) {
+  async _uploadChunk(options: UploadChunkTask, retryCount = 2) {
     const {
       filePath,
       start,
@@ -147,9 +165,6 @@ export class WebVideoUploader extends BaseRequest {
         headers: {
           "X-Upos-Auth": auth,
         },
-        "axios-retry": {
-          retries: 2,
-        },
         extra: {
           rawResponse: true,
         },
@@ -170,10 +185,22 @@ export class WebVideoUploader extends BaseRequest {
       });
       return params;
     } catch (e) {
-      // console.log(e.name);
-      if (e.name == "CanceledError") {
+      console.error("upload error", e.code);
+      if (e.code == "ERR_CANCELED") {
         this.chunkTasks[params.partNumber].status = "abort";
-        // console.log("upload abort", e);
+      } else if (
+        e.code === "ECONNABORTED" ||
+        e.code === "ERR_BAD_RESPONSE" ||
+        e.code === "ERR_BAD_REQUEST" ||
+        e.code === "ETIMEDOUT"
+      ) {
+        if (retryCount > 0) {
+          await this.sleep(1000);
+          this._uploadChunk(options, retryCount - 1);
+        } else {
+          this.chunkTasks[params.partNumber].status = "error";
+          throw e;
+        }
       } else {
         this.chunkTasks[params.partNumber].status = "error";
         // console.error("upload error", e);
@@ -191,7 +218,7 @@ export class WebVideoUploader extends BaseRequest {
     size: number
   ): Promise<{ partNumber: number; eTag: "etag" }[]> {
     return new Promise((resolve, reject) => {
-      const queue = new PQueue({ concurrency: this.concurrency });
+      const queue = new PQueue({ concurrency: this.options.concurrency });
       this.queue = queue;
 
       const chunks = Math.ceil(size / chunk_size);
@@ -243,10 +270,9 @@ export class WebVideoUploader extends BaseRequest {
     });
   }
 
-  async mergeVideo(
+  async mergeVideoApi(
     url: string,
     params: any,
-    parts: any,
     auth: string
   ): Promise<{
     OK: number;
@@ -268,7 +294,6 @@ export class WebVideoUploader extends BaseRequest {
         },
       }
     );
-    // console.log("mergeVideo", res);
     return res.data;
   }
 
@@ -281,12 +306,16 @@ export class WebVideoUploader extends BaseRequest {
     this.size = size;
 
     this.emitter.emit("progress", {
-      event: "preuplad-start",
+      event: "preupload-start",
       progress: 0,
     });
-    const data = await this.preupload(filePath, size);
+    const data = await retry(
+      () => this.preuploadApi(filePath, size),
+      this.options.retryTimes,
+      this.options.retryDelay
+    );
     this.emitter.emit("progress", {
-      event: "preuplad-end",
+      event: "preupload-end",
       progress: 0,
     });
 
@@ -297,12 +326,10 @@ export class WebVideoUploader extends BaseRequest {
       event: "getUploadInfo-start",
       progress: 0,
     });
-    const uploadInfo = await this.getUploadInfo(
-      url,
-      biz_id,
-      chunk_size,
-      auth,
-      size
+    const uploadInfo = await retry(
+      () => this.getUploadInfo(url, biz_id, chunk_size, auth, size),
+      this.options.retryTimes,
+      this.options.retryDelay
     );
     this.emitter.emit("progress", {
       event: "getUploadInfo-end",
@@ -311,7 +338,7 @@ export class WebVideoUploader extends BaseRequest {
     });
     // console.log("uploadInfo", uploadInfo);
 
-    const parts = await this.uploadChunk(
+    await this.uploadChunk(
       filePath,
       url,
       auth,
@@ -334,7 +361,7 @@ export class WebVideoUploader extends BaseRequest {
     });
     let attempt = 0;
     while (attempt < 5) {
-      const res = await this.mergeVideo(url, params, parts, auth);
+      const res = await this.mergeVideoApi(url, params, auth);
       if (res.OK !== 1) {
         attempt += 1;
         console.error("合并视频失败，等待重试");

@@ -1,12 +1,12 @@
 import path from "node:path";
 import PQueue from "p-queue";
-import EventEmitter from "events";
+import EventEmitter from "node:events";
 
 import { BaseRequest } from "../base/index";
 import Auth from "../base/Auth";
 import { isString, readFileAsBase64 } from "../utils";
 import { WebVideoUploader } from "./upload";
-import { getFileSize, sum } from "../utils/index";
+import { getFileSize, sum, retry } from "../utils/index";
 
 import type { MediaOptions, MediaPartOptions, DescV2 } from "../types/index";
 import {
@@ -101,7 +101,13 @@ export default class Platform extends BaseRequest {
   /**
    * 上传
    */
-  private async _upload(filePaths: string[] | MediaPartOptions[]): Promise<{
+  private async _upload(
+    filePaths: string[] | MediaPartOptions[],
+    retryOptions: {
+      times?: number;
+      delay?: number;
+    } = {}
+  ): Promise<{
     emitter: EventEmitter;
     queue: PQueue;
     videos: {
@@ -137,7 +143,10 @@ export default class Platform extends BaseRequest {
 
     const uploadTasks: WebVideoUploader[] = [];
     for (let i = 0; i < mediaOptions.length; i++) {
-      const uploader = new WebVideoUploader(this.auth);
+      const uploader = new WebVideoUploader(this.auth, {
+        retryDelay: retryOptions.delay,
+        retryTimes: retryOptions.times,
+      });
       uploadTasks.push(uploader);
       queue.add(() => uploader.upload(mediaOptions[i]));
     }
@@ -219,14 +228,19 @@ export default class Platform extends BaseRequest {
     } = {
       uploader: "web",
       submit: "client",
-    }
+    },
+    retryOptions: {
+      times?: number;
+      delay?: number;
+    } = {}
   ) {
     this.auth.authLogin([api.submit, api.uploader]);
     if (filePaths.length === 0) throw new Error("filePaths can not be empty");
     this.checkOptions(options);
 
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
-      filePaths
+      filePaths,
+      retryOptions
     );
 
     const submitApiObj = {
@@ -242,7 +256,11 @@ export default class Platform extends BaseRequest {
         return;
       }
       try {
-        const res = await submitApi(videos, options);
+        const res = await retry(
+          () => submitApi(videos, options),
+          retryOptions.times,
+          retryOptions.delay
+        );
         emitter.emit("completed", res as { aid: number; bvid: string });
       } catch (error) {
         emitter.emit("error", String(error));
@@ -326,7 +344,11 @@ export default class Platform extends BaseRequest {
     } = {
       uploader: "web",
       submit: "client",
-    }
+    },
+    retryOptions: {
+      times?: number;
+      delay?: number;
+    } = {}
   ) {
     this.auth.authLogin();
     const submitApiObj = {
@@ -336,12 +358,17 @@ export default class Platform extends BaseRequest {
     const submitApi = submitApiObj[api.submit];
 
     const { emitter, queue, videos, pause, start, cancel } = await this._upload(
-      filePaths
+      filePaths,
+      retryOptions
     );
 
     const submit = async () => {
       try {
-        const res = await submitApi(videos, { aid: aid, ...options }, mode);
+        const res = await retry(
+          () => submitApi(videos, { aid: aid, ...options }, mode),
+          retryOptions.times,
+          retryOptions.delay
+        );
         emitter.emit("completed", res as { aid: number; bvid: string });
       } catch (error) {
         // console.log("error", error);

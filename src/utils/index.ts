@@ -153,3 +153,32 @@ export async function spawnChild(
   }
   return data;
 }
+
+/**
+ * 重试函数
+ * @param fn 要重试的函数
+ * @param times 重试次数
+ * @param delay 重试间隔时间
+ */
+export function retry<T>(
+  fn: () => Promise<T>,
+  times: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    function attempt(currentTimes: number) {
+      fn()
+        .then(resolve)
+        .catch(err => {
+          setTimeout(() => {
+            if (currentTimes === 1) {
+              reject(err);
+            } else {
+              attempt(currentTimes - 1);
+            }
+          }, delay);
+        });
+    }
+    attempt(times);
+  });
+}
