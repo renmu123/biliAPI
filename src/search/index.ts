@@ -1,7 +1,7 @@
-import { fakeBuvid3 } from "../utils/index";
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
-import type { SearchTypeParams } from "../types/search";
+import { fakeBuvid3 } from "../utils/index.js";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
+import type { SearchTypeParams } from "../types/search.js";
 
 export default class Search extends BaseRequest {
   noAuthUseCookie: boolean;

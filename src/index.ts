@@ -1,18 +1,18 @@
-import { TvQrcodeLogin, WebQrcodeLogin } from "./user/login";
-import Auth from "./base/Auth";
-import { BiliResponseError } from "./base/Error";
-import Live from "./live/index";
-import Platform from "./platform";
-import { WebVideoUploader } from "./platform/upload";
-import Search from "./search/index";
-import User from "./user/index";
-import Video from "./video/index";
-import Reply from "./video/reply";
-import Common from "./common/index";
-import { WbiSign } from "./base/sign";
-import { fakeBuvid3, fakeDmCoverImgStr } from "./utils";
-import { protobufDecode, protoBufToXml } from "./utils/dm";
-import Downloader from "./utils/downloader";
+import { TvQrcodeLogin, WebQrcodeLogin } from "./user/login.js";
+import Auth from "./base/Auth.js";
+import { BiliResponseError } from "./base/Error.js";
+import Live from "./live/index.js";
+import Platform from "./platform/index.js";
+import { WebVideoUploader } from "./platform/upload.js";
+import Search from "./search/index.js";
+import User from "./user/index.js";
+import Video from "./video/index.js";
+import Reply from "./video/reply.js";
+import Common from "./common/index.js";
+import { WbiSign } from "./base/sign.js";
+import { fakeBuvid3, fakeDmCoverImgStr } from "./utils/index.js";
+import { protobufDecode, protoBufToXml } from "./utils/dm.js";
+import Downloader from "./utils/downloader.js";
 
 declare module "axios" {
   export interface AxiosRequestConfig {

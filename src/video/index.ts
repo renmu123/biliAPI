@@ -4,16 +4,19 @@ import os from "node:os";
 import path from "node:path";
 import { TypedEmitter } from "tiny-typed-emitter";
 
-import Reply from "./reply";
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
-import Downloader from "../utils/downloader";
-import { mergeMedia } from "../utils/ffmpeg";
-import { uuid } from "../utils/index";
+import Reply from "./reply.js";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
+import Downloader from "../utils/downloader.js";
+import { mergeMedia } from "../utils/ffmpeg.js";
+import { uuid } from "../utils/index.js";
 
-import type { GenerateNumberRange } from "../types/utils";
-import type { VideoId } from "../types/index";
-import type { VideoDetailReturnType, PlayUrlReturnType } from "../types/video";
+import type { GenerateNumberRange } from "../types/utils.js";
+import type { VideoId } from "../types/index.js";
+import type {
+  VideoDetailReturnType,
+  PlayUrlReturnType,
+} from "../types/video.js";
 
 interface ProgressEvent {
   event: "download" | "merge-start" | "merge-end";

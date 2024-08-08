@@ -1,7 +1,7 @@
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
 
-import type { getMasterInfoReturnType } from "../types/live";
+import type { getMasterInfoReturnType } from "../types/live.js";
 
 export default class Live extends BaseRequest {
   private noAuthUseCookie: boolean;

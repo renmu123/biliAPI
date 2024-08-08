@@ -1,12 +1,33 @@
 import path from "node:path";
-import EventEmitter from "node:events";
+import { TypedEmitter } from "tiny-typed-emitter";
 
 import PQueue from "p-queue";
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
-import { getFileSize, readBytesFromFile, sum, retry } from "../utils/index";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
+import { getFileSize, readBytesFromFile, sum, retry } from "../utils/index.js";
 
-import type { Request, MediaPartOptions } from "../types/index";
+import type { MediaPartOptions } from "../types/index.js";
+
+interface WebEmitterEvents {
+  start: () => void;
+  completed: (response: {
+    cid: number;
+    filename: string;
+    title: string;
+  }) => void;
+  progress: (response: {
+    event:
+      | "preupload-start"
+      | "preupload-end"
+      | "getUploadInfo-start"
+      | "getUploadInfo-end"
+      | "uploading"
+      | "merge-start"
+      | "merge-end";
+    progress: number;
+    data?: any;
+  }) => void;
+}
 
 interface UploadChunkTask {
   filePath: string;
@@ -24,7 +45,7 @@ interface UploadChunkTask {
 
 export class WebVideoUploader extends BaseRequest {
   queue: PQueue;
-  emitter = new EventEmitter();
+  emitter = new TypedEmitter<WebEmitterEvents>();
   progress: { [key: string]: number } = {};
   chunkTasks: {
     [key: number]: UploadChunkTask;
@@ -35,6 +56,9 @@ export class WebVideoUploader extends BaseRequest {
     retryTimes: number;
     retryDelay: number;
   };
+  on: TypedEmitter<WebEmitterEvents>["on"];
+  once: TypedEmitter<WebEmitterEvents>["once"];
+  off: TypedEmitter<WebEmitterEvents>["off"];
 
   constructor(
     auth: Auth = new Auth(),
@@ -53,6 +77,9 @@ export class WebVideoUploader extends BaseRequest {
       },
       options
     );
+    this.on = this.emitter.on.bind(this);
+    this.once = this.emitter.once.bind(this);
+    this.off = this.emitter.off.bind(this);
   }
 
   async preuploadApi(
@@ -185,7 +212,6 @@ export class WebVideoUploader extends BaseRequest {
       });
       return params;
     } catch (e) {
-      console.error("upload error", e.code);
       if (e.code == "ERR_CANCELED") {
         this.chunkTasks[params.partNumber].status = "abort";
       } else if (
@@ -359,18 +385,15 @@ export class WebVideoUploader extends BaseRequest {
       progress: 1,
       data: params,
     });
-    let attempt = 0;
-    while (attempt < 5) {
-      const res = await this.mergeVideoApi(url, params, auth);
-      if (res.OK !== 1) {
-        attempt += 1;
-        console.error("合并视频失败，等待重试");
-        await this.sleep(10000);
-      } else {
-        break;
-      }
+    const res = await retry(
+      () => this.mergeVideoApi(url, params, auth),
+      5,
+      5000
+    );
+    if (res.OK !== 1) {
+      throw new Error("合并视频失败");
     }
-    if (attempt >= 5) throw new Error("合并视频失败");
+
     this.emitter.emit("progress", {
       event: "merge-end",
       progress: 1,
@@ -390,7 +413,6 @@ export class WebVideoUploader extends BaseRequest {
   }
   pause() {
     this.queue.pause();
-    // console.log("暂停上传", this.chunkTasks);
     Object.values(this.chunkTasks)
       .filter(task => task.status === "running")
       .map(task => {
@@ -399,11 +421,9 @@ export class WebVideoUploader extends BaseRequest {
       });
   }
   start() {
-    // console.log("继续上传", this.chunkTasks);
     const abortTasks = Object.values(this.chunkTasks).filter(
       task => task.status == "abort"
     );
-    // console.log("暂停上传", this.queue.size, abortTasks.length);
 
     abortTasks.map(task => {
       task.controller = new AbortController();
@@ -411,22 +431,11 @@ export class WebVideoUploader extends BaseRequest {
       this.queue.add(() => this._uploadChunk(task));
     });
     this.queue.start();
-    // console.log("开始上传", this.queue.size);
   }
   cancel() {
     this.queue.clear();
     Object.values(this.chunkTasks).map(task => {
       task.controller.abort();
     });
-  }
-  on(event: "start" | "completed" | "progress", callback: () => void) {
-    this.emitter.on(event, callback);
-    // progress callback(event: 'preuplad-start'|'preuplad-end'|'merge-start'|'merge-end'|'getUploadInfo-end'|'getUploadInfo-start',progress:number)
-  }
-  once(event: "start" | "completed" | "progress", callback: () => void) {
-    this.emitter.once(event, callback);
-  }
-  off(event: "start" | "completed" | "progress", callback: () => void) {
-    this.emitter.off(event, callback);
   }
 }

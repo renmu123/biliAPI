@@ -1,5 +1,5 @@
 import type { AxiosInstance } from "axios";
-import { Client as ClientClass } from "../index";
+import { Client as ClientClass } from "../index.js";
 
 export type Request = AxiosInstance;
 

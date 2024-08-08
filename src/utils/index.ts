@@ -14,8 +14,7 @@ export async function getFileSize(filePath: string) {
   }
 }
 
-export let isString = (value: unknown) =>
-  typeof value === "string" || value instanceof String;
+export let isString = (value: unknown) => typeof value === "string";
 
 export function readBytesFromFile(
   filePath: string,

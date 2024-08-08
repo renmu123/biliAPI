@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 
-import { fakeBuvid3 } from "../utils/index";
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
+import { fakeBuvid3 } from "../utils/index.js";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
 
 import type {
   MyInfoV2ReturnType,
@@ -12,7 +12,7 @@ import type {
   SeriesMeta,
   SeriesArchive,
   SeasonMeta,
-} from "../types/user";
+} from "../types/user.js";
 
 export default class User extends BaseRequest {
   noAuthUseCookie: boolean;

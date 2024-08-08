@@ -1,10 +1,8 @@
-import EventEmitter from "node:events";
-
-import { BaseRequest } from "../base/index";
-import { md5 } from "../utils/index";
+import { BaseRequest } from "../base/index.js";
+import { md5 } from "../utils/index.js";
 import { TypedEmitter } from "tiny-typed-emitter";
 
-import type { CommonResponse } from "../types/index";
+import type { CommonResponse } from "../types/index.js";
 
 const enum Event {
   start = "start",
@@ -62,7 +60,10 @@ export class TvQrcodeLogin extends BaseRequest {
   private appkey = "4409e2ce8ffd12b8";
   private secretKey = "59b43e04ad6965f34319062b478f83dd";
   private timmer: NodeJS.Timeout | null = null;
-  emitter = new EventEmitter() as TypedEmitter<TvEmitterEvents>;
+  emitter = new TypedEmitter<TvEmitterEvents>();
+  on: TypedEmitter<TvEmitterEvents>["on"];
+  once: TypedEmitter<TvEmitterEvents>["once"];
+  off: TypedEmitter<TvEmitterEvents>["off"];
 
   constructor() {
     super(undefined, {
@@ -71,6 +72,9 @@ export class TvQrcodeLogin extends BaseRequest {
         cookie: null,
       },
     });
+    this.on = this.emitter.on.bind(this);
+    this.once = this.emitter.once.bind(this);
+    this.off = this.emitter.off.bind(this);
   }
 
   /**
@@ -184,24 +188,24 @@ export class TvQrcodeLogin extends BaseRequest {
     clearInterval(this.timmer);
     this.removeAllListeners();
   }
-  /**
-   * 监听事件
-   */
-  on(event: keyof TvEmitterEvents, callback: (response: any) => void) {
-    this.emitter.on(event, callback);
-  }
-  /**
-   * 监听事件，只触发一次
-   */
-  once(event: keyof TvEmitterEvents, callback: (response: any) => void) {
-    this.emitter.once(event, callback);
-  }
-  /**
-   * 移除监听事件
-   */
-  off(event: keyof TvEmitterEvents, callback: (response: any) => void) {
-    this.emitter.off(event, callback);
-  }
+  // /**
+  //  * 监听事件
+  //  */
+  // on(event: keyof TvEmitterEvents, callback: (response: any) => void) {
+  //   this.emitter.on(event, callback);
+  // }
+  // /**
+  //  * 监听事件，只触发一次
+  //  */
+  // once(event: keyof TvEmitterEvents, callback: (response: any) => void) {
+  //   this.emitter.once(event, callback);
+  // }
+  // /**
+  //  * 移除监听事件
+  //  */
+  // off(event: keyof TvEmitterEvents, callback: (response: any) => void) {
+  //   this.emitter.off(event, callback);
+  // }
   /**
    * 移除所有监听事件
    */
@@ -231,7 +235,11 @@ export class TvQrcodeLogin extends BaseRequest {
  */
 export class WebQrcodeLogin extends BaseRequest {
   private timmer: NodeJS.Timeout | null = null;
-  emitter = new EventEmitter() as TypedEmitter<WebEmitterEvents>;
+  emitter = new TypedEmitter<WebEmitterEvents>();
+  on: TypedEmitter<WebEmitterEvents>["on"];
+  once: TypedEmitter<WebEmitterEvents>["once"];
+  off: TypedEmitter<WebEmitterEvents>["off"];
+
   constructor() {
     super(undefined, {
       headers: {
@@ -239,6 +247,9 @@ export class WebQrcodeLogin extends BaseRequest {
         cookie: null,
       },
     });
+    this.on = this.emitter.on.bind(this);
+    this.once = this.emitter.once.bind(this);
+    this.off = this.emitter.off.bind(this);
   }
 
   /**
@@ -342,24 +353,6 @@ export class WebQrcodeLogin extends BaseRequest {
   interrupt() {
     clearInterval(this.timmer);
     this.removeAllListeners();
-  }
-  /**
-   * 监听事件
-   */
-  on(event: keyof WebEmitterEvents, callback: (response: any) => void) {
-    this.emitter.on(event, callback);
-  }
-  /**
-   * 监听事件，只触发一次
-   */
-  once(event: keyof WebEmitterEvents, callback: (response: any) => void) {
-    this.emitter.once(event, callback);
-  }
-  /**
-   * 移除监听事件
-   */
-  off(event: keyof WebEmitterEvents, callback: (response: any) => void) {
-    this.emitter.off(event, callback);
   }
   /**
    * 移除所有监听事件

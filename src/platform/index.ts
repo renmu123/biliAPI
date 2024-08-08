@@ -2,13 +2,13 @@ import path from "node:path";
 import PQueue from "p-queue";
 import EventEmitter from "node:events";
 
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
-import { isString, readFileAsBase64 } from "../utils";
-import { WebVideoUploader } from "./upload";
-import { getFileSize, sum, retry } from "../utils/index";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
+import { isString, readFileAsBase64 } from "../utils/index.js";
+import { WebVideoUploader } from "./upload.js";
+import { getFileSize, sum, retry } from "../utils/index.js";
 
-import type { MediaOptions, MediaPartOptions, DescV2 } from "../types/index";
+import type { MediaOptions, MediaPartOptions, DescV2 } from "../types/index.js";
 import {
   MediaDetailReturnType,
   getArchivesReturnType,
@@ -18,7 +18,7 @@ import {
   Season,
   Section,
   ArchivePreReturnType,
-} from "../types/platform";
+} from "../types/platform.js";
 
 export default class Platform extends BaseRequest {
   constructor(auth: Auth = new Auth()) {
@@ -120,7 +120,7 @@ export default class Platform extends BaseRequest {
     cancel: () => void;
   }> {
     const mediaOptions: Required<MediaPartOptions[]> = filePaths.map(
-      filePath => {
+      (filePath: any) => {
         if (isString(filePath)) {
           return {
             path: filePath,

@@ -1,7 +1,7 @@
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
 
-import type { GenerateNumberRange } from "../types/utils";
+import type { GenerateNumberRange } from "../types/utils.js";
 
 export default class Reply extends BaseRequest {
   oid?: number;

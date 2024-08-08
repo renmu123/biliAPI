@@ -1,5 +1,5 @@
-import { BaseRequest } from "../base/index";
-import Auth from "../base/Auth";
+import { BaseRequest } from "../base/index.js";
+import Auth from "../base/Auth.js";
 
 export default class Common extends BaseRequest {
   noAuthUseCookie: boolean;

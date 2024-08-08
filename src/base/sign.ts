@@ -1,5 +1,5 @@
 import axios from "axios";
-import { md5 } from "../utils/index";
+import { md5 } from "../utils/index.js";
 
 const mixinKeyEncTab = [
   46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,

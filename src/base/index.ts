@@ -1,12 +1,12 @@
 import axios from "axios";
-import { encWbi, getWbiKeys } from "./sign";
-import Auth from "./Auth";
+import { encWbi, getWbiKeys } from "./sign.js";
+import Auth from "./Auth.js";
 import axiosRetry from "axios-retry";
-import { fakeDmCoverImgStr } from "../utils";
-import { BiliResponseError } from "./Error";
+import { fakeDmCoverImgStr } from "../utils/index.js";
+import { BiliResponseError } from "./Error.js";
 
 import type { CreateAxiosDefaults } from "axios";
-import type { Request } from "../types/index";
+import type { Request } from "../types/index.js";
 
 export class BaseRequest {
   request: Request;
