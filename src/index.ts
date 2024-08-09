@@ -3,7 +3,7 @@ import Auth from "./base/Auth.js";
 import { BiliResponseError } from "./base/Error.js";
 import Live from "./live/index.js";
 import Platform from "./platform/index.js";
-import { WebVideoUploader } from "./platform/upload.js";
+export * from "./platform/upload.js";
 import Search from "./search/index.js";
 import User from "./user/index.js";
 import Video from "./video/index.js";
@@ -114,7 +114,6 @@ export {
   TvQrcodeLogin,
   Client,
   utils,
-  WebVideoUploader,
   WebQrcodeLogin,
   Common,
   Reply,

@@ -4,19 +4,10 @@
   "type": "module",
   "description": "bilibili 接口的 node 包装库",
   "homepage": "https://github.com/renmu123/biliAPI",
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": {
-        "default": "./dist/index.d.ts"
-      },
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
-    }
-  },
   "scripts": {
     "dev": "tsc -w",
     "build": "pnpm run test && pnpm run typecheck && tsc && cpy src/assets/dm.proto dist/assets --flat",
@@ -46,6 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "22.1.0",
+    "axios-mock-adapter": "^2.0.0",
     "cpy-cli": "^5.0.0",
     "rimraf": "^6.0.1",
     "tslib": "^2.6.3",
