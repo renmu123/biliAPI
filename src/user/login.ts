@@ -72,9 +72,9 @@ export class TvQrcodeLogin extends BaseRequest {
         cookie: null,
       },
     });
-    this.on = this.emitter.on.bind(this);
-    this.once = this.emitter.once.bind(this);
-    this.off = this.emitter.off.bind(this);
+    this.on = this.emitter.on.bind(this.emitter);
+    this.once = this.emitter.once.bind(this.emitter);
+    this.off = this.emitter.off.bind(this.emitter);
   }
 
   /**

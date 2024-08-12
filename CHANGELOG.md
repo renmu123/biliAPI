@@ -1,7 +1,8 @@
-# 1.5.0
+# 2.0.0
 
 1. 优化 login 和上传的类型提示
 2. 不再使用 rollup 打包
+3. WebVideoUploader 参数变更，新增路线参数`line: "auto" | "bda2" | "qn" | "qnhk" | "bldsa"`，`upload`的参数移至构造函数
 
 # 1.4.0
 

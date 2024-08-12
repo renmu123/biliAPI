@@ -1,4 +1,4 @@
-import { WebVideoUploader2 } from "../src/index";
+import { WebVideoUploader } from "../src/index";
 import { describe, expect, it, vi } from "vitest";
 import axios, { AxiosError } from "axios";
 import MockAdapter from "axios-mock-adapter";
@@ -13,7 +13,7 @@ describe("WebVideoUploader", () => {
     };
   });
   describe("upload", () => {
-    const uploader = new WebVideoUploader2({
+    const uploader = new WebVideoUploader({
       path: "/data/test.mp4",
     }) as any;
     const preuploadSPy = vi.spyOn(uploader, "preupload").mockResolvedValue({
@@ -80,7 +80,7 @@ describe("WebVideoUploader", () => {
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   describe("uploadChunk", async () => {
     it("should upload a chunk successfully", async () => {
-      const uploader = new WebVideoUploader2({
+      const uploader = new WebVideoUploader({
         path: "/data/test.mp4",
       }) as any;
       uploader.size = 240850008;
@@ -108,7 +108,7 @@ describe("WebVideoUploader", () => {
       ).toBe(true);
     });
     it("should upload failure", async () => {
-      const uploader = new WebVideoUploader2(
+      const uploader = new WebVideoUploader(
         {
           path: "/data/test.mp4",
         },

@@ -143,12 +143,12 @@ export default class Platform extends BaseRequest {
 
     const uploadTasks: WebVideoUploader[] = [];
     for (let i = 0; i < mediaOptions.length; i++) {
-      const uploader = new WebVideoUploader(this.auth, {
+      const uploader = new WebVideoUploader(mediaOptions[i], this.auth, {
         retryDelay: retryOptions.delay,
         retryTimes: retryOptions.times,
       });
       uploadTasks.push(uploader);
-      queue.add(() => uploader.upload(mediaOptions[i]));
+      queue.add(() => uploader.upload());
     }
 
     const totalSize = sum(
