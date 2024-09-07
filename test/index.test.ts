@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 import MockAdapter from "axios-mock-adapter";
 
 describe("WebVideoUploader", () => {
-  vi.mock("../src//utils/index.js", async importOriginal => {
+  vi.mock("../src/utils/index.js", async importOriginal => {
     const mod = await importOriginal<typeof import("../src/utils/index.js")>();
     return {
       ...mod,
@@ -12,6 +12,7 @@ describe("WebVideoUploader", () => {
       readBytesFromFile: vi.fn().mockResolvedValue(Buffer.from("test")),
     };
   });
+  WebVideoUploader.prototype.getFileSizeSync = () => 240850008;
   describe("upload", () => {
     const uploader = new WebVideoUploader({
       path: "/data/test.mp4",
@@ -77,7 +78,6 @@ describe("WebVideoUploader", () => {
       );
     });
   });
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   describe("uploadChunk", async () => {
     it("should upload a chunk successfully", async () => {
       const uploader = new WebVideoUploader({

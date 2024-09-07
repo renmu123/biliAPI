@@ -1,10 +1,11 @@
+import fs from "node:fs";
 import path from "node:path";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import PQueue from "p-queue";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
-import { getFileSize, readBytesFromFile, sum, retry } from "../utils/index.js";
+import { readBytesFromFile, sum, retry } from "../utils/index.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
@@ -19,6 +20,7 @@ interface WebEmitterEvents {
   }) => void;
   progress: (response: {
     event:
+      | "init"
       | "preupload-start"
       | "preupload-end"
       | "getUploadInfo-start"
@@ -27,7 +29,11 @@ interface WebEmitterEvents {
       | "merge-start"
       | "merge-end";
     progress: number;
-    data?: any;
+    data: {
+      loaded: number;
+      total: number;
+      [key: string]: any;
+    };
   }) => void;
   error: (error: Error) => void;
   cancel: () => void;
@@ -48,6 +54,13 @@ interface UploadChunkTask {
 }
 
 export class WebVideoUploader extends BaseRequest {
+  private status:
+    | "pending"
+    | "running"
+    | "paused"
+    | "completed"
+    | "error"
+    | "cancel" = "pending";
   queue: PQueue;
   emitter = new TypedEmitter<WebEmitterEvents>();
   progress: { [key: string]: number } = {};
@@ -101,11 +114,33 @@ export class WebVideoUploader extends BaseRequest {
     this.on = this.emitter.on.bind(this.emitter);
     this.once = this.emitter.once.bind(this.emitter);
     this.off = this.emitter.off.bind(this.emitter);
+
+    try {
+      this.size = this.getFileSizeSync(this.filePath);
+      this.emitter.emit("progress", {
+        event: "init",
+        progress: 1,
+        data: {
+          loaded: 0,
+          total: this.size,
+        },
+      });
+    } catch (e) {
+      this.emitter.emit("error", e);
+      this.status = "error";
+      throw e;
+    }
+  }
+
+  getFileSizeSync(filePath: string) {
+    const stats = fs.statSync(filePath);
+    const fileSizeInBytes = stats.size;
+    return fileSizeInBytes;
   }
 
   async upload() {
     try {
-      this.size = await getFileSize(this.filePath);
+      this.status = "running";
 
       const { url, biz_id, chunk_size, auth } = await this.preupload();
       const uploadInfo = await this.getUploadInfo(
@@ -134,6 +169,10 @@ export class WebVideoUploader extends BaseRequest {
       this.emitter.emit("progress", {
         event: "merge-start",
         progress: 1,
+        data: {
+          loaded: this.size,
+          total: this.size,
+        },
       });
       const res = await retry(
         () => this.mergeVideoApi(url, params, auth),
@@ -147,7 +186,7 @@ export class WebVideoUploader extends BaseRequest {
       this.emitter.emit("progress", {
         event: "merge-end",
         progress: 1,
-        data: params,
+        data: { ...params, loaded: this.size, total: this.size },
       });
 
       const completedPart = {
@@ -157,10 +196,14 @@ export class WebVideoUploader extends BaseRequest {
       };
       this.completedPart = completedPart;
       this.emitter.emit("completed", completedPart);
+      this.status = "completed";
 
       return completedPart;
     } catch (e) {
+      if (this.status === "cancel") return;
+
       this.emitter.emit("error", e);
+      this.status = "error";
       throw e;
     }
   }
@@ -182,6 +225,10 @@ export class WebVideoUploader extends BaseRequest {
     this.emitter.emit("progress", {
       event: "getUploadInfo-start",
       progress: 0,
+      data: {
+        loaded: 0,
+        total: this.size,
+      },
     });
     const uploadInfo = await retry(
       () => this.getUploadInfoApi(url, biz_id, chunk_size, auth),
@@ -191,7 +238,7 @@ export class WebVideoUploader extends BaseRequest {
     this.emitter.emit("progress", {
       event: "getUploadInfo-end",
       progress: 0,
-      data: uploadInfo,
+      data: { ...uploadInfo, loaded: 0, total: this.size },
     });
     return uploadInfo;
   }
@@ -203,6 +250,10 @@ export class WebVideoUploader extends BaseRequest {
     this.emitter.emit("progress", {
       event: "preupload-start",
       progress: 0,
+      data: {
+        loaded: 0,
+        total: this.size,
+      },
     });
     let query: Record<string, string> = {
       zone: "cs",
@@ -227,6 +278,10 @@ export class WebVideoUploader extends BaseRequest {
     this.emitter.emit("progress", {
       event: "preupload-end",
       progress: 0,
+      data: {
+        loaded: 0,
+        total: this.size,
+      },
     });
     const { endpoint, upos_uri, biz_id, chunk_size, auth } = data;
     const url = `https:${endpoint}/${upos_uri.replace("upos://", "")}`;
@@ -509,6 +564,8 @@ export class WebVideoUploader extends BaseRequest {
   sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
   pause() {
+    this.status = "paused";
+
     this.queue.pause();
     Object.values(this.chunkTasks)
       .filter(task => task.status === "running")
@@ -518,6 +575,8 @@ export class WebVideoUploader extends BaseRequest {
       });
   }
   start() {
+    this.status = "running";
+
     const abortTasks = Object.values(this.chunkTasks).filter(
       task => task.status == "abort"
     );
@@ -530,6 +589,8 @@ export class WebVideoUploader extends BaseRequest {
     this.queue.start();
   }
   cancel() {
+    this.status = "cancel";
+
     this.queue.clear();
     Object.values(this.chunkTasks).map(task => {
       task.controller.abort();
