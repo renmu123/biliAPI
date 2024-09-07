@@ -8,6 +8,8 @@ import { getFileSize, readBytesFromFile, sum, retry } from "../utils/index.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
+export type Line = "auto" | "bda2" | "qn" | "qnhk" | "bldsa";
+
 interface WebEmitterEvents {
   start: () => void;
   completed: (response: {
@@ -57,7 +59,7 @@ export class WebVideoUploader extends BaseRequest {
     concurrency: number;
     retryTimes: number;
     retryDelay: number;
-    line: "auto" | "bda2" | "qn" | "qnhk" | "bldsa";
+    line: Line;
   };
   on: TypedEmitter<WebEmitterEvents>["on"];
   once: TypedEmitter<WebEmitterEvents>["once"];
@@ -77,7 +79,7 @@ export class WebVideoUploader extends BaseRequest {
       concurrency?: number;
       retryTimes?: number;
       retryDelay?: number;
-      line?: "auto" | "bda2" | "qn" | "qnhk" | "bldsa";
+      line?: Line;
     } = {}
   ) {
     super(auth);
@@ -90,13 +92,15 @@ export class WebVideoUploader extends BaseRequest {
       },
       options
     );
-    this.on = this.emitter.on.bind(this.emitter);
-    this.once = this.emitter.once.bind(this.emitter);
-    this.off = this.emitter.off.bind(this.emitter);
 
     this.filePath = part.path;
     this.title = part.title || path.parse(this.filePath).name;
     this.progress = {};
+    this.queue = new PQueue({ concurrency: this.options.concurrency });
+
+    this.on = this.emitter.on.bind(this.emitter);
+    this.once = this.emitter.once.bind(this.emitter);
+    this.off = this.emitter.off.bind(this.emitter);
   }
 
   async upload() {
@@ -111,7 +115,13 @@ export class WebVideoUploader extends BaseRequest {
         auth
       );
 
-      await this.uploadChunk(url, auth, uploadInfo.upload_id, chunk_size);
+      const status = await this.uploadChunk(
+        url,
+        auth,
+        uploadInfo.upload_id,
+        chunk_size
+      );
+      if (!status) return;
 
       const params = {
         name: this.title,
@@ -403,16 +413,17 @@ export class WebVideoUploader extends BaseRequest {
     }
   }
 
+  /**
+   * 上传切片
+   * return boolean 是否上传成功，如果否可能就是被取消了
+   */
   private uploadChunk(
     url: string,
     auth: string,
     uploadId: string,
     chunk_size: number
-  ): Promise<{ partNumber: number; eTag: "etag" }[]> {
+  ): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const queue = new PQueue({ concurrency: this.options.concurrency });
-      this.queue = queue;
-
       const numberOfChunks = Math.ceil(this.size / chunk_size);
       const chunkParams: UploadChunkTask[] = [];
       for (let i = 0; i < numberOfChunks; i++) {
@@ -437,7 +448,7 @@ export class WebVideoUploader extends BaseRequest {
       }
       // console.log("chunkParams", chunkParams.length);
       chunkParams.map(params => {
-        return queue
+        return this.queue
           .add(() => this._uploadChunk(params))
           .catch(e => {
             reject(e);
@@ -449,17 +460,20 @@ export class WebVideoUploader extends BaseRequest {
         eTag: "etag";
       }[] = [];
 
-      queue.addListener("completed", partNumber => {
+      this.queue.addListener("completed", partNumber => {
         this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
 
-      queue.on("idle", () => {
+      this.queue.on("idle", () => {
+        if (parts.length === 0) {
+          resolve(false);
+        }
         // console.log("idle", parts.length, chunkParams.length);
         if (parts.length === chunkParams.length) {
-          resolve(parts);
+          resolve(true);
         } else {
-          reject("upload eroor: not all parts uploaded");
+          resolve(false);
         }
       });
     });

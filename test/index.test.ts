@@ -90,13 +90,13 @@ describe("WebVideoUploader", () => {
         .spyOn(uploader, "uploadChunkApi")
         .mockResolvedValue(true);
 
-      const parts = await uploader.uploadChunk(
+      const status = await uploader.uploadChunk(
         "https://upos-cs-upcdnbldsa.bilivideo.com/ugcfx2lf/n240809sa.mp4",
         "",
         "6bb8-q1fe-442a-82e3-717cc0ed2432",
         10485760
       );
-      expect(parts.length).toBe(23);
+      expect(status).toBe(true);
       expect(_uploadChunkSpy).toHaveBeenCalledTimes(23);
       expect(uploadChunkApiSpy).toHaveBeenCalledTimes(23);
       expect(Object.entries(uploader.chunkTasks)).toHaveLength(23);
