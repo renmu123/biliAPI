@@ -176,7 +176,7 @@ export class TvQrcodeLogin extends BaseRequest {
         clearInterval(timer);
         this.emitter.emit(Event.end, response);
       }
-    }, 1000);
+    }, 2000);
     this.timmer = timer;
 
     return data.url;
@@ -342,7 +342,7 @@ export class WebQrcodeLogin extends BaseRequest {
         clearInterval(timer);
         this.emitter.emit(Event.end, res);
       }
-    }, 1000);
+    }, 2000);
     this.timmer = timer;
 
     return data.url;
