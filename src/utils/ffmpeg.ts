@@ -17,6 +17,7 @@ export function mergeMedia(
     }
     args = [...args, "-c", "copy", ...exArgs, "-y", outputFilepath];
     const ffmpeg = spawn(ffmpegBinPath, args);
+    ffmpeg.on("error", reject);
 
     let error = "";
     ffmpeg.stderr.on("data", chunk => {
