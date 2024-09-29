@@ -37,6 +37,7 @@ interface WebEmitterEvents {
   }) => void;
   error: (error: Error) => void;
   cancel: () => void;
+  debug: (data: any) => void;
 }
 
 interface UploadChunkTask {
@@ -156,7 +157,12 @@ export class WebVideoUploader extends BaseRequest {
         uploadInfo.upload_id,
         chunk_size
       );
-      if (!status) return;
+      if (!status) {
+        if (this.status === "running") {
+          throw new Error("上传失败");
+        }
+        return;
+      }
 
       const params = {
         name: this.title,
@@ -528,6 +534,10 @@ export class WebVideoUploader extends BaseRequest {
         if (parts.length === chunkParams.length) {
           resolve(true);
         } else {
+          this.emitter.emit(
+            "debug",
+            JSON.stringify({ text: "completed parts", parts })
+          );
           resolve(false);
         }
       });

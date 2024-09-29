@@ -1,6 +1,7 @@
 # 2.0.0
 
 1. 登录轮询默认间隔修改为 2 秒，可以通过`interval`参数修改
+2. 修复上传失败时，未触发 error 事件的 bug [#30](https://github.com/renmu123/biliLive-tools/issues/30)
 
 ## bug 修复
 
