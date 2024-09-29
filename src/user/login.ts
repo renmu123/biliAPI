@@ -64,6 +64,7 @@ export class TvQrcodeLogin extends BaseRequest {
   on: TypedEmitter<TvEmitterEvents>["on"];
   once: TypedEmitter<TvEmitterEvents>["once"];
   off: TypedEmitter<TvEmitterEvents>["off"];
+  interval: number = 2000;
 
   constructor() {
     super(undefined, {
@@ -176,7 +177,7 @@ export class TvQrcodeLogin extends BaseRequest {
         clearInterval(timer);
         this.emitter.emit(Event.end, response);
       }
-    }, 2000);
+    }, this.interval);
     this.timmer = timer;
 
     return data.url;
@@ -235,6 +236,7 @@ export class TvQrcodeLogin extends BaseRequest {
  */
 export class WebQrcodeLogin extends BaseRequest {
   private timmer: NodeJS.Timeout | null = null;
+  interval: number = 2000;
   emitter = new TypedEmitter<WebEmitterEvents>();
   on: TypedEmitter<WebEmitterEvents>["on"];
   once: TypedEmitter<WebEmitterEvents>["once"];
@@ -342,7 +344,7 @@ export class WebQrcodeLogin extends BaseRequest {
         clearInterval(timer);
         this.emitter.emit(Event.end, res);
       }
-    }, 2000);
+    }, this.interval);
     this.timmer = timer;
 
     return data.url;

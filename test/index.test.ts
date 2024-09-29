@@ -77,6 +77,25 @@ describe("WebVideoUploader", () => {
         "ak=14944&cdn=%2F%2Fupos-cs-upcdnbldsa.bilivideo.com&os=upos&sign=aeed1d0f57b27bf9359a5b36d&timestamp=1723173507.145&uid=10995238&uip=1.84.214.166&uport=9896&use_dqp=0"
       );
     });
+    // it("should merge error", async () => {
+    //   const mergeVideoSpy = vi
+    //     .spyOn(uploader, "mergeVideoApi")
+    //     .mockResolvedValue({
+    //       OK: 0,
+    //     });
+    //   const uploadChunkSpy = vi
+    //     .spyOn(uploader, "uploadChunk")
+    //     .mockResolvedValue([
+    //       {
+    //         partNumber: 1,
+    //         eTag: "etag",
+    //       },
+    //     ]);
+    //   uploader.emitter.on("error", error => {
+    //     console.log(error);
+    //   });
+    //   await uploader.upload();
+    // });
   });
   describe("uploadChunk", async () => {
     it("should upload a chunk successfully", async () => {
