@@ -111,6 +111,7 @@ export default class User extends BaseRequest {
       "3064": 1,
       "39c8": `${spmPrefix}.fp.risk`,
       "3c43": {
+        // @ts-ignore
         adca: "Win32" || (ua && ua.includes("Windows")) ? "Win32" : "Linux",
         bfe9: randPngEnd,
       },
