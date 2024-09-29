@@ -1,6 +1,6 @@
 {
   "name": "@renmu/bili-api",
-  "version": "2.0.0-beta.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "bilibili 接口的 node 包装库",
   "homepage": "https://github.com/renmu123/biliAPI",
