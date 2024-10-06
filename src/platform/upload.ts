@@ -210,7 +210,6 @@ export class WebVideoUploader extends BaseRequest {
 
       this.emitter.emit("error", e);
       this.status = "error";
-      throw e;
     }
   }
 
@@ -412,7 +411,6 @@ export class WebVideoUploader extends BaseRequest {
       end: start + chunkData.length,
       total: size,
     };
-
     return this.request.put(url, chunkData, {
       params: params,
       headers: {
@@ -445,31 +443,35 @@ export class WebVideoUploader extends BaseRequest {
       chunk_size,
       size
     );
-
     const partNumber = chunk + 1;
     this.chunkTasks[partNumber].status = "running";
-    try {
-      await this.uploadChunkApi(options, chunkData);
-      return partNumber;
-    } catch (e) {
-      if (e.code == "ERR_CANCELED") {
-        this.chunkTasks[partNumber].status = "abort";
-      } else if (
-        e.code === "ECONNABORTED" ||
-        e.code === "ERR_BAD_RESPONSE" ||
-        e.code === "ERR_BAD_REQUEST" ||
-        e.code === "ETIMEDOUT"
-      ) {
-        if (retryCount > 0) {
-          await this.sleep(this.options.retryDelay);
-          this._uploadChunk(options, retryCount - 1);
+
+    while (retryCount >= 0) {
+      try {
+        await this.uploadChunkApi(options, chunkData);
+        return partNumber;
+      } catch (e) {
+        if (e.code == "ERR_CANCELED") {
+          this.chunkTasks[partNumber].status = "abort";
+          return;
+        } else if (
+          e.code === "ECONNABORTED" ||
+          e.code === "ERR_BAD_RESPONSE" ||
+          e.code === "ERR_BAD_REQUEST" ||
+          e.code === "ETIMEDOUT" ||
+          e.code === "ECONNRESET"
+        ) {
+          if (retryCount > 0) {
+            await this.sleep(this.options.retryDelay);
+            retryCount--;
+          } else {
+            this.chunkTasks[partNumber].status = "error";
+            throw e;
+          }
         } else {
           this.chunkTasks[partNumber].status = "error";
           throw e;
         }
-      } else {
-        this.chunkTasks[partNumber].status = "error";
-        throw e;
       }
     }
   }
@@ -507,19 +509,19 @@ export class WebVideoUploader extends BaseRequest {
         chunkParams.push(data);
         this.chunkTasks[partNumber] = data;
       }
-      // console.log("chunkParams", chunkParams.length);
-      chunkParams.map(params => {
-        return this.queue
-          .add(() => this._uploadChunk(params))
-          .catch(e => {
-            reject(e);
-          });
-      });
+      for (let i = 0; i < chunkParams.length; i++) {
+        this.queue.add(() => this._uploadChunk(chunkParams[i])).catch(e => {});
+      }
 
       const parts: {
         partNumber: number;
         eTag: "etag";
       }[] = [];
+
+      this.queue.on("error", error => {
+        this.taskClear();
+        reject(error);
+      });
 
       this.queue.addListener("completed", partNumber => {
         this.chunkTasks[partNumber].status = "completed";
@@ -530,7 +532,6 @@ export class WebVideoUploader extends BaseRequest {
         if (parts.length === 0) {
           resolve(false);
         }
-        // console.log("idle", parts.length, chunkParams.length);
         if (parts.length === chunkParams.length) {
           resolve(true);
         } else {
@@ -594,17 +595,20 @@ export class WebVideoUploader extends BaseRequest {
     abortTasks.map(task => {
       task.controller = new AbortController();
       task.status = "pending";
-      this.queue.add(() => this._uploadChunk(task));
+      this.queue.add(() => this._uploadChunk(task)).catch(e => {});
     });
     this.queue.start();
   }
   cancel() {
     this.status = "cancel";
 
+    this.taskClear();
+    this.emitter.emit("cancel");
+  }
+  taskClear() {
     this.queue.clear();
     Object.values(this.chunkTasks).map(task => {
       task.controller.abort();
     });
-    this.emitter.emit("cancel");
   }
 }

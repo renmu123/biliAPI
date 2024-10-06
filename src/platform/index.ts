@@ -174,6 +174,9 @@ export default class Platform extends BaseRequest {
           totalSize: totalSize,
         });
       });
+      uploader.emitter.on("error", err => {
+        emitter.emit("error", err);
+      });
     });
 
     const videos: {
