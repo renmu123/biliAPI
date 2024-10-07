@@ -210,6 +210,7 @@ export class WebVideoUploader extends BaseRequest {
 
       this.emitter.emit("error", e);
       this.status = "error";
+      throw e;
     }
   }
 
@@ -524,6 +525,7 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       this.queue.addListener("completed", partNumber => {
+        if (partNumber === undefined) return;
         this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
