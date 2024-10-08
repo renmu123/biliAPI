@@ -80,6 +80,8 @@ export interface MediaOptions {
   recreate?: 1 | -1;
   /** 是否推送到动态：0：推送，1：不推送 */
   no_disturbance?: 0 | 1;
+  /** 仅自己空间：0：公开可见，1：仅自己可见 */
+  is_only_self?: 0 | 1;
 }
 
 export interface MediaPartOptions {
