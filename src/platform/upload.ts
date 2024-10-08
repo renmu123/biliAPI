@@ -455,13 +455,7 @@ export class WebVideoUploader extends BaseRequest {
         if (e.code == "ERR_CANCELED") {
           this.chunkTasks[partNumber].status = "abort";
           return;
-        } else if (
-          e.code === "ECONNABORTED" ||
-          e.code === "ERR_BAD_RESPONSE" ||
-          e.code === "ERR_BAD_REQUEST" ||
-          e.code === "ETIMEDOUT" ||
-          e.code === "ECONNRESET"
-        ) {
+        } else {
           if (retryCount > 0) {
             await this.sleep(this.options.retryDelay);
             retryCount--;
@@ -469,10 +463,11 @@ export class WebVideoUploader extends BaseRequest {
             this.chunkTasks[partNumber].status = "error";
             throw e;
           }
-        } else {
-          this.chunkTasks[partNumber].status = "error";
-          throw e;
         }
+        //  else {
+        //   this.chunkTasks[partNumber].status = "error";
+        //   throw e;
+        // }
       }
     }
   }
