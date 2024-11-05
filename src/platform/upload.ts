@@ -436,7 +436,10 @@ export class WebVideoUploader extends BaseRequest {
       },
     });
   }
-  async _uploadChunk(options: UploadChunkTask, retryCount = 2) {
+  async _uploadChunk(
+    options: UploadChunkTask,
+    retryCount = this.options.retryTimes
+  ) {
     const { filePath, start, chunk_size, size, chunk } = options;
     const chunkData = await readBytesFromFile(
       filePath,
