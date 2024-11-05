@@ -351,7 +351,7 @@ export class WebVideoUploader extends BaseRequest {
     probe_url: string;
   }> {
     const res = await this.request.get(
-      "	https://member.bilibili.com/preupload?r=probe",
+      "https://member.bilibili.com/preupload?r=probe",
       {
         extra: {
           rawResponse: true,

@@ -868,7 +868,7 @@ export default class Platform extends BaseRequest {
       type_id?: number;
       /** 页码，从0开始 */
       pn: number;
-      /** 个数 */
+      /** 每页个数 */
       ps: number;
       /** 视频标题 */
       title?: string;
@@ -876,16 +876,19 @@ export default class Platform extends BaseRequest {
       pn: 0,
       ps: 20,
     }
-  ): Promise<
-    {
+  ): Promise<{
+    topics: {
       topic_id: number;
       topic_name: string;
       description: string;
       mission_id: number;
       activity_text: string;
       activity_description: string;
-    }[]
-  > {
+    }[];
+    tags: null;
+    maxpage: number;
+    request_id: string;
+  }> {
     this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/topic/type",
@@ -899,10 +902,14 @@ export default class Platform extends BaseRequest {
    */
   async searchTopic(
     params: {
-      page_size: number;
-      offset: number;
+      /** 每页个数 */
+      page_size?: number;
+      /** 个数偏移，并非页数 */
+      offset?: number;
       /** 关键字 */
       keywords?: string;
+      /** 当前时间 */
+      t?: number;
     } = {
       page_size: 20,
       offset: 0,
@@ -988,7 +995,7 @@ export default class Platform extends BaseRequest {
   }
 
   /**
-   * 修改投稿视频合集
+   * 编辑投稿视频合集
    */
   async editMediaSeason(params: {
     /** 视频id */
@@ -999,7 +1006,13 @@ export default class Platform extends BaseRequest {
     section_id: number | null;
     /** 视频标题 */
     title: string;
-  }): Promise<{}> {
+  }): Promise<{
+    season_id?: number | null;
+    section_id?: number | null;
+    title: string;
+    aid: number;
+    csrf: string;
+  }> {
     this.auth.authLogin();
     return this.request.post(
       "https://member.bilibili.com/x2/creative/web/season/switch",
@@ -1084,15 +1097,19 @@ export default class Platform extends BaseRequest {
   }
   /**
    * 获取分区的简介相关信息
+   * @param typeid 分区id
+   * @param copyright 版权类型，可选 1，2
+   * @returns typeid: 分区id, id: 未知, lang: 未知, copyright：版权类型
+   * components: 简介输入框提示文字，一个json字符串，例：'[{"name":"相关游戏","index":1,"type":"text","required":"1","box":"请输入本视频所涉及的游戏名称，以顿号分隔，例：英雄联盟、塞尔达传说、刺客信条"},{"name":"简介补充","index":2,"type":"textarea","required":"1","box":""}]'
    */
   getTypeDesc(
     typeid: number,
-    copyright: 0 | 1 = 1
+    copyright: 1 | 2 = 1
   ): Promise<null | {
     typeid: number;
     id: number;
     lang: 0;
-    copyright: 0 | 1;
+    copyright: 1 | 2;
     components: string;
   }> {
     this.auth.authLogin();

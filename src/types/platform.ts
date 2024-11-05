@@ -256,25 +256,48 @@ export interface getSeasonListReturnType {
 export interface Season {
   /** 合集id */
   id: number;
+  /** 合集标题 */
   title: string;
+  /** 合集描述 */
   desc: string;
+  /** 合集封面 URL */
   cover: string;
+  /** 是否已完结 0: 未完结, 1: 已完结 */
   isEnd: number;
+  /** 合集作者 ID */
   mid: number;
+  /** 是否为活动合集 0: 否, 1: 是 */
   isAct: number;
+  /** 是否付费 0: 否, 1: 是 */
   is_pay: number;
+  /** 合集状态 0: 正常显示, -6: 正在审核 */
   state: number;
+  /** 合集分段状态 0: 正常 */
   partState: number;
+  /** 合集签名状态 0: 正常 */
   signState: number;
+  /** 合集拒绝原因 */
   rejectReason: string;
+  /** 创建时间 UNIX 时间戳 */
   ctime: number;
+  /** 修改时间 UNIX 时间戳 */
   mtime: number;
+  /** 是否设小节 1: 不设小节 */
   no_section: number;
+  /** 合集是否禁止 0: 否, 1: 是 */
   forbid: number;
+  /** 协议 ID */
   protocol_id: string;
+  /** 视频数量 */
   ep_num: number;
+  /** 合集价格 0: 免费 */
   season_price: number;
+  /** 是否公开 1: 公开, 0: 不公开 */
   is_opened: number;
+  /** 是否充电付费 0: 否, 1: 是 */
+  has_charging_pay: number;
+  /** 发布时间 UNIX 时间戳 */
+  pub_real_time: number;
 }
 
 export interface Section {
