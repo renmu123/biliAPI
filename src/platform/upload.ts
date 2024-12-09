@@ -9,7 +9,7 @@ import { readBytesFromFile, sum, retry } from "../utils/index.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
-export type Line = "auto" | "bda2" | "qn" | "qnhk" | "bldsa";
+export type Line = "auto" | string;
 
 interface WebEmitterEvents {
   start: () => void;
@@ -74,6 +74,7 @@ export class WebVideoUploader extends BaseRequest {
     retryTimes: number;
     retryDelay: number;
     line: Line;
+    zone: string;
   };
   on: TypedEmitter<WebEmitterEvents>["on"];
   once: TypedEmitter<WebEmitterEvents>["once"];
@@ -94,6 +95,7 @@ export class WebVideoUploader extends BaseRequest {
       retryTimes?: number;
       retryDelay?: number;
       line?: Line;
+      zone?: string;
     } = {}
   ) {
     super(auth);
@@ -103,6 +105,7 @@ export class WebVideoUploader extends BaseRequest {
         retryTimes: 3,
         retryDelay: 3000,
         line: "auto",
+        zone: "cs",
       },
       options
     );
@@ -262,7 +265,7 @@ export class WebVideoUploader extends BaseRequest {
       },
     });
     let query: Record<string, string> = {
-      zone: "cs",
+      zone: this.options.zone,
       upcdn: this.options.line,
       probe_version: "20221109",
     };
