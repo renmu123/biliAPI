@@ -27,6 +27,10 @@ class RangeDownloader {
     | "canceled"
     | "error"
     | "completed" = "pending";
+  private retryCount: number;
+  private maxRetries: number;
+  private timeout: number;
+  private timeoutId: NodeJS.Timeout | null;
 
   constructor(param: {
     url: string;
@@ -43,6 +47,8 @@ class RangeDownloader {
       progress: number;
     }) => void;
     oncompleted?: (downloader: RangeDownloader) => void;
+    maxRetries?: number;
+    timeout?: number;
   }) {
     this.url = param.url;
     this.filePath = param.filePath;
@@ -58,17 +64,13 @@ class RangeDownloader {
     this.downloadedSize = 0;
     this.abortController = null;
     // this.supportPartial = false;
+    this.retryCount = 0;
+    this.maxRetries = param.maxRetries || 3;
+    this.timeout = param.timeout || 10000; // 默认超时时间为30秒
+    this.timeoutId = null;
   }
 
   async start(): Promise<void> {
-    // console.log(
-    //   "start",
-    //   new Date(),
-    //   this.filePath,
-    //   this.downloadedSize,
-    //   this.status
-    // );
-
     if (!["pending", "paused"].includes(this.status)) return;
     if (this.status === "pending") {
       try {
@@ -77,74 +79,108 @@ class RangeDownloader {
     }
 
     this.status = "running";
-    // console.log("start2", new Date(), this.filePath, this.downloadedSize);
 
     this.abortController = new AbortController();
     const _self = this;
 
-    try {
-      const response = await axios.get(this.url, {
-        headers: {
-          Range: "bytes=" + this.downloadedSize.toString() + "-",
-          ...this.axiosRequestConfig?.headers,
-        },
-        proxy: this.axiosRequestConfig?.proxy,
-        responseType: "stream",
-        signal: this.abortController.signal,
-        onDownloadProgress: progressEvent => {
-          _self.downloadedSize += progressEvent.bytes;
-          if (typeof _self.onprogress === "function") {
-            _self.onprogress({
-              loaded: _self.downloadedSize,
-              total: _self.totalSize,
-              progress: _self.totalSize
-                ? _self.downloadedSize / _self.totalSize
-                : 0,
-            });
+    const resetTimeout = () => {
+      if (_self.timeoutId) {
+        clearTimeout(_self.timeoutId);
+      }
+      _self.timeoutId = setTimeout(() => {
+        if (_self.retryCount < _self.maxRetries) {
+          _self.retryCount++;
+          _self.start();
+        } else {
+          if (typeof _self.onerror === "function") {
+            _self.onerror(new Error("Download timed out."));
           }
-        },
-      });
-
-      // _self.supportPartial = response.status === 206;
-      _self.totalSize = parseInt(
-        response.headers["content-range"]?.split("/")[1] || "0",
-        10
-      );
-      _self.totalSize = isNaN(_self.totalSize)
-        ? parseInt(response.headers["content-length"] || "0", 10)
-        : _self.totalSize;
-
-      const writableStream = fs.createWriteStream(this.filePath, {
-        flags: "a",
-      });
-
-      response.data.pipe(writableStream);
-
-      writableStream.on("finish", () => {
-        this.status = "completed";
-        if (typeof _self.oncompleted === "function") {
-          _self.oncompleted(_self);
+          _self.status = "error";
         }
-      });
-      writableStream.on("error", error => {
-        throw error;
-      });
+      }, _self.timeout);
+    };
 
-      if (typeof _self.onload === "function") {
-        _self.onload(_self);
-      }
-    } catch (e) {
-      if (axios.isCancel(e)) {
-        return;
-      }
+    const download = async () => {
+      try {
+        const response = await axios.get(this.url, {
+          headers: {
+            Range: "bytes=" + this.downloadedSize.toString() + "-",
+            ...this.axiosRequestConfig?.headers,
+          },
+          proxy: this.axiosRequestConfig?.proxy,
+          responseType: "stream",
+          signal: this.abortController.signal,
+          onDownloadProgress: progressEvent => {
+            resetTimeout();
+            _self.downloadedSize += progressEvent.bytes;
+            if (typeof _self.onprogress === "function") {
+              _self.onprogress({
+                loaded: _self.downloadedSize,
+                total: _self.totalSize,
+                progress: _self.totalSize
+                  ? _self.downloadedSize / _self.totalSize
+                  : 0,
+              });
+            }
+          },
+        });
 
-      if (typeof _self.onerror === "function") {
-        _self.onerror(e);
-      }
+        // _self.supportPartial = response.status === 206;
+        _self.totalSize = parseInt(
+          response.headers["content-range"]?.split("/")[1] || "0",
+          10
+        );
+        _self.totalSize = isNaN(_self.totalSize)
+          ? parseInt(response.headers["content-length"] || "0", 10)
+          : _self.totalSize;
 
-      this.status = "error";
-      throw e;
-    }
+        const writableStream = fs.createWriteStream(this.filePath, {
+          flags: "a",
+        });
+
+        response.data.pipe(writableStream);
+
+        writableStream.on("finish", () => {
+          if (_self.timeoutId) {
+            clearTimeout(_self.timeoutId);
+          }
+          this.status = "completed";
+          if (typeof _self.oncompleted === "function") {
+            _self.oncompleted(_self);
+          }
+        });
+        writableStream.on("error", error => {
+          if (typeof _self.onerror === "function") {
+            _self.onerror(error);
+          }
+          this.status = "error";
+          throw error;
+        });
+
+        if (typeof _self.onload === "function") {
+          _self.onload(_self);
+        }
+      } catch (e) {
+        if (axios.isCancel(e)) {
+          return;
+        }
+
+        if (_self.retryCount < _self.maxRetries) {
+          _self.retryCount++;
+          await download();
+        } else {
+          if (typeof _self.onerror === "function") {
+            _self.onerror(e);
+          }
+
+          this.status = "error";
+          throw e;
+        }
+      }
+    };
+
+    resetTimeout();
+    await download();
   }
 
   pause(): void {

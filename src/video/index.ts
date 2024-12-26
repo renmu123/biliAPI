@@ -407,10 +407,9 @@ export default class Video extends BaseRequest {
    * @param options.cid 视频cid
    * @param options.output 输出文件路径
    * @param options.ffmpegBinPath ffmpeg路径，用于合并视频和音频
-   * 如果不传递默认使用web模式，最高720p分辨率，且mediaOptions参数不会生效
-   * 如果传递，则使用dash模式，分辨率和账户相关，如果想使用环境变量中的可以传递ffmpeg
    * @param options.cachePath 缓存路径，默认使用系统临时目录
-   *
+   * @param options.disableVideo 禁止下载视频
+   * @param options.disableAudio 禁止下载音频
    * @param mediaOptions
    * @param mediaOptions.resolution 分辨率宽度，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
    * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
@@ -422,6 +421,8 @@ export default class Video extends BaseRequest {
       output: string;
       ffmpegBinPath: string;
       cachePath?: string;
+      disableVideo?: boolean;
+      disableAudio?: boolean;
     } & VideoId,
     mediaOptions: {
       videoCodec?: 7 | 12 | 13;
@@ -432,20 +433,17 @@ export default class Video extends BaseRequest {
   ) {
     const emitter = new EventEmitter() as TypedEmitter<EmitterEvents>;
 
+    if (options.disableVideo && options.disableAudio) {
+      throw new Error("不能同时禁止视频和音频");
+    }
+
     const media = await this.playurl({
       bvid: options.bvid,
       aid: options.aid,
       cid: options.cid,
       fnval: 16 | 2048,
     });
-    // dash
-    // fnval: 16 | 2048,
 
-    // pc
-    // fnval: 1,
-    // platform: "pc",
-    // high_quality: 1,
-    // qn: 64,
     let videos = (media.dash.video || []).filter(video => {
       if (!mediaOptions.videoCodec) return true;
       return video.codecid === mediaOptions.videoCodec;
@@ -459,80 +457,104 @@ export default class Video extends BaseRequest {
       return audio.id === mediaOptions.audioQuality;
     });
 
-    if (videos.length === 0) throw new Error("不存在符合要求的视频");
-    if (audios.length === 0) throw new Error("不存在符合要求的音频");
+    if (options.disableVideo && audios.length === 0) {
+      throw new Error("不存在符合要求的音频");
+    }
+    if (options.disableAudio && videos.length === 0) {
+      throw new Error("不存在符合要求的视频");
+    }
 
     const video = videos[0];
     const audio = audios[0];
 
     const downloadedFile: string[] = [];
-    const cachePath = options.cachePath ?? os.tmpdir();
+    const cachePath =
+      options.disableVideo || options.disableAudio
+        ? null
+        : options.cachePath ?? os.tmpdir();
 
     // let loadedSize = 0;
-    const videoDownloader = new Downloader({
-      url: video.baseUrl,
-      filePath: path.join(cachePath, `${uuid()}.mp4`),
-      axiosRequestConfig: {
-        headers: {
-          Referer: "https://www.bilibili.com/",
-          cookie: this.auth.cookie,
-        },
-      },
-      oncompleted: downloader => {
-        downloadedFile.push(downloader.filePath);
-        emitter.emit("download-completed", downloadedFile);
-      },
-      onprogress: progress => {
-        const loaded =
-          videoDownloader.downloadedSize + audioDownloader.downloadedSize;
-        const total = videoDownloader.totalSize + audioDownloader.totalSize;
-        const data: ProgressEvent = {
-          event: "download",
-          progress: {
-            loaded: loaded,
-            total: total,
-            progress: loaded / total,
+    let audioDownloader: Downloader | null,
+      videoDownloader: Downloader | null = null;
+
+    if (!options.disableVideo) {
+      const output = cachePath
+        ? path.join(cachePath, `${uuid()}.mp4`)
+        : options.output;
+
+      videoDownloader = new Downloader({
+        url: video.baseUrl,
+        filePath: output,
+        axiosRequestConfig: {
+          headers: {
+            Referer: "https://www.bilibili.com/",
+            cookie: this.auth.cookie,
           },
-        };
-        emitter.emit("progress", data);
-      },
-      onerror: error => {
-        emitter.emit("error", error.message);
-        console.error(error);
-      },
-    });
-    const audioDownloader = new Downloader({
-      url: audio.baseUrl,
-      filePath: path.join(cachePath, `${uuid()}.mp3`),
-      axiosRequestConfig: {
-        headers: {
-          Referer: "https://www.bilibili.com/",
-          cookie: this.auth.cookie,
         },
-      },
-      oncompleted: downloader => {
-        downloadedFile.push(downloader.filePath);
-        emitter.emit("download-completed", downloadedFile);
-      },
-      onprogress: progress => {
-        const loaded =
-          videoDownloader.downloadedSize + audioDownloader.downloadedSize;
-        const total = videoDownloader.totalSize + audioDownloader.totalSize;
-        const data: ProgressEvent = {
-          event: "download",
-          progress: {
-            loaded: loaded,
-            total: total,
-            progress: total ? loaded / total : 0,
+        oncompleted: downloader => {
+          downloadedFile.push(downloader.filePath);
+          emitter.emit("download-completed", downloadedFile);
+        },
+        onprogress: progress => {
+          const loaded =
+            videoDownloader.downloadedSize +
+            (audioDownloader?.downloadedSize || 0);
+          const total =
+            videoDownloader.totalSize + (audioDownloader?.totalSize || 0);
+          const data: ProgressEvent = {
+            event: "download",
+            progress: {
+              loaded: loaded,
+              total: total,
+              progress: loaded / total,
+            },
+          };
+          emitter.emit("progress", data);
+        },
+        onerror: error => {
+          emitter.emit("error", error.message);
+          console.error(error);
+        },
+      });
+    }
+    if (!options.disableAudio) {
+      const output = cachePath
+        ? path.join(cachePath, `${uuid()}.mp3`)
+        : options.output;
+      audioDownloader = new Downloader({
+        url: audio.baseUrl,
+        filePath: output,
+        axiosRequestConfig: {
+          headers: {
+            Referer: "https://www.bilibili.com/",
+            cookie: this.auth.cookie,
           },
-        };
-        emitter.emit("progress", data);
-      },
-      onerror: error => {
-        emitter.emit("error", error.message);
-        console.error(error);
-      },
-    });
+        },
+        oncompleted: downloader => {
+          downloadedFile.push(downloader.filePath);
+          emitter.emit("download-completed", downloadedFile);
+        },
+        onprogress: progress => {
+          const loaded =
+            (videoDownloader?.downloadedSize || 0) +
+            audioDownloader.downloadedSize;
+          const total =
+            (videoDownloader?.totalSize || 0) + audioDownloader.totalSize;
+          const data: ProgressEvent = {
+            event: "download",
+            progress: {
+              loaded: loaded,
+              total: total,
+              progress: total ? loaded / total : 0,
+            },
+          };
+          emitter.emit("progress", data);
+        },
+        onerror: error => {
+          emitter.emit("error", error.message);
+        },
+      });
+    }
 
     const clean = () => {
       try {
@@ -544,9 +566,8 @@ export default class Video extends BaseRequest {
     };
 
     emitter.on("download-completed", async files => {
-      const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
-      // console.log("ffmpegBinPath", ffmpegBinPath);
       if (files.length === 2) {
+        const ffmpegBinPath = options.ffmpegBinPath ?? "ffmpeg";
         emitter.emit("progress", { event: "merge-start" });
         try {
           await mergeMedia(files, options.output, [], ffmpegBinPath);
@@ -557,28 +578,34 @@ export default class Video extends BaseRequest {
           emitter.emit("error", error);
         }
       }
+      if (
+        files.length === 1 &&
+        (options.disableVideo || options.disableAudio)
+      ) {
+        emitter.emit("completed", files[0]);
+      }
     });
     emitter.on("error", () => {
       clean();
     });
 
     if (autoStart) {
-      videoDownloader.start();
-      audioDownloader.start();
+      if (!options.disableVideo) videoDownloader.start();
+      if (!options.disableAudio) audioDownloader.start();
     }
 
     const task = {
       pause: () => {
-        videoDownloader.pause();
-        audioDownloader.pause();
+        if (!options.disableVideo) videoDownloader.pause();
+        if (!options.disableAudio) audioDownloader.pause();
       },
       start: () => {
-        videoDownloader.start();
-        audioDownloader.start();
+        if (!options.disableVideo) videoDownloader.start();
+        if (!options.disableAudio) audioDownloader.start();
       },
       cancel: () => {
-        videoDownloader.cancel();
-        audioDownloader.cancel();
+        if (!options.disableVideo) videoDownloader.cancel();
+        if (!options.disableAudio) audioDownloader.cancel();
         clean();
       },
       on(

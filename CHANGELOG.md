@@ -1,3 +1,7 @@
+# 2.3.0
+
+`dashDownload`支持了`disableVideo`和`disableAudio`选项，增加了下载超时时间以及重试次数
+
 # 2.2.0
 
 1. 上传增加了 `zone` 参数，默认为 `cs`，使用 `line=auto` 时无效
