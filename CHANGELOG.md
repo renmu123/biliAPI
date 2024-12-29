@@ -1,6 +1,7 @@
 # 2.3.0
 
-`dashDownload`支持了`disableVideo`和`disableAudio`选项，增加了下载超时时间以及重试次数
+1. `dashDownload`支持了`disableVideo`和`disableAudio`选项，增加了下载超时时间以及重试次数
+2. 增加上传速度限制参数`limitRate`，单位 KB，默认为不限速
 
 # 2.2.0
 

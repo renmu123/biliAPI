@@ -21,25 +21,19 @@ export function readBytesFromFile(
   start: number,
   numBytes: number,
   totalBytes: number
-): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const endByte = Math.min(start + numBytes - 1, totalBytes - 1);
+): [fs.ReadStream, number] {
+  const endByte = Math.min(start + numBytes - 1, totalBytes - 1);
 
-    const readStream = fs.createReadStream(filePath, { start, end: endByte });
-    let data: Buffer[] = [];
+  const readStream = fs.createReadStream(filePath, { start, end: endByte });
+  return [readStream, endByte - start + 1];
+}
 
-    readStream.on("data", chunk => {
-      data.push(chunk as Buffer);
-    });
-
-    readStream.on("end", () => {
-      resolve(Buffer.concat(data));
-    });
-
-    readStream.on("error", err => {
-      reject(`Error reading file: ${err.message}`);
-    });
-  });
+export async function streamToBuffer(stream: fs.ReadStream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 export async function readFileAsBase64(filePath: string) {

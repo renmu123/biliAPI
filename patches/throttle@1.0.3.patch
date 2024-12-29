@@ -1,0 +1,16 @@
+diff --git a/.npmignore b/.npmignore
+deleted file mode 100644
+index c12f3a80c1810e3ea08de9f8ef3fe56c61a11416..0000000000000000000000000000000000000000
+diff --git a/throttle.js b/throttle.js
+index 2526a069f586257a7faacef115f32557c8b405d2..82a324b94062b8761817793af33977ccc7628224 100644
+--- a/throttle.js
++++ b/throttle.js
+@@ -9,7 +9,7 @@ var inherits = require('util').inherits;
+ var Transform = require('stream').Transform;
+ 
+ // node v0.8.x compat
+-if (!Transform) Transform = require('readable-stream/transform');
++// if (!Transform) Transform = require('readable-stream/transform');
+ 
+ /**
+  * Module exports.

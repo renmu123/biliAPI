@@ -3,9 +3,15 @@ import path from "node:path";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import PQueue from "p-queue";
+import Throttle from "throttle";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
-import { readBytesFromFile, sum, retry } from "../utils/index.js";
+import {
+  readBytesFromFile,
+  sum,
+  retry,
+  streamToBuffer,
+} from "../utils/index.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
@@ -75,6 +81,7 @@ export class WebVideoUploader extends BaseRequest {
     retryDelay: number;
     line: Line;
     zone: string;
+    limitRate: number;
   };
   on: TypedEmitter<WebEmitterEvents>["on"];
   once: TypedEmitter<WebEmitterEvents>["once"];
@@ -96,6 +103,7 @@ export class WebVideoUploader extends BaseRequest {
       retryDelay?: number;
       line?: Line;
       zone?: string;
+      throttleRate?: number;
     } = {}
   ) {
     super(auth);
@@ -106,6 +114,7 @@ export class WebVideoUploader extends BaseRequest {
         retryDelay: 3000,
         line: "auto",
         zone: "cs",
+        limitRate: 0,
       },
       options
     );
@@ -403,22 +412,31 @@ export class WebVideoUploader extends BaseRequest {
   /**
    * 切片上传api
    */
-  async uploadChunkApi(options: UploadChunkTask, chunkData: Buffer) {
+  async uploadChunkApi(
+    options: UploadChunkTask,
+    readStream: fs.ReadStream,
+    streamSize: number
+  ) {
     const { start, size, auth, url, uploadId, chunk, chunks } = options;
     const params = {
       uploadId: uploadId,
       partNumber: chunk + 1,
       chunk: chunk,
       chunks: chunks,
-      size: chunkData.length,
+      size: streamSize,
       start: start,
-      end: start + chunkData.length,
+      end: start + streamSize,
       total: size,
     };
-    return this.request.put(url, chunkData, {
+    const throttleStream =
+      this.options.limitRate > 0
+        ? readStream.pipe(new Throttle(this.options.limitRate * 1024))
+        : await streamToBuffer(readStream);
+    return this.request.put(url, throttleStream, {
       params: params,
       headers: {
         "X-Upos-Auth": auth,
+        "Content-Length": this.options.limitRate > 0 ? streamSize : undefined,
       },
       extra: {
         rawResponse: true,
@@ -444,7 +462,7 @@ export class WebVideoUploader extends BaseRequest {
     retryCount = this.options.retryTimes
   ) {
     const { filePath, start, chunk_size, size, chunk } = options;
-    const chunkData = await readBytesFromFile(
+    const [readStream, streamSize] = readBytesFromFile(
       filePath,
       start,
       chunk_size,
@@ -455,7 +473,7 @@ export class WebVideoUploader extends BaseRequest {
 
     while (retryCount >= 0) {
       try {
-        await this.uploadChunkApi(options, chunkData);
+        await this.uploadChunkApi(options, readStream, streamSize);
         return partNumber;
       } catch (e) {
         if (e.code == "ERR_CANCELED") {
