@@ -438,6 +438,8 @@ export class WebVideoUploader extends BaseRequest {
       headers: {
         "X-Upos-Auth": auth,
         "Content-Length": this.options.limitRate > 0 ? streamSize : undefined,
+        Connection: "keep-alive",
+        "Content-Type": "application/octet-stream",
       },
       extra: {
         rawResponse: true,
