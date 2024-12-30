@@ -7,6 +7,7 @@ import Throttle from "throttle";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
 import {
+  createReadStream,
   readBytesFromFile,
   sum,
   retry,
@@ -414,7 +415,7 @@ export class WebVideoUploader extends BaseRequest {
    */
   async uploadChunkApi(
     options: UploadChunkTask,
-    readStream: fs.ReadStream,
+    throttleStream: fs.ReadStream | Buffer,
     streamSize: number
   ) {
     const { start, size, auth, url, uploadId, chunk, chunks } = options;
@@ -428,10 +429,10 @@ export class WebVideoUploader extends BaseRequest {
       end: start + streamSize,
       total: size,
     };
-    const throttleStream =
-      this.options.limitRate > 0
-        ? readStream.pipe(new Throttle(this.options.limitRate * 1024))
-        : await streamToBuffer(readStream);
+    // const throttleStream =
+    //   this.options.limitRate > 0
+    //     ? readStream.pipe(new Throttle(this.options.limitRate * 1024))
+    //     : await streamToBuffer(readStream);
     return this.request.put(url, throttleStream, {
       params: params,
       headers: {
@@ -462,18 +463,27 @@ export class WebVideoUploader extends BaseRequest {
     retryCount = this.options.retryTimes
   ) {
     const { filePath, start, chunk_size, size, chunk } = options;
-    const [readStream, streamSize] = readBytesFromFile(
-      filePath,
-      start,
-      chunk_size,
-      size
-    );
+
+    let streamSize = chunk_size;
+    let stream: fs.ReadStream | Buffer = null;
+    if (this.options.limitRate > 0) {
+      [stream, streamSize] = createReadStream(
+        filePath,
+        start,
+        chunk_size,
+        size
+      );
+      stream = stream.pipe(new Throttle(this.options.limitRate * 1024));
+    } else {
+      stream = await readBytesFromFile(filePath, start, chunk_size, size);
+      streamSize = stream.length;
+    }
     const partNumber = chunk + 1;
     this.chunkTasks[partNumber].status = "running";
 
     while (retryCount >= 0) {
       try {
-        await this.uploadChunkApi(options, readStream, streamSize);
+        await this.uploadChunkApi(options, stream, streamSize);
         return partNumber;
       } catch (e) {
         if (e.code == "ERR_CANCELED") {
