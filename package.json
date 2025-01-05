@@ -1,6 +1,6 @@
 {
   "name": "@renmu/bili-api",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "type": "module",
   "description": "bilibili 接口的 node 包装库",
   "homepage": "https://github.com/renmu123/biliAPI",
@@ -29,12 +29,12 @@
   "author": "renmu123",
   "license": "GPL",
   "dependencies": {
+    "@renmu/throttle": "^1.0.3",
     "axios": "^1.7.7",
     "axios-retry": "^4.5.0",
     "fast-xml-parser": "^4.5.0",
     "p-queue": "^8.0.1",
     "protobufjs": "^7.4.0",
-    "throttle": "^1.0.3",
     "tiny-typed-emitter": "^2.1.0"
   },
   "devDependencies": {
@@ -46,10 +46,5 @@
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
   },
-  "packageManager": "pnpm@9.11.0",
-  "pnpm": {
-    "patchedDependencies": {
-      "throttle@1.0.3": "patches/throttle@1.0.3.patch"
-    }
-  }
+  "packageManager": "pnpm@9.11.0"
 }
