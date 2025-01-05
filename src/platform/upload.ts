@@ -3,7 +3,7 @@ import path from "node:path";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import PQueue from "p-queue";
-import Throttle from "throttle";
+import Throttle from "@renmu/throttle";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
 import {
