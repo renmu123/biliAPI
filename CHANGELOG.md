@@ -1,3 +1,7 @@
+# 2.4.0
+
+1. `TvQrcodeLogin` 新增 `refresh` 函数用于刷新授权
+
 # 2.3.0
 
 1. `dashDownload`支持了`disableVideo`和`disableAudio`选项，增加了下载超时时间以及重试次数

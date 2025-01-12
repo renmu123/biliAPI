@@ -182,6 +182,28 @@ export class TvQrcodeLogin extends BaseRequest {
 
     return data.url;
   }
+
+  async refresh(access_key: string, refresh_token: string) {
+    const params: {
+      appkey: string;
+      access_key: string;
+      refresh_token: string;
+      ts: number;
+      sign?: string;
+    } = {
+      access_key: access_key,
+      appkey: this.appkey,
+      refresh_token: refresh_token,
+      ts: Math.floor(Date.now() / 1000),
+    };
+
+    params.sign = this.generateSign(params);
+
+    return this.request.post<never, CommonResponse<TvLoginResponse>>(
+      "https://passport.bilibili.com/api/v2/oauth2/refresh_token",
+      params
+    );
+  }
   /**
    * 中断任务，并清除所有监听器
    */
