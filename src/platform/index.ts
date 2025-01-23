@@ -630,6 +630,16 @@ export default class Platform extends BaseRequest {
     const archive = await this.getArchive({
       aid: options.aid,
     });
+    const archiveData = archive.archive;
+    for (const key of [
+      "recreate",
+      "human_type2",
+      "activity",
+      "attrs",
+      "tp_info",
+    ]) {
+      delete archiveData[key];
+    }
 
     const csrf = this.auth.cookieObj.bili_jct;
     const data: MediaOptions & {
@@ -638,15 +648,13 @@ export default class Platform extends BaseRequest {
       aid: number;
     } = {
       videos: [],
-      ...archive.archive,
+      ...archiveData,
       csrf: csrf,
       ...options,
     };
     this.checkOptions(data);
 
     data.aid = Number(data.aid);
-    // @ts-ignore
-    delete data.recreate;
     if (data.cover && !data.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(data.cover);
       data["cover"] = coverRes.url;
@@ -689,20 +697,29 @@ export default class Platform extends BaseRequest {
     const archive = await this.getArchive({
       aid: options.aid,
     });
+    const archiveData = archive.archive;
+    for (const key of [
+      "recreate",
+      "human_type2",
+      "activity",
+      "attrs",
+      "tp_info",
+    ]) {
+      delete archiveData[key];
+    }
 
     const data: MediaOptions & {
       videos: { cid: number; filename: string; title: string; desc?: string }[];
       aid: number;
     } = {
       videos: [],
-      ...archive.archive,
+      ...archiveData,
       ...options,
     };
     this.checkOptions(data);
 
     data.aid = Number(data.aid);
-    // @ts-ignore
-    delete data.recreate;
+
     if (data.cover && !data.cover.startsWith("http")) {
       const coverRes = await this.uploadCover(data.cover);
       data["cover"] = coverRes.url;
@@ -720,7 +737,7 @@ export default class Platform extends BaseRequest {
     } else {
       throw new Error("mode can only be append or replace");
     }
-    // console.log("edit submit", data);
+    console.log("edit submit", data);
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/edit",
       data,
