@@ -737,7 +737,6 @@ export default class Platform extends BaseRequest {
     } else {
       throw new Error("mode can only be append or replace");
     }
-    console.log("edit submit", data);
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/edit",
       data,
