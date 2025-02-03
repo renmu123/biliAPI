@@ -820,7 +820,7 @@ export default class Platform extends BaseRequest {
       {
         tid: tid,
         ...options,
-        crsf: this.auth.cookieObj.bili_jct,
+        csrf: this.auth.cookieObj.bili_jct,
       },
       {
         params: {
