@@ -201,7 +201,7 @@ export interface getArchivesReturnType {
       tid: number;
       /* -30:审核中 -6: 修改内容待审核 -16: 转码失败 -2：已退回 -4：已锁定 0:审核通过 */
       state: -30 | -16 | -6 | -4 | -2 | 0 | number;
-      state_desc?: string;
+      state_desc: string;
       /** 拒绝理由 */
       reject_reason?: string;
       [key: string]: any;
