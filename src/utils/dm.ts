@@ -39,34 +39,29 @@ export const protoBufToXml = async (buffer: Buffer) => {
     attributeNamePrefix: "@@",
     format: true,
   });
-  const elems = mesages.elems.map((ele: Danmu) => {
-    const data = {
-      "@@p": "",
-      "@@id": String(ele.id),
-      "@@progress": String(ele.progress / 1000),
-      "@@mode": String(ele.mode),
-      "@@fontsize": String(ele.fontsize),
-      "@@color": String(ele.color),
-      "@@midHash": String(ele.midHash),
-      "#text": String(ele.content),
-      "@@ctime": String(ele.ctime),
-      "@@pool": String(ele.pool || 0),
-      "@@weight": String(ele.weight),
-      "@@idStr": String(ele.idStr),
-    };
-    data["@@p"] = [
-      data["@@progress"],
-      data["@@mode"],
-      data["@@fontsize"],
-      data["@@color"],
-      data["@@ctime"],
-      data["@@pool"],
-      data["@@midHash"],
-      data["@@idStr"],
-      data["@@weight"],
-    ].join(",");
-    return data;
-  });
+  const elems: {
+    "@@p": string;
+    "#text": string;
+  }[] = [];
+  for (let i = 0; i < mesages.elems.length; i++) {
+    const ele = mesages.elems[i];
+    if (!ele.progress) continue;
+
+    elems.push({
+      "@@p": [
+        ele.progress / 1000,
+        ele.mode,
+        ele.fontsize,
+        ele.color,
+        ele.ctime,
+        ele.pool || 0,
+        ele.midHash,
+        ele.idStr,
+        ele.weight,
+      ].join(","),
+      "#text": ele.content,
+    });
+  }
   const xmlContent = builder.build({
     i: {
       d: elems,
