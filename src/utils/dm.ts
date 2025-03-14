@@ -1,10 +1,7 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { XMLBuilder } from "fast-xml-parser";
+import { fromBinary, toJson } from "@bufbuild/protobuf";
 
-import protobuf from "protobufjs";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { DmSegMobileReplySchema } from "../assets/dm_pb.js";
 
 interface Danmu {
   id: string;
@@ -22,9 +19,10 @@ interface Danmu {
 }
 
 export const protobufDecode = async (buffer: Buffer) => {
-  const root = await protobuf.load(path.join(__dirname, "assets", "dm.proto"));
-  const MyMessage = root.lookupType("DmSegMobileReply");
-  const message = MyMessage.decode(buffer);
+  const message = toJson(
+    DmSegMobileReplySchema,
+    fromBinary(DmSegMobileReplySchema, new Uint8Array(buffer))
+  );
   return message;
 };
 

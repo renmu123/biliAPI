@@ -1,6 +1,6 @@
 {
   "name": "@renmu/bili-api",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "type": "module",
   "description": "bilibili 接口的 node 包装库",
   "homepage": "https://github.com/renmu123/biliAPI",
@@ -10,10 +10,11 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "dev": "tsc -w",
-    "build": "pnpm run test && pnpm run typecheck && tsc && cpy src/assets/dm.proto dist/assets --flat",
+    "build": "pnpm run test && pnpm run typecheck && tsc",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "test": "vitest run",
-    "release": "pnpm run build && npm publish --access=public"
+    "release": "pnpm run build && npm publish --access=public",
+    "gen:protobuf": "npx buf generate"
   },
   "engines": {
     "node": ">=18"
@@ -29,15 +30,17 @@
   "author": "renmu123",
   "license": "GPL",
   "dependencies": {
+    "@bufbuild/protobuf": "^2.2.3",
     "@renmu/throttle": "^1.0.3",
     "axios": "^1.7.7",
     "axios-retry": "^4.5.0",
     "fast-xml-parser": "^4.5.0",
     "p-queue": "^8.0.1",
-    "protobufjs": "^7.4.0",
     "tiny-typed-emitter": "^2.1.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.50.1",
+    "@bufbuild/protoc-gen-es": "^2.2.3",
     "@types/node": "22.1.0",
     "axios-mock-adapter": "^2.0.0",
     "cpy-cli": "^5.0.0",

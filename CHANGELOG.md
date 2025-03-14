@@ -1,7 +1,9 @@
-# 2.4.2
+# 2.5.0
 
 1. 移除 console 信息
 2. 修复编辑上传模板参数错误
+3. 使用`@bufbuild/protobuf`替代`protobufjs`进行视频弹幕下载
+4. 新增`video.getAllDm`用于下载全部视频弹幕
 
 # 2.4.1
 

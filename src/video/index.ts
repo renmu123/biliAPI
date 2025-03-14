@@ -295,7 +295,7 @@ export default class Video extends BaseRequest {
    * 获取视频弹幕，为protobuf格式
    * @param cid 视频cid
    * @param aid 视频aid
-   * @param segment_index 弹幕分片序号，6min一包
+   * @param segment_index 弹幕分片序号，6min一包，从0开始
    * @param pull_mode 未知
    * @param ps 未知
    * @param pn 未知
@@ -303,11 +303,11 @@ export default class Video extends BaseRequest {
   async getDm(params: {
     cid: number;
     aid?: number;
-    segment_index?: number;
+    segment_index: number;
     pull_mode?: number;
     ps?: number;
     pn?: number;
-  }): Promise<any> {
+  }): Promise<Buffer> {
     const url = `https://api.bilibili.com/x/v2/dm/wbi/web/seg.so`;
     const options = {
       type: 1,
@@ -316,7 +316,6 @@ export default class Video extends BaseRequest {
     };
     if (!options.type) options.type = 1;
 
-    // TODO: 如果segment_index为空，则获取所有分片
     const signParams = await this.WbiSign(options);
     const res = await this.request.get(`${url}?${signParams}`, {
       responseType: "arraybuffer",
@@ -325,6 +324,42 @@ export default class Video extends BaseRequest {
       },
     });
     return res.data;
+  }
+
+  /**
+   * 获取视频所有弹幕，是否登录影响弹幕数量
+   * @param cid 视频cid
+   * @param aid 视频aid
+   */
+  async getAllDm(params: {
+    cid: number;
+    aid?: number;
+    bvid?: string;
+  }): Promise<Buffer> {
+    // bvid和aid二选一
+    if (!params.aid && !params.bvid) {
+      throw new Error("aid or bvid is required");
+    }
+    const detail = await this.detail({
+      aid: params.aid,
+      bvid: params.bvid,
+    });
+    const duration = detail.View?.duration;
+    if (!duration) throw new Error("视频时长获取失败");
+
+    const totalSegment = Math.ceil(duration / 360);
+    const dmList: Buffer[] = [];
+    // 从1开始
+    for (let i = 0; i < totalSegment; i++) {
+      const res = await this.getDm({
+        cid: params.cid,
+        aid: params.aid,
+        segment_index: i + 1,
+      });
+      dmList.push(res);
+    }
+    // @ts-ignore
+    return Buffer.concat(dmList);
   }
 
   private authAid() {
