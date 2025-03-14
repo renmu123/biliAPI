@@ -405,6 +405,22 @@ const download = async () => {
 };
 ```
 
+### 下载弹幕
+
+```js
+import { Client, utils } from "@renmu/bili-api";
+
+const convertDm = async () => {
+  const client = new Client();
+  const data = await client.video.getAllDm({
+    aid: 114108254919086,
+    cid: 28699528643,
+  });
+  const xmlContent = await utils.protoBufToXml(data);
+  fs.writeFileSync("test.xml", xmlContent);
+};
+```
+
 ### 设置 aid
 
 `video.setAid(aid)`

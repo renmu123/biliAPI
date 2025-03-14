@@ -88,7 +88,5 @@ const convertDm = async () => {
     cid: 28699528643,
   });
   const xmlContent = await utils.protoBufToXml(data);
-  fs.writeFileSync("aa.xml", xmlContent);
+  fs.writeFileSync("test.xml", xmlContent);
 };
-
-convertDm();
