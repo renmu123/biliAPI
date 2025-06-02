@@ -131,4 +131,90 @@ export default class Live extends BaseRequest {
       }
     );
   }
+
+  /**
+   * 获取直播回放列表
+   * @param params
+   * @param params.live_uid 主播uid
+   * @param params.time_range 时间范围 1: 最近3天 2: 最近7天 3: 最近14天
+   * @param params.page 页码
+   * @param params.page_size 每页大小
+   * @returns
+   */
+  getSliceList(params: {
+    live_uid: number;
+    time_range: 1 | 2 | 3;
+    page: number;
+    page_size: number;
+    web_location?: string;
+  }): Promise<{
+    replay_info: {
+      live_key: string;
+      start_time: number;
+      end_time: number;
+      live_info: {
+        title: string;
+        cover: string;
+        live_time: number;
+        type: number;
+      };
+      video_info: {
+        replay_status: number;
+        download_url: string;
+        estimated_time: string;
+        is_archive: number;
+      };
+      alarm_info: {
+        code: number;
+        message: string;
+        cur_time: number;
+        is_ban_publish: boolean;
+      };
+    }[];
+    pagination: {
+      page: number;
+      page_size: number;
+      total: number;
+    };
+    archive_flag: boolean;
+    can_edit: number;
+  }> {
+    return this.request.get(
+      "https://api.live.bilibili.com/xlive/web-room/v1/videoService/GetOtherSliceList",
+      {
+        params: params,
+      }
+    );
+  }
+
+  /**
+   * 获取直播回放流
+   * @param params
+   * @param params.live_key 直播key
+   * @param params.start_time 开始时间
+   * @param params.end_time 结束时间
+   * @param params.room_id 房间id
+   * @param params.web_location 未知字段，未知含义
+   * @returns
+   */
+  getSliceStream(params: {
+    live_key: string;
+    start_time: number;
+    end_time: number;
+    room_id: number;
+    web_location?: string;
+  }): Promise<{
+    list: {
+      start_time: number;
+      end_time: number;
+      stream: string;
+    }[];
+  }> {
+    return this.request.get(
+      "https://api.live.bilibili.com/xlive/web-room/v1/videoService/GetUserSliceStream",
+      {
+        params: params,
+      }
+    );
+  }
 }

@@ -1,3 +1,8 @@
+# 2.6.0
+
+1. 增加 `getSliceList` 获取直播回放列表
+2. 增加 `getSliceStream` 某天直播的 m3u8 数据
+
 # 2.5.0
 
 1. 移除 console 信息
