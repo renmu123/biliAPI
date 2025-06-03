@@ -193,7 +193,7 @@ export default class Live extends BaseRequest {
    * @param params.live_key 直播key
    * @param params.start_time 开始时间
    * @param params.end_time 结束时间
-   * @param params.room_id 房间id
+   * @param params.live_uid 房间id
    * @param params.web_location 未知字段，未知含义
    * @returns
    */
@@ -201,7 +201,7 @@ export default class Live extends BaseRequest {
     live_key: string;
     start_time: number;
     end_time: number;
-    room_id: number;
+    live_uid: number;
     web_location?: string;
   }): Promise<{
     list: {
