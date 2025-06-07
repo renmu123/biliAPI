@@ -204,11 +204,13 @@ export default class Live extends BaseRequest {
     live_uid: number;
     web_location?: string;
   }): Promise<{
-    list: {
-      start_time: number;
-      end_time: number;
-      stream: string;
-    }[];
+    list:
+      | {
+          start_time: number;
+          end_time: number;
+          stream: string;
+        }[]
+      | null;
   }> {
     return this.request.get(
       "https://api.live.bilibili.com/xlive/web-room/v1/videoService/GetUserSliceStream",
