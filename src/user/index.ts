@@ -89,7 +89,7 @@ export default class User extends BaseRequest {
     );
     // 更新cookies
     const spmPrefix = response.data.match(
-      /<meta name="spm_prefix" content="([^"]+?)">/
+      /<meta\s+name="spm_prefix"\s+content="([^"]+?)"\s*\/?>/i
     )[1];
     const cookies = response.headers["set-cookie"]
       .map(cookie => {

@@ -3,6 +3,7 @@
 1. 客户端投稿接口增加`csrf`参数
 2. 增加`platform.getHumanType2List`用于查询新的分区接口
 3. 投稿接口增加 `human_type2` 来传递新分区接口
+4. 修复 `user.space` 未登录时获取 cookie 错误的 bug [#2](https://github.com/renmu123/biliAPI/issues/2)
 
 # 2.6.0
 
