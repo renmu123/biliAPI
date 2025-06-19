@@ -84,6 +84,8 @@ export interface MediaOptions {
   is_only_self?: 0 | 1;
   /** 创作者声明 */
   neutral_mark?: string;
+  /** 新分区 */
+  human_type2?: number;
 }
 
 export interface MediaPartOptions {

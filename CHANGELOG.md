@@ -1,7 +1,13 @@
+# 2.7.0
+
+1. 客户端投稿接口增加`csrf`参数
+2. 增加`platform.getHumanType2List`用于查询新的分区接口
+3. 投稿接口增加 `human_type2` 来传递新分区接口
+
 # 2.6.0
 
-1. 增加 `getSliceList` 获取直播回放列表
-2. 增加 `getSliceStream` 某天直播的 m3u8 数据
+1. 增加 `live.getSliceList` 获取直播回放列表
+2. 增加 `live.getSliceStream` 某天直播的 m3u8 数据
 
 # 2.5.0
 

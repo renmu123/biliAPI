@@ -206,6 +206,14 @@ const query = await utils.WbiSign({
 
 `client.live.getGuardTopList({user_id:1,room_id:1,page:1,page_size:20})`
 
+### 获取直播回放列表
+
+`live.getSliceList`
+
+### 某天直播的 m3u8 数据
+
+`live.getSliceStream`
+
 ## 创作中心
 
 登录：必要
@@ -337,6 +345,10 @@ client.platorm.getArchive({
 ### 获取分区简介信息
 
 `client.platform.getTypeDesc()`
+
+### 新的投稿分区接口
+
+`platform.getHumanType2List`
 
 ## 搜索
 

@@ -476,13 +476,13 @@ export default class Platform extends BaseRequest {
       data["cover"] = coverRes.url;
     }
 
-    // console.log("submit", data);
-
+    const csrf = this.auth.cookieObj.bili_jct;
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/add",
       data,
       {
         params: {
+          csrf: csrf,
           access_key: this.auth.accessToken,
         },
       }
@@ -737,12 +737,15 @@ export default class Platform extends BaseRequest {
     } else {
       throw new Error("mode can only be append or replace");
     }
+
+    const csrf = this.auth.cookieObj.bili_jct;
     return this.request.post(
       "http://member.bilibili.com/x/vu/client/edit",
       data,
       {
         params: {
           access_key: this.auth.accessToken,
+          csrf: csrf,
         },
       }
     );
@@ -1138,6 +1141,21 @@ export default class Platform extends BaseRequest {
           t: Date.now(),
         },
       }
+    );
+  }
+
+  /**
+   * 获取新分区列表
+   */
+  async getHumanType2List(): Promise<{
+    type_list: {
+      id: number;
+      name: string;
+    }[];
+  }> {
+    this.auth.authLogin();
+    return this.request.get(
+      "https://member.bilibili.com/x/vupre/web/archive/human/type2/list"
     );
   }
 }
