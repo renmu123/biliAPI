@@ -1,3 +1,8 @@
+# 2.8.0
+
+1. 增加 `addMediaWebApiV3` 接口进行 web 投稿
+2. `addMediaClientApi` 、`editMediaClientApi` 由于 B 站投稿客户端已停用
+
 # 2.7.0
 
 1. 客户端投稿接口增加`csrf`参数

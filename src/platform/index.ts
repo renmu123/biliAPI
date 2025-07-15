@@ -439,6 +439,7 @@ export default class Platform extends BaseRequest {
 
   /**
    * 通过client api投稿视频
+   * @deprecated 由于 B 站投稿客户端已停用
    */
   async addMediaClientApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
@@ -601,6 +602,60 @@ export default class Platform extends BaseRequest {
     });
   }
 
+  /**
+   * 通过web api v3投稿视频
+   */
+  async addMediaWebApiV3(
+    videos: { cid: number; filename: string; title: string; desc?: string }[],
+    options: MediaOptions
+  ): Promise<{
+    aid: number;
+    bvid: string;
+  }> {
+    this.auth.authLogin();
+    this.checkOptions(options);
+    const csrf = this.auth.cookieObj.bili_jct;
+    const data = {
+      copyright: 1,
+      tid: 124,
+      desc_format_id: 0,
+      desc: "",
+      recreate: -1,
+      dynamic: "",
+      interactive: 0,
+      videos: videos,
+      act_reserve_create: 0,
+      no_disturbance: 0,
+      no_reprint: 1,
+      subtitle: { open: 0, lan: "" },
+      dolby: 0,
+      lossless_music: 0,
+      up_selection_reply: false,
+      up_close_reply: false,
+      up_close_danmu: false,
+      web_os: 1,
+      mission_id: 0,
+      csrf: csrf,
+      ...options,
+    };
+
+    if (options.cover && !options.cover.startsWith("http")) {
+      const coverRes = await this.uploadCover(options.cover);
+      data["cover"] = coverRes.url;
+    }
+
+    return this.request.post(
+      "https://member.bilibili.com/x/vu/web/add/v3",
+      data,
+      {
+        params: {
+          t: Date.now(),
+          csrf: csrf,
+        },
+      }
+    );
+  }
+
   convertDescV2ToDesc(descV2: DescV2[]): string {
     return descV2
       .map(item => {
@@ -684,6 +739,7 @@ export default class Platform extends BaseRequest {
 
   /**
    * 通过client api接口编辑视频
+   * @deprecated 由于 B 站投稿客户端已停用
    */
   async editMediaClientApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
