@@ -899,6 +899,11 @@ export default class Platform extends BaseRequest {
       if (options.source.length > 200)
         throw new Error("source can not be longer than 200 characters");
     }
+    if (!this.verifyScheduledPublishTime(options.dtime)) {
+      throw new Error(
+        `scheduledPublishTime ${options.dtime} is not valid. See method 'verifyScheduledPublishTime' for details.`
+      );
+    }
     return true;
   }
   /**
@@ -1212,6 +1217,17 @@ export default class Platform extends BaseRequest {
     this.auth.authLogin();
     return this.request.get(
       "https://member.bilibili.com/x/vupre/web/archive/human/type2/list"
+    );
+  }
+
+  /**
+   * 校验定时发布时间，返回 true 则为合法。
+   */
+  verifyScheduledPublishTime(scheduledPublishTime: number): boolean {
+    return (
+      scheduledPublishTime === undefined ||
+      (scheduledPublishTime >= Math.floor(Date.now() / 1000) + 2 * 60 * 60 &&
+        scheduledPublishTime <= Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60)
     );
   }
 }

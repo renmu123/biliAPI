@@ -86,6 +86,8 @@ export interface MediaOptions {
   neutral_mark?: string;
   /** 新分区 */
   human_type2?: number;
+  /** 定时发布：10位秒级时间戳。必须距离提交时间>7200秒 */
+  dtime?: number;
 }
 
 export interface MediaPartOptions {
