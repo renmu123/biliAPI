@@ -1,3 +1,7 @@
+# 2.9.0
+
+1. 编辑投稿接口增加 `dtime` 参数用于定时投稿 [#3](https://github.com/renmu123/biliAPI/pull/3)
+
 # 2.8.0
 
 1. 增加 `addMediaWebApiV3` 接口进行 web 投稿
