@@ -1223,11 +1223,12 @@ export default class Platform extends BaseRequest {
   /**
    * 校验定时发布时间，返回 true 则为合法。
    */
-  verifyScheduledPublishTime(scheduledPublishTime: number): boolean {
+  verifyScheduledPublishTime(scheduledPublishTime?: number): boolean {
     return (
       scheduledPublishTime === undefined ||
       (scheduledPublishTime >= Math.floor(Date.now() / 1000) + 2 * 60 * 60 &&
-        scheduledPublishTime <= Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60)
+        scheduledPublishTime <=
+          Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60)
     );
   }
 }

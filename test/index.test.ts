@@ -1,4 +1,4 @@
-import { WebVideoUploader } from "../src/index";
+import { WebVideoUploader, Platform } from "../src/index";
 import { describe, expect, it, vi } from "vitest";
 import axios, { AxiosError } from "axios";
 import MockAdapter from "axios-mock-adapter";
@@ -156,6 +156,32 @@ describe("WebVideoUploader", () => {
           })
         ).toBe(false);
       }
+    });
+
+    describe("verifyScheduledPublishTime", () => {
+      const platform = new Platform();
+
+      it("should return true if scheduledPublishTime is undefined", () => {
+        expect(platform.verifyScheduledPublishTime(undefined)).toBe(true);
+      });
+
+      it("should return true if scheduledPublishTime is within valid range", () => {
+        const now = Math.floor(Date.now() / 1000);
+        const validTime = now + 3 * 60 * 60; // 3 hours from now
+        expect(platform.verifyScheduledPublishTime(validTime)).toBe(true);
+      });
+
+      it("should return false if scheduledPublishTime is less than 2 hours from now", () => {
+        const now = Math.floor(Date.now() / 1000);
+        const invalidTime = now + 60 * 60; // 1 hour from now
+        expect(platform.verifyScheduledPublishTime(invalidTime)).toBe(false);
+      });
+
+      it("should return false if scheduledPublishTime is more than 15 days from now", () => {
+        const now = Math.floor(Date.now() / 1000);
+        const invalidTime = now + 16 * 24 * 60 * 60; // 16 days from now
+        expect(platform.verifyScheduledPublishTime(invalidTime)).toBe(false);
+      });
     });
   });
 });
