@@ -33,6 +33,7 @@ export default class Search extends BaseRequest {
       {
         headers: {
           cookie: cookie,
+          Referer: "https://search.bilibili.com",
         },
       }
     );
@@ -63,6 +64,7 @@ export default class Search extends BaseRequest {
       {
         headers: {
           cookie: cookie,
+          Referer: "https://search.bilibili.com",
         },
       }
     );

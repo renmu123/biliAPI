@@ -1,3 +1,7 @@
+# 2.9.1
+
+1. 修复 `search.all` `search.type` 接口 [#4](https://github.com/renmu123/biliAPI/issues/4)
+
 # 2.9.0
 
 1. 编辑投稿接口增加 `dtime` 参数用于定时投稿 [#3](https://github.com/renmu123/biliAPI/pull/3)
