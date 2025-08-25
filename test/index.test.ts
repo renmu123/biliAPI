@@ -165,6 +165,10 @@ describe("WebVideoUploader", () => {
         expect(platform.verifyScheduledPublishTime(undefined)).toBe(true);
       });
 
+      it("should return true if scheduledPublishTime is 0", () => {
+        expect(platform.verifyScheduledPublishTime(0)).toBe(true);
+      });
+
       it("should return true if scheduledPublishTime is within valid range", () => {
         const now = Math.floor(Date.now() / 1000);
         const validTime = now + 3 * 60 * 60; // 3 hours from now

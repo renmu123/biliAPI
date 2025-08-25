@@ -1,3 +1,7 @@
+# 2.9.2
+
+1. 移除稿件中关于`dtime`参数的验证
+
 # 2.9.1
 
 1. 修复 `search.all` `search.type` 接口 [#4](https://github.com/renmu123/biliAPI/issues/4)
