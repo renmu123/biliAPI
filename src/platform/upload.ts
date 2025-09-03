@@ -164,6 +164,10 @@ export class WebVideoUploader extends BaseRequest {
         auth
       );
 
+      // 取消操作可能在上传之前进行，如果已经触发，拦截后续操作
+      // @ts-expect-error
+      if (this.status === "cancel") return;
+
       const status = await this.uploadChunk(
         url,
         auth,
