@@ -1,18 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import https from "node:https";
+import { URL } from "node:url";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import PQueue from "p-queue";
 import Throttle from "@renmu/throttle";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
-import {
-  createReadStream,
-  readBytesFromFile,
-  sum,
-  retry,
-  streamToBuffer,
-} from "../utils/index.js";
+import { createReadStream, sum, retry } from "../utils/index.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
@@ -415,11 +411,11 @@ export class WebVideoUploader extends BaseRequest {
   }
 
   /**
-   * 切片上传api
+   * 切片上传api - 使用 https 原生库
    */
   async uploadChunkApi(
     options: UploadChunkTask,
-    throttleStream: fs.ReadStream | Buffer,
+    throttleStream: fs.ReadStream,
     streamSize: number
   ) {
     const { start, size, auth, url, uploadId, chunk, chunks } = options;
@@ -433,35 +429,126 @@ export class WebVideoUploader extends BaseRequest {
       end: start + streamSize,
       total: size,
     };
-    // const throttleStream =
-    //   this.options.limitRate > 0
-    //     ? readStream.pipe(new Throttle(this.options.limitRate * 1024))
-    //     : await streamToBuffer(readStream);
-    return this.request.put(url, throttleStream, {
-      params: params,
-      headers: {
-        "X-Upos-Auth": auth,
-        "Content-Length": this.options.limitRate > 0 ? streamSize : undefined,
-        Connection: "keep-alive",
-        "Content-Type": "application/octet-stream",
-      },
-      extra: {
-        rawResponse: true,
-      },
-      timeout: 1000000,
-      signal: options.controller.signal,
-      onUploadProgress: (progressEvent: any) => {
-        this.progress[params.partNumber] = progressEvent.loaded;
+
+    // 构建完整的URL，包含查询参数
+    const urlObj = new URL(url);
+    Object.entries(params).forEach(([key, value]) => {
+      urlObj.searchParams.set(key, value.toString());
+    });
+
+    return this.uploadWithHttps(
+      urlObj.toString(),
+      throttleStream,
+      streamSize,
+      auth,
+      options.controller.signal,
+      chunk + 1 // partNumber
+    );
+  }
+
+  /**
+   * 使用 https 原生库进行上传
+   */
+  private uploadWithHttps(
+    fullUrl: string,
+    fileStream: fs.ReadStream,
+    contentLength: number,
+    auth: string,
+    abortSignal: AbortSignal,
+    partNumber: number
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const url = new URL(fullUrl);
+      let uploaded = 0;
+
+      const options: https.RequestOptions = {
+        hostname: url.hostname,
+        port: url.port || 443,
+        path: url.pathname + url.search,
+        method: "PUT",
+        headers: {
+          "X-Upos-Auth": auth,
+          "Content-Length": contentLength.toString(),
+          Connection: "keep-alive",
+          "Content-Type": "application/octet-stream",
+        },
+      };
+
+      const req = https.request(options, res => {
+        let responseData = "";
+
+        res.on("data", chunk => {
+          responseData += chunk;
+        });
+
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              // 尝试解析JSON响应
+              const jsonResponse = responseData ? JSON.parse(responseData) : {};
+              resolve({ data: jsonResponse });
+            } catch (e) {
+              // 如果不是JSON，直接返回原始数据
+              resolve({ data: responseData });
+            }
+          } else {
+            reject(
+              new Error(
+                `Upload failed with status: ${res.statusCode}, response: ${responseData}`
+              )
+            );
+          }
+        });
+      });
+
+      req.on("error", error => {
+        reject(new Error(`Upload request failed: ${error.message}`));
+      });
+
+      // 处理中止信号
+      if (abortSignal.aborted) {
+        const abortError = new Error("Upload aborted");
+        abortError.name = "ERR_CANCELED";
+        reject(abortError);
+        req.destroy();
+        return;
+      }
+
+      abortSignal.addEventListener("abort", () => {
+        const abortError = new Error("Upload aborted");
+        (abortError as any).code = "ERR_CANCELED";
+        reject(abortError);
+        req.destroy();
+      });
+
+      // 监听文件流的进度
+      fileStream.on("data", (chunk: Buffer) => {
+        if (abortSignal.aborted) return;
+
+        uploaded += chunk.length;
+        this.progress[partNumber] = uploaded;
+
         const progress = sum(Object.values(this.progress));
         this.emitter.emit("progress", {
           event: `uploading`,
-          progress: progress / size,
+          progress: progress / this.size,
           data: {
             loaded: progress,
-            total: size,
+            total: this.size,
           },
         });
-      },
+      });
+
+      fileStream.on("error", error => {
+        reject(new Error(`File stream error: ${error.message}`));
+      });
+
+      fileStream.on("end", () => {
+        req.end();
+      });
+
+      // 将文件流管道连接到请求
+      fileStream.pipe(req);
     });
   }
   async _uploadChunk(
@@ -470,20 +557,18 @@ export class WebVideoUploader extends BaseRequest {
   ) {
     const { filePath, start, chunk_size, size, chunk } = options;
 
-    let streamSize = chunk_size;
-    let stream: fs.ReadStream | Buffer = null;
+    // let streamSize = chunk_size;
+    // let stream: fs.ReadStream;
+    let [stream, streamSize] = createReadStream(
+      filePath,
+      start,
+      chunk_size,
+      size
+    );
     if (this.options.limitRate > 0) {
-      [stream, streamSize] = createReadStream(
-        filePath,
-        start,
-        chunk_size,
-        size
-      );
       stream = stream.pipe(new Throttle(this.options.limitRate * 1024));
-    } else {
-      stream = await readBytesFromFile(filePath, start, chunk_size, size);
-      streamSize = stream.length;
     }
+
     const partNumber = chunk + 1;
     this.chunkTasks[partNumber].status = "running";
 
