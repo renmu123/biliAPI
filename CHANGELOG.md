@@ -1,3 +1,8 @@
+# 2.10.0
+
+1. `video.dashDownload` 支持大会员画质，仅音频支持杜比
+2. 移除 `video.dashDownload` 的 `resolution` 参数，采用 `qn` 参数
+
 # 2.9.3
 
 1. 上传分 p 支持在准备数据阶段取消

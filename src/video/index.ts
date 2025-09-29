@@ -16,6 +16,8 @@ import type { VideoId } from "../types/index.js";
 import type {
   VideoDetailReturnType,
   PlayUrlReturnType,
+  VideoQn,
+  VideoCodec,
 } from "../types/video.js";
 
 interface ProgressEvent {
@@ -396,10 +398,9 @@ export default class Video extends BaseRequest {
       cachePath?: string;
     } & VideoId,
     mediaOptions: {
-      videoCodec?: 7 | 12 | 13;
+      videoCodec?: VideoCodec;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
-      resolution?: number;
-      qn?: 16 | 32 | 64 | 80;
+      qn?: VideoQn;
     } = {},
     autoStart: boolean = true
   ) {
@@ -446,7 +447,7 @@ export default class Video extends BaseRequest {
    * @param options.disableVideo 禁止下载视频
    * @param options.disableAudio 禁止下载音频
    * @param mediaOptions
-   * @param mediaOptions.resolution 分辨率宽度，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
+   * @param mediaOptions.qn 画质参数，默认为可选最高 @link https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html#fnval%E8%A7%86%E9%A2%91%E6%B5%81%E6%A0%BC%E5%BC%8F%E6%A0%87%E8%AF%86
    * @param mediaOptions.videoCodec 视频编码，默认为符合视频质量的第一个编码，7：H264，12：H265，13：AV1
    * @param mediaOptions.audioQuality 音质，默认使用最高音质，30216：64k，30232：128k，30280：192k，30250：杜比全景声，30251：Hi-Res无损
    */
@@ -460,9 +461,9 @@ export default class Video extends BaseRequest {
       disableAudio?: boolean;
     } & VideoId,
     mediaOptions: {
-      videoCodec?: 7 | 12 | 13;
+      videoCodec?: VideoCodec;
       audioQuality?: 30216 | 30232 | 30280 | 30250 | 30251;
-      resolution?: number;
+      qn?: VideoQn;
     } = {},
     autoStart: boolean = true
   ) {
@@ -476,26 +477,32 @@ export default class Video extends BaseRequest {
       bvid: options.bvid,
       aid: options.aid,
       cid: options.cid,
-      fnval: 16 | 2048,
+      fnval: 16 | 4048,
     });
 
     let videos = (media.dash.video || []).filter(video => {
       if (!mediaOptions.videoCodec) return true;
       return video.codecid === mediaOptions.videoCodec;
     });
-    if (mediaOptions.resolution) {
-      videos = videos.filter(video => video.width === mediaOptions.resolution);
+    if (mediaOptions.qn) {
+      videos = videos.filter(video => video.id === mediaOptions.qn);
     }
 
-    const audios = media.dash.audio.filter(audio => {
+    let audios = media.dash.audio || [];
+    if (media.dash?.dolby?.audio) {
+      // 如果有杜比音频，杜比音频也要被添加
+      audios.unshift(...media.dash.dolby.audio);
+    }
+
+    audios = media.dash.audio.filter(audio => {
       if (!mediaOptions.audioQuality) return true;
       return audio.id === mediaOptions.audioQuality;
     });
 
-    if (options.disableVideo && audios.length === 0) {
+    if (audios.length === 0) {
       throw new Error("不存在符合要求的音频");
     }
-    if (options.disableAudio && videos.length === 0) {
+    if (videos.length === 0) {
       throw new Error("不存在符合要求的视频");
     }
 
@@ -671,7 +678,7 @@ export default class Video extends BaseRequest {
       output: string;
     } & VideoId,
     mediaOptions: {
-      qn?: 16 | 32 | 64 | 80;
+      qn?: VideoQn;
     } = {
       qn: 64,
     },
