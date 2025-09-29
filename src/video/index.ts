@@ -489,6 +489,7 @@ export default class Video extends BaseRequest {
     }
 
     let audios = media.dash.audio || [];
+    // TODO: 这样处理会导致只有杜比音频，那么一定会使用杜比，可能不是用户想要的
     if (media.dash?.dolby?.audio) {
       // 如果有杜比音频，杜比音频也要被添加
       audios.unshift(...media.dash.dolby.audio);
