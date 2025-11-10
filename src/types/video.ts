@@ -108,6 +108,72 @@ export interface VideoDetailReturnType {
   };
 }
 
+interface Audio {
+  id: number;
+  baseUrl: string;
+  backupUrl: string[];
+  bandwidth: number;
+  mimeType: string;
+  codecs: string;
+  audioQuality: string;
+  audioChannelCount: number;
+  audioSamplingRate: string;
+  segmentBase: {
+    Initialization: {
+      range: string;
+    };
+    RepresentationIndex: {
+      range: string;
+    };
+  };
+  segmentList: {
+    duration: number;
+    timescale: number;
+    startNumber: number;
+    initialization: {
+      sourceURL: string;
+      range: string;
+    };
+    segmentURL: {
+      media: string;
+      mediaRange: string;
+    }[];
+  };
+  segmentTemplate: {
+    timescale: number;
+    initialization: {
+      sourceURL: string;
+      range: string;
+    };
+    segmentTimeline: {
+      startNumber: number;
+      duration: number;
+      repeatCount: number;
+    }[];
+    segmentURL: {
+      media: string;
+      mediaRange: string;
+    }[];
+  };
+}
+
+export type VideoQn =
+  | 6
+  | 16
+  | 32
+  | 64
+  | 72
+  | 80
+  | 100
+  | 112
+  | 116
+  | 120
+  | 125
+  | 126
+  | 127;
+
+export type VideoCodec = 7 | 12 | 13;
+
 export interface PlayUrlReturnType {
   from: string;
   result: string;
@@ -134,7 +200,7 @@ export interface PlayUrlReturnType {
     minBufferTime: number;
     minBufferTimeSliced: number;
     video: {
-      id: number;
+      id: VideoQn;
       baseUrl: string;
       backupUrl: string[];
       bandwidth: number;
@@ -182,59 +248,25 @@ export interface PlayUrlReturnType {
           mediaRange: string;
         }[];
       };
-      codecid: 7 | 12 | 13;
+      codecid: VideoCodec;
     }[];
-    audio: {
-      id: number;
-      baseUrl: string;
-      backupUrl: string[];
-      bandwidth: number;
-      mimeType: string;
-      codecs: string;
-      audioQuality: string;
-      audioChannelCount: number;
-      audioSamplingRate: string;
-      segmentBase: {
-        Initialization: {
-          range: string;
-        };
-        RepresentationIndex: {
-          range: string;
-        };
-      };
-      segmentList: {
-        duration: number;
-        timescale: number;
-        startNumber: number;
-        initialization: {
-          sourceURL: string;
-          range: string;
-        };
-        segmentURL: {
-          media: string;
-          mediaRange: string;
-        }[];
-      };
-      segmentTemplate: {
-        timescale: number;
-        initialization: {
-          sourceURL: string;
-          range: string;
-        };
-        segmentTimeline: {
-          startNumber: number;
-          duration: number;
-          repeatCount: number;
-        }[];
-        segmentURL: {
-          media: string;
-          mediaRange: string;
-        }[];
-      };
-    }[];
+    audio: Audio[];
+    dolby?: {
+      type: string;
+      audio: Audio[];
+    };
+    flac: null | any;
   };
   high_format?: string;
   last_play_time: number;
   last_play_cid: number;
+  support_formats: {
+    quality: VideoQn;
+    format: string;
+    new_description: string;
+    display_desc: string;
+    superscript: string;
+    codecs: string[];
+  }[];
   [key: string]: any;
 }

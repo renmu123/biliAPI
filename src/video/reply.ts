@@ -104,6 +104,7 @@ export default class Reply extends BaseRequest {
     plat: 1 | 2 | 3 | 4;
     at_name_to_mid?: string;
     pictures?: string;
+    gain_source?: "main_web" | string;
   }): Promise<{
     rpid: number;
   }> {
@@ -112,14 +113,18 @@ export default class Reply extends BaseRequest {
     const data = {
       oid: this.oid,
       type: this.type,
+      gain_source: "main_web",
+      csrf: this.auth.cookieObj.bili_jct,
+      statistics: JSON.stringify({ appId: 100, platform: 5 }),
       ...params,
     };
-    return this.request.post(url, data, {
+
+    const signParams = await this.WbiSign({
+      ...this.dm,
+    });
+    return this.request.post(`${url}?${signParams}`, data, {
       headers: {
         "content-type": "application/x-www-form-urlencoded",
-      },
-      params: {
-        csrf: this.auth.cookieObj.bili_jct,
       },
     });
   }
