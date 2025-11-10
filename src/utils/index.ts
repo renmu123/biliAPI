@@ -24,7 +24,11 @@ export function createReadStream(
 ): [fs.ReadStream, number] {
   const endByte = Math.min(start + numBytes - 1, totalBytes - 1);
 
-  const readStream = fs.createReadStream(filePath, { start, end: endByte });
+  const readStream = fs.createReadStream(filePath, {
+    start,
+    end: endByte,
+    highWaterMark: 1024 * 1024,
+  });
   return [readStream, endByte - start + 1];
 }
 
