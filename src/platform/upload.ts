@@ -476,19 +476,21 @@ export class WebVideoUploader extends BaseRequest {
 
       const options: https.RequestOptions = {
         hostname: urlWithParams.hostname,
+        servername: urlWithParams.hostname,
         port: urlWithParams.port || 443,
         path: urlWithParams.pathname + urlWithParams.search,
         method: "PUT",
         headers: {
           "X-Upos-Auth": auth,
           "Content-Length": streamSize.toString(),
-          Connection: "keep-alive",
           "Content-Type": "application/octet-stream",
-          cookie: this?.auth?.cookie,
+          Cookie: this?.auth?.cookie,
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
         },
         timeout: 1000000,
       };
-
+      console.log("Uploading chunk to", options);
       const req = https.request(options, res => {
         let responseData = "";
 
@@ -497,6 +499,7 @@ export class WebVideoUploader extends BaseRequest {
         });
 
         res.on("end", () => {
+          console.log("Upload response ended", res);
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             resolve();
           } else {
@@ -510,6 +513,7 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       req.on("error", error => {
+        console.log("Upload request error", error);
         reject(new Error(`Upload request failed: ${error.message}`));
       });
 
@@ -558,7 +562,12 @@ export class WebVideoUploader extends BaseRequest {
   ) {
     const { filePath, start, chunk_size, size, chunk } = options;
 
-    let [stream] = createReadStream(filePath, start, chunk_size, size);
+    let [stream, streamSize] = createReadStream(
+      filePath,
+      start,
+      chunk_size,
+      size
+    );
     if (this.options.limitRate > 0) {
       stream = stream.pipe(new Throttle(this.options.limitRate * 1024));
     }
@@ -568,10 +577,11 @@ export class WebVideoUploader extends BaseRequest {
 
     while (retryCount >= 0) {
       try {
-        await this.uploadChunkApi(options, stream, chunk_size);
+        await this.uploadChunkApi(options, stream, streamSize);
+        console.log("上传切片成功", partNumber);
         return partNumber;
       } catch (e) {
-        console.error("error", e);
+        console.log("上传切片错误", e);
         if (e.code == "ERR_CANCELED") {
           this.chunkTasks[partNumber].status = "abort";
           return;
@@ -640,12 +650,14 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       this.queue.addListener("completed", partNumber => {
+        console.log("completed", partNumber);
         if (partNumber === undefined) return;
         this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
 
       this.queue.on("idle", () => {
+        console.log("idle", this.chunkTasks, parts);
         if (parts.length === 0) {
           resolve(false);
         }
