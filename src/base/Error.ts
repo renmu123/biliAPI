@@ -21,5 +21,16 @@ export class BiliResponseError extends Error {
     this.method = options["method"];
     this.code = options["code"];
     this.rawResponse = options["rawResponse"];
+    this.stack = new Error().stack;
+  }
+}
+
+export class CancelError extends Error {
+  code: string;
+  constructor(message: string) {
+    super(message);
+    this.name = "CancelError";
+    this.code = "ERR_CANCELED";
+    this.stack = new Error().stack;
   }
 }

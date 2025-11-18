@@ -8,13 +8,8 @@ import PQueue from "p-queue";
 import Throttle from "@renmu/throttle";
 import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
-import {
-  createReadStream,
-  readBytesFromFile,
-  sum,
-  retry,
-  streamToBuffer,
-} from "../utils/index.js";
+import { createReadStream, sum, retry } from "../utils/index.js";
+import { CancelError } from "../base/Error.js";
 
 import type { MediaPartOptions } from "../types/index.js";
 
@@ -520,16 +515,14 @@ export class WebVideoUploader extends BaseRequest {
 
       // 处理中止信号
       if (abortSignal.aborted) {
-        const abortError = new Error("Upload aborted");
-        abortError.name = "AbortError";
+        const abortError = new CancelError("Upload aborted");
         reject(abortError);
         req.destroy();
         return;
       }
 
       abortSignal.addEventListener("abort", () => {
-        const abortError = new Error("Upload aborted");
-        abortError.name = "AbortError";
+        const abortError = new CancelError("Upload aborted");
         reject(abortError);
         req.destroy();
       });
@@ -578,6 +571,7 @@ export class WebVideoUploader extends BaseRequest {
         await this.uploadChunkApi(options, stream, chunk_size);
         return partNumber;
       } catch (e) {
+        console.error("error", e);
         if (e.code == "ERR_CANCELED") {
           this.chunkTasks[partNumber].status = "abort";
           return;
