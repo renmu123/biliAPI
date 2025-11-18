@@ -513,6 +513,9 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       req.on("error", error => {
+        // if (abortSignal.aborted) {
+        //   return;
+        // }
         console.log("Upload request error", error);
         reject(new Error(`Upload request failed: ${error.message}`));
       });
@@ -539,6 +542,11 @@ export class WebVideoUploader extends BaseRequest {
       } else {
         // 如果是流，监听进度并管道连接
         fileStream.on("data", (chunk: Buffer) => {
+          if (abortSignal.aborted) {
+            uploaded = 0;
+            onProgress(uploaded);
+            return;
+          }
           uploaded += chunk.length;
           onProgress(uploaded);
         });
@@ -578,14 +586,15 @@ export class WebVideoUploader extends BaseRequest {
     while (retryCount >= 0) {
       try {
         await this.uploadChunkApi(options, stream, streamSize);
-        console.log("上传切片成功", partNumber);
+        // console.log("上传切片成功", partNumber);
         return partNumber;
       } catch (e) {
-        console.log("上传切片错误", e);
+        // console.log("上传切片出错", partNumber, e, e.code);
         if (e.code == "ERR_CANCELED") {
           this.chunkTasks[partNumber].status = "abort";
           return;
         } else {
+          // console.log("上传切片失败", partNumber, e.message);
           if (retryCount > 0) {
             await this.sleep(this.options.retryDelay);
             retryCount--;
@@ -650,14 +659,13 @@ export class WebVideoUploader extends BaseRequest {
       });
 
       this.queue.addListener("completed", partNumber => {
-        console.log("completed", partNumber);
+        // console.log("completed", partNumber);
         if (partNumber === undefined) return;
         this.chunkTasks[partNumber].status = "completed";
         parts.push({ partNumber, eTag: "etag" });
       });
 
       this.queue.on("idle", () => {
-        console.log("idle", this.chunkTasks, parts);
         if (parts.length === 0) {
           resolve(false);
         }
@@ -710,9 +718,13 @@ export class WebVideoUploader extends BaseRequest {
     Object.values(this.chunkTasks)
       .filter(task => task.status === "running")
       .map(task => {
-        this.progress[task.chunk + 1] = 0;
         task.controller.abort();
+        this.progress[task.chunk + 1] = 0;
       });
+    // console.log("上传已暂停", this.progress);
+    // setTimeout(() => {
+    //   // console.log("上传已暂停", this.progress);
+    // }, 2000);
   }
   start() {
     this.status = "running";
@@ -720,6 +732,7 @@ export class WebVideoUploader extends BaseRequest {
     const abortTasks = Object.values(this.chunkTasks).filter(
       task => task.status == "abort"
     );
+    // console.log("重新开始上传切片数量", abortTasks.length, abortTasks);
 
     abortTasks.map(task => {
       task.controller = new AbortController();
