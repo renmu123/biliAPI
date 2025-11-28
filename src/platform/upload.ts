@@ -490,7 +490,7 @@ export class WebVideoUploader extends BaseRequest {
         },
         timeout: 1000000,
       };
-      console.log("Uploading chunk to", options);
+      // console.log("Uploading chunk to", options);
       const req = https.request(options, res => {
         let responseData = "";
 
@@ -499,7 +499,7 @@ export class WebVideoUploader extends BaseRequest {
         });
 
         res.on("end", () => {
-          console.log("Upload response ended", res);
+          // console.log("Upload response ended", res);
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             resolve();
           } else {
@@ -516,7 +516,7 @@ export class WebVideoUploader extends BaseRequest {
         // if (abortSignal.aborted) {
         //   return;
         // }
-        console.log("Upload request error", error);
+        // console.log("Upload request error", error);
         reject(new Error(`Upload request failed: ${error.message}`));
       });
 
