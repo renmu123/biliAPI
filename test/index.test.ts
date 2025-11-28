@@ -10,6 +10,9 @@ describe("WebVideoUploader", () => {
       ...mod,
       getFileSize: vi.fn().mockResolvedValue(240850008),
       readBytesFromFile: vi.fn().mockResolvedValue(Buffer.from("test")),
+      createReadStream: vi
+        .fn()
+        .mockReturnValue([Buffer.from("test"), 10485760]),
     };
   });
   WebVideoUploader.prototype.getFileSizeSync = () => 240850008;
