@@ -570,21 +570,22 @@ export class WebVideoUploader extends BaseRequest {
   ) {
     const { filePath, start, chunk_size, size, chunk } = options;
 
-    let [stream, streamSize] = createReadStream(
-      filePath,
-      start,
-      chunk_size,
-      size
-    );
-    if (this.options.limitRate > 0) {
-      stream = stream.pipe(new Throttle(this.options.limitRate * 1024));
-    }
-
     const partNumber = chunk + 1;
     this.chunkTasks[partNumber].status = "running";
 
     while (retryCount >= 0) {
       try {
+        // 每次重试都需要重新创建流，因为流读取后无法重用
+        let [stream, streamSize] = createReadStream(
+          filePath,
+          start,
+          chunk_size,
+          size
+        );
+        if (this.options.limitRate > 0) {
+          stream = stream.pipe(new Throttle(this.options.limitRate * 1024));
+        }
+
         await this.uploadChunkApi(options, stream, streamSize);
         // console.log("上传切片成功", partNumber);
         return partNumber;
