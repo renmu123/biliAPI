@@ -17,6 +17,7 @@ export class BiliResponseError extends Error {
     super(message);
     this.name = "BiliResponseError";
     this.statusCode = options["statusCode"];
+    this.code = this.statusCode;
     this.path = options["path"];
     this.method = options["method"];
     this.code = options["code"];

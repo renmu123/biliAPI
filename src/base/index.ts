@@ -83,7 +83,21 @@ export class BaseRequest {
         }
       },
       error => {
-        return Promise.reject(error);
+        const response = error.response;
+        if (response?.status === 406) {
+          const message =
+            response?.data?.message + "（请尝试去web投稿解除)" || "no message";
+          const error2 = new BiliResponseError(`${message}`, {
+            statusCode: response.status,
+            code: response?.data?.code,
+            path: error.url,
+            method: error.method,
+            rawResponse: response,
+          });
+          return Promise.reject(error2);
+        } else {
+          return Promise.reject(error);
+        }
       }
     );
 

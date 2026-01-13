@@ -278,7 +278,7 @@ export class WebVideoUploader extends BaseRequest {
     let query: Record<string, string> = {
       zone: this.options.zone,
       upcdn: this.options.line,
-      probe_version: "20221109",
+      probe_version: "20250923",
     };
     if (this.options.line === "auto") {
       const line = await retry(
@@ -342,7 +342,7 @@ export class WebVideoUploader extends BaseRequest {
           r: "upos",
           profile: "ugcfx/bup",
           ssl: "0",
-          version: "",
+          version: "2.14.0.0",
           build: "2140000",
           size: this.size,
           webVersion: "2.14.0",
