@@ -58,6 +58,8 @@ interface UploadChunkTask {
   status?: "pending" | "completed" | "running" | "error" | "abort";
 }
 
+const BCUT_BUILD = "22559864";
+
 export class WebVideoUploader extends BaseRequest {
   private status:
     | "pending"
@@ -80,6 +82,7 @@ export class WebVideoUploader extends BaseRequest {
     line: Line;
     zone: string;
     limitRate: number;
+    bcutPreUpload: boolean;
   };
   on: TypedEmitter<WebEmitterEvents>["on"];
   once: TypedEmitter<WebEmitterEvents>["once"];
@@ -102,6 +105,8 @@ export class WebVideoUploader extends BaseRequest {
       line?: Line;
       zone?: string;
       throttleRate?: number;
+      // 使用必剪的预上传接口，web的存在406风控，b-cut的看起来不存在
+      bcutPreUpload?: boolean;
     } = {}
   ) {
     super(auth);
@@ -113,6 +118,7 @@ export class WebVideoUploader extends BaseRequest {
         line: "auto",
         zone: "cs",
         limitRate: 0,
+        bcutPreUpload: false,
       },
       options
     );
@@ -334,19 +340,32 @@ export class WebVideoUploader extends BaseRequest {
     upos_uri: string;
   }> {
     const { base } = path.parse(this.filePath);
+    const bcutParams = {
+      build: BCUT_BUILD,
+      version: "3.11.20",
+      profile: "ugcfx/bcut-pc",
+    };
+    const params = {
+      name: base,
+      r: "upos",
+      profile: "ugcfx/bup",
+      ssl: "0",
+      version: "2.14.0.0",
+      build: "2140000",
+      size: this.size,
+      webVersion: "2.14.0",
+      ...query,
+    };
+    if (this.options.bcutPreUpload) {
+      Object.assign(params, bcutParams);
+      delete params.webVersion;
+      delete params.ssl;
+    }
     const res = await this.request.get(
       "https://member.bilibili.com/preupload",
       {
         params: {
-          name: base,
-          r: "upos",
-          profile: "ugcfx/bup",
-          ssl: "0",
-          version: "2.14.0.0",
-          build: "2140000",
-          size: this.size,
-          webVersion: "2.14.0",
-          ...query,
+          ...params,
         },
         extra: {
           rawResponse: true,
@@ -364,11 +383,21 @@ export class WebVideoUploader extends BaseRequest {
     query: string;
     probe_url: string;
   }> {
+    const bcutHeaders = {
+      "User-Agent": `bcut-pc build:${BCUT_BUILD}`,
+    };
+    const headers = {};
+    if (this.options.bcutPreUpload) {
+      Object.assign(headers, bcutHeaders);
+    }
     const res = await this.request.get(
       "https://member.bilibili.com/preupload?r=probe",
       {
         extra: {
           rawResponse: true,
+        },
+        headers: {
+          ...headers,
         },
       }
     );

@@ -1,3 +1,7 @@
+# 2.12.0
+
+- `WebVideoUploader` 增加 `bcutPreUpload` 选项规避 406 风控
+
 # 2.11.2
 
 - 更新上传参数以及优化报错
