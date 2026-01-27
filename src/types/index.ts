@@ -88,6 +88,10 @@ export interface MediaOptions {
   human_type2?: number;
   /** 定时发布：10位秒级时间戳。必须距离提交时间>7200秒 */
   dtime?: number;
+  /** 添加水印：非转载时有效，缺省值为开启，0：关闭，1 开启 */
+  watermark?: {
+    state: 0 | 1;
+  };
 }
 
 export interface MediaPartOptions {
