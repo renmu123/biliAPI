@@ -1,3 +1,7 @@
+# 2.12.1
+
+- 提交接口中增加`watermark`类型签名
+
 # 2.12.0
 
 - `WebVideoUploader` 增加 `bcutPreUpload` 选项规避 406 风控
