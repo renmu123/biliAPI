@@ -706,6 +706,9 @@ export default class Platform extends BaseRequest {
       ...archiveData,
       csrf: csrf,
       ...options,
+      watermark: {
+        state: options.watermark?.state ?? archive.watermark.state,
+      },
     };
     this.checkOptions(data);
 
