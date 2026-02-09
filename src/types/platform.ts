@@ -51,7 +51,7 @@ interface Watermark {
   id: number;
   mid: number;
   uname: string;
-  state: number;
+  state: 0 | 1;
   type: number;
   position: number;
   url: string;
