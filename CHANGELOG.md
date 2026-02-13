@@ -1,3 +1,7 @@
+# 2.12.0
+
+- 新增 `video.playerInfo` 接口
+
 # 2.12.2
 
 - 修复编辑时`watermark`参数丢失的情况

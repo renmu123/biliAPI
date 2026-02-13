@@ -18,6 +18,7 @@ import type {
   PlayUrlReturnType,
   VideoQn,
   VideoCodec,
+  PlayerInfoReturnType,
 } from "../types/video.js";
 
 interface ProgressEvent {
@@ -72,6 +73,19 @@ export default class Video extends BaseRequest {
    */
   detail(params: VideoId): Promise<VideoDetailReturnType> {
     const url = `https://api.bilibili.com/x/web-interface/view/detail`;
+    return this.request.get(url, {
+      params: params,
+    });
+  }
+  /**
+   * 获取视频播放信息
+   */
+  playerInfo(
+    params: VideoId & {
+      cid: number;
+    }
+  ): Promise<PlayerInfoReturnType> {
+    const url = `https://api.bilibili.com/x/player/wbi/v2`;
     return this.request.get(url, {
       params: params,
     });
@@ -514,7 +528,7 @@ export default class Video extends BaseRequest {
     const cachePath =
       options.disableVideo || options.disableAudio
         ? null
-        : options.cachePath ?? os.tmpdir();
+        : (options.cachePath ?? os.tmpdir());
 
     // let loadedSize = 0;
     let audioDownloader: Downloader | null,

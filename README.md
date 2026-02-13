@@ -381,9 +381,13 @@ video.like({
 
 `video.getInfo()`
 
-### 获取视频播放信息
+### 获取视频播放链接信息
 
 `video.playurl()`
+
+### 获取视频播放信息
+
+`video.playerInfo()`
 
 ### 下载
 
