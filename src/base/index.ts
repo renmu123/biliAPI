@@ -30,7 +30,7 @@ export class BaseRequest {
     this.auth = auth;
     this.dm = {
       dm_img_list: "[]",
-      dm_img_str: "",
+      dm_img_str: "V2ViR0wgMS",
       dm_cover_img_str: fakeDmCoverImgStr(
         "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0XX)), SwiftShader driver)Google Inc. (Google)"
       ),

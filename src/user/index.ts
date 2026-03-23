@@ -50,6 +50,7 @@ export default class User extends BaseRequest {
       token: "",
       platform: "web",
       web_location: "1550101",
+      ...this.dm,
     });
 
     let cookie = this.auth.cookie;
@@ -60,7 +61,6 @@ export default class User extends BaseRequest {
         cookie = `buvid3=${fakeBuvid3()}`;
       }
     }
-
     return this.request.get(
       `https://api.bilibili.com/x/space/wbi/acc/info?${signParams}`,
       {
