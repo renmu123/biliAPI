@@ -1,3 +1,7 @@
+# 2.12.4
+
+- 修复 `user.getUserInfo` 的风控修改 [#9](https://github.com/renmu123/biliAPI/issues/9)
+
 # 2.12.0
 
 - 新增 `video.playerInfo` 接口
