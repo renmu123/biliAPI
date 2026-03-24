@@ -279,11 +279,8 @@ export default class Video extends BaseRequest {
     [key: string]: any;
   }> {
     const url = `https://api.bilibili.com/x/web-interface/view`;
-    const data = {
-      aid: params.aid ?? this.aid,
-    };
     return this.request.get(url, {
-      params: data,
+      params: params,
     });
   }
   /**
