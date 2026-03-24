@@ -1,3 +1,7 @@
+# 2.12.5
+
+- 修复 `video.getInfo` 的 `bvid` 支持
+
 # 2.12.4
 
 - 修复 `user.getUserInfo` 的风控修改 [#9](https://github.com/renmu123/biliAPI/issues/9)
