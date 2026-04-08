@@ -518,3 +518,16 @@ const reply = client.reply;
 ### 获取分区
 
 `client.common.getAreas()`
+
+## 必剪
+
+### ASR字幕识别
+
+```js
+import { BcutASR } from "@renmu/bili-api";
+
+const asr = new BcutASR("aa.mp3");
+const res = await asr.recognize();
+const srt = res.toSrt();
+console.log(srt);
+```

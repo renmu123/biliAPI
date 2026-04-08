@@ -1,3 +1,8 @@
+# 2.13.0
+
+- typescript 升级至6.0
+- 增加必剪的asr支持
+
 # 2.12.5
 
 - 修复 `video.getInfo` 的 `bvid` 支持

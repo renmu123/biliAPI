@@ -13,6 +13,8 @@ import { WbiSign } from "./base/sign.js";
 import { fakeBuvid3, fakeDmCoverImgStr } from "./utils/index.js";
 import { protobufDecode, protoBufToXml } from "./utils/dm.js";
 import Downloader from "./utils/downloader.js";
+import { BcutASR } from "./bCut/asr.js";
+export * from "./bCut/asr.js";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -125,4 +127,5 @@ export {
   Auth,
   BiliResponseError,
   Downloader,
+  BcutASR,
 };

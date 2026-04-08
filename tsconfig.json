@@ -2,12 +2,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": ".",
     "inlineSourceMap": false,
     "inlineSources": false,
     "module": "node16",
     "target": "es2022",
-    "downlevelIteration": true,
     "allowJs": false,
     "noImplicitAny": false,
     "moduleResolution": "node16",
@@ -17,7 +15,9 @@
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": false,
     "experimentalDecorators": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["node"],
+    "strict": false
   },
   "include": ["src/**/*.ts", "src/**/*"]
 }
