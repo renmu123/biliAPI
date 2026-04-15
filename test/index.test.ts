@@ -1,7 +1,97 @@
 import { WebVideoUploader, Platform } from "../src/index";
 import { describe, expect, it, vi } from "vitest";
-import axios, { AxiosError } from "axios";
-import MockAdapter from "axios-mock-adapter";
+
+describe("Platform", () => {
+  describe("sortByCid", () => {
+    it("should place matched cids first and keep unmatched cids at the end", () => {
+      const platform = new Platform() as any;
+      const videos = [
+        { cid: 3, filename: "3.mp4", title: "3" },
+        { cid: 1, filename: "1.mp4", title: "1" },
+        { cid: 2, filename: "2.mp4", title: "2" },
+        { cid: 4, filename: "4.mp4", title: "4" },
+      ];
+
+      const sortedVideos = platform.sortVideosByCid(videos, [2, 1]);
+
+      expect(sortedVideos.map((video: { cid: number }) => video.cid)).toEqual([
+        2, 1, 3, 4,
+      ]);
+    });
+    it("should keep original order if sortByCid is not provided", () => {
+      const platform = new Platform() as any;
+      const videos = [
+        { cid: 3, filename: "3.mp4", title: "3" },
+        { cid: 1, filename: "1.mp4", title: "1" },
+        { cid: 2, filename: "2.mp4", title: "2" },
+      ];
+      const sortedVideos = platform.sortVideosByCid(videos, undefined);
+      expect(sortedVideos.map((video: { cid: number }) => video.cid)).toEqual([
+        3, 1, 2,
+      ]);
+    });
+
+    it("should allow sorting with existing archive cids during edit", async () => {
+      const platform = new Platform() as any;
+      platform.auth = {
+        cookieObj: {
+          bili_jct: "csrf",
+        },
+        authLogin: vi.fn(),
+      };
+
+      vi.spyOn(platform, "getArchive").mockResolvedValue({
+        archive: {
+          aid: 1,
+          title: "title",
+          tag: "tag",
+          tid: 1,
+          desc: "",
+          copyright: 1,
+          no_reprint: 1,
+          source: "",
+          desc_format_id: 0,
+          dynamic: "",
+          mission_id: 0,
+        },
+        watermark: {
+          state: 1,
+        },
+        videos: [
+          { cid: 10, filename: "10.mp4", title: "10" },
+          { cid: 30, filename: "30.mp4", title: "30" },
+        ],
+      });
+      vi.spyOn(platform, "checkOptions").mockReturnValue(true);
+      const postSpy = vi.spyOn(platform.request, "post").mockResolvedValue({
+        aid: 1,
+        bvid: "BV1",
+      } as any);
+
+      await platform.editMediaWebApi(
+        [{ cid: 20, filename: "20.mp4", title: "20" }],
+        {
+          aid: 1,
+          title: "title",
+          tag: "tag",
+          tid: 1,
+          sortByCid: [30, 20],
+        },
+        "append"
+      );
+
+      expect(postSpy).toHaveBeenCalled();
+      expect(
+        // @ts-ignore
+        postSpy.mock.calls[0][1].videos.map(
+          (video: { cid: number }) => video.cid
+        )
+      ).toEqual([30, 20, 10]);
+      // @ts-ignore
+      expect(postSpy.mock.calls[0][1].sortByCid).toBeUndefined();
+    });
+  });
+});
 
 describe("WebVideoUploader", () => {
   vi.mock("../src/utils/index.js", async importOriginal => {

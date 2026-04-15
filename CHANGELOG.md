@@ -1,3 +1,7 @@
+# 2.13.1
+
+- `editMediaWebApi` 增加 `sortByCid` 用于cid排序
+
 # 2.13.0
 
 - typescript 升级至6.0

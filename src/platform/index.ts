@@ -675,15 +675,16 @@ export default class Platform extends BaseRequest {
    */
   async editMediaWebApi(
     videos: { cid: number; filename: string; title: string; desc?: string }[],
-    options: Partial<MediaOptions> & { aid: number },
+    options: Partial<MediaOptions> & { aid: number; sortByCid?: number[] },
     mode: "append" | "replace"
   ): Promise<{
     aid: number;
     bvid: string;
   }> {
     this.auth.authLogin();
+    const { sortByCid, ...mediaOptions } = options;
     const archive = await this.getArchive({
-      aid: options.aid,
+      aid: mediaOptions.aid,
     });
     const archiveData = archive.archive;
     for (const key of [
@@ -705,9 +706,9 @@ export default class Platform extends BaseRequest {
       videos: [],
       ...archiveData,
       csrf: csrf,
-      ...options,
+      ...mediaOptions,
       watermark: {
-        state: options.watermark?.state ?? archive.watermark.state,
+        state: mediaOptions.watermark?.state ?? archive.watermark.state,
       },
     };
     this.checkOptions(data);
@@ -721,9 +722,12 @@ export default class Platform extends BaseRequest {
       data.desc = this.convertDescV2ToDesc(data.desc_v2);
     }
     if (mode === "append") {
-      data.videos = [...archive.videos, ...videos];
+      data.videos = this.sortVideosByCid(
+        [...archive.videos, ...videos],
+        sortByCid
+      );
     } else if (mode === "replace") {
-      data.videos = videos;
+      data.videos = this.sortVideosByCid(videos, sortByCid);
     } else {
       throw new Error("mode can only be append or replace");
     }
@@ -908,6 +912,38 @@ export default class Platform extends BaseRequest {
     //   );
     // }
     return true;
+  }
+
+  private sortVideosByCid<T extends { cid: number }>(
+    videos: T[],
+    cidOrder?: number[]
+  ): T[] {
+    if (!cidOrder || cidOrder.length === 0) {
+      return videos;
+    }
+
+    const orderMap = new Map<number, number>();
+    cidOrder.forEach((cid, index) => {
+      if (!orderMap.has(cid)) {
+        orderMap.set(cid, index);
+      }
+    });
+
+    const matchedVideos: { video: T; order: number }[] = [];
+    const unmatchedVideos: T[] = [];
+
+    videos.forEach(video => {
+      const order = orderMap.get(video.cid);
+      if (order === undefined) {
+        unmatchedVideos.push(video);
+        return;
+      }
+      matchedVideos.push({ video, order });
+    });
+
+    matchedVideos.sort((left, right) => left.order - right.order);
+
+    return [...matchedVideos.map(item => item.video), ...unmatchedVideos];
   }
   /**
    * 获取推荐标签

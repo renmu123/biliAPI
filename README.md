@@ -263,9 +263,20 @@ task.cancel();
 ```js
 const client = new Client();
 await client.loadCookieFile("cookies.json");
-const task = await client.platform.editMedia(aid, ["test.mp4"], {}, mode);
-// 其余功能参考新投稿
+await client.platform.editMediaWebApi(
+  [{ cid: 123456, filename: "test.mp4", title: "test" }],
+  {
+    aid,
+    title: "测试",
+    tid: 138,
+    tag: "测试",
+    sortByCid: [987654, 123456],
+  },
+  "append"
+);
 ```
+
+`sortByCid` 仅 `editMediaWebApi` 支持，类型是 `number[]`，会按传入的 `cid` 顺序调整分 P，未包含的 `cid` 会保留原顺序并排在最后。
 
 ### 单独上传分 p
 
