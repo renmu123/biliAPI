@@ -1,3 +1,7 @@
+# 2.13.2
+
+- 修复`getAllDm`下载弹幕超过index的接口报错
+
 # 2.13.1
 
 - `editMediaWebApi` 增加 `sortByCid` 用于cid排序

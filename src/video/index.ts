@@ -360,7 +360,9 @@ export default class Video extends BaseRequest {
     const duration = detail.View?.duration;
     if (!duration) throw new Error("视频时长获取失败");
 
-    const totalSegment = Math.ceil(duration / 360);
+    const part = detail.View?.pages?.find((p: any) => p.cid === params.cid);
+    if (!part) throw new Error("未找到对应cid的视频分P");
+    const totalSegment = Math.ceil(part.duration / 360);
     const dmList: Buffer[] = [];
     // 从1开始
     for (let i = 0; i < totalSegment; i++) {
