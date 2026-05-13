@@ -42,7 +42,7 @@ export interface ASRDataSeg {
   start_time: number;
   end_time: number;
   transcript: string;
-  /** 是否存在音乐的概率 */
+  /** 值为 0-1 之间的概率，表示该段落是音乐的可能性 */
   music: number;
   punc: number;
   words: ASRDataWords[];
