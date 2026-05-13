@@ -42,6 +42,9 @@ export interface ASRDataSeg {
   start_time: number;
   end_time: number;
   transcript: string;
+  /** 是否存在音乐的概率 */
+  music: number;
+  punc: number;
   words: ASRDataWords[];
 }
 
