@@ -41,8 +41,8 @@ export interface MediaOptions {
   cover?: string;
   /** 标题 */
   title: string;
-  /** 1: 自制，2: 转载，转载必须有source字段，且不能超过200字 */
-  copyright?: 1 | 2;
+  /** 1: 自制，2: 转载，转载必须有source字段，且不能超过200字，3：指定创作声明 */
+  copyright?: 1 | 2 | 3;
   /** copyright=2之后必填的字段 */
   source?: string;
   /** 分区id */
@@ -93,6 +93,11 @@ export interface MediaOptions {
   /** 添加水印：非转载时有效，缺省值为开启，0：关闭，1 开启 */
   watermark?: {
     state: 0 | 1;
+  };
+  // 创作声明，copyright=1时选填，3时必填
+  creation_statement?: {
+    // -1: 内容无需标注，1: 含AI生成内容，2：含虚构演绎内容，3：内容含营销信息，4：个人观点，仅供参考
+    id: number;
   };
 }
 

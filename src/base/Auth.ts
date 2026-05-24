@@ -67,11 +67,11 @@ export default class Auth {
    * 登录验证
    * @param [api=["web"]] 用于验证web还是client api
    */
-  async authLogin(api: Array<"web" | "client" | "b-cut"> = ["web"]) {
+  async authLogin(api: Array<"web" | "client" | "b-cut" | "webV3"> = ["web"]) {
     if (!this.cookieObj) {
       throw new Error("未设置登录参数");
     }
-    if (api.includes("web")) {
+    if (api.includes("web") || api.includes("webV3")) {
       const isLogin = !!this.cookie;
       if (!isLogin) {
         throw new Error("接口为web端接口，需要cookie");

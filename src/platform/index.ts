@@ -215,7 +215,7 @@ export default class Platform extends BaseRequest {
     };
   }
   /**
-   * 投稿视频，推荐submit使用client参数
+   * 投稿视频，推荐submit使用web参数
    * on("completed", data => {})可以监听上传完成
    * @param filePaths 文件路径
    * @param options
@@ -230,7 +230,7 @@ export default class Platform extends BaseRequest {
       submit: SubmitType;
     } = {
       uploader: "web",
-      submit: "client",
+      submit: "webV3",
     },
     retryOptions: {
       times?: number;
@@ -247,9 +247,9 @@ export default class Platform extends BaseRequest {
     );
 
     const submitApiObj = {
-      client: this.addMediaClientApi.bind(this),
       web: this.addMediaWebApi.bind(this),
       "b-cut": this.addMediaBCutApi.bind(this),
+      webV3: this.addMediaWebApiV3.bind(this),
     };
     const submitApi = submitApiObj[api.submit];
 
@@ -279,7 +279,7 @@ export default class Platform extends BaseRequest {
     };
   }
   /**
-   * 投稿视频，推荐submit使用client参数
+   * 投稿视频，推荐submit使用web参数
    * @param filePaths 文件路径
    * @param options
    * @param api
@@ -293,7 +293,7 @@ export default class Platform extends BaseRequest {
       submit: SubmitType;
     } = {
       uploader: "web",
-      submit: "client",
+      submit: "webV3",
     }
   ): Promise<{ aid: number; bvid: string }> {
     return new Promise(async (resolve, reject) => {
@@ -329,7 +329,7 @@ export default class Platform extends BaseRequest {
   }
 
   /**
-   * 编辑视频，推荐使用client api
+   * 编辑视频，推荐使用web api
    * @param aid 视频id
    * @param filePaths 文件路径
    * @param options
@@ -343,10 +343,10 @@ export default class Platform extends BaseRequest {
     mode: "append" | "replace" = "append",
     api: {
       uploader: UploaderType;
-      submit: "web" | "client";
+      submit: "web";
     } = {
       uploader: "web",
-      submit: "client",
+      submit: "web",
     },
     retryOptions: {
       times?: number;
@@ -355,7 +355,6 @@ export default class Platform extends BaseRequest {
   ) {
     this.auth.authLogin();
     const submitApiObj = {
-      client: this.editMediaClientApi.bind(this),
       web: this.editMediaWebApi.bind(this),
     };
     const submitApi = submitApiObj[api.submit];
@@ -414,10 +413,10 @@ export default class Platform extends BaseRequest {
     mode: "append" | "replace" = "append",
     api: {
       uploader: UploaderType;
-      submit: "web" | "client";
+      submit: "web";
     } = {
       uploader: "web",
-      submit: "client",
+      submit: "web",
     }
   ): Promise<{ aid: number; bvid: string }> {
     return new Promise(async (resolve, reject) => {
@@ -435,59 +434,6 @@ export default class Platform extends BaseRequest {
         reject(err);
       });
     });
-  }
-
-  /**
-   * 通过client api投稿视频
-   * @deprecated 由于 B 站投稿客户端已停用
-   */
-  async addMediaClientApi(
-    videos: { cid: number; filename: string; title: string; desc?: string }[],
-    options: MediaOptions
-  ): Promise<{
-    aid: number;
-    bvid: string;
-  }> {
-    this.auth.authLogin(["client"]);
-    this.checkOptions(options);
-    const data = {
-      copyright: 1,
-      tid: 124,
-      desc_format_id: 0,
-      desc: "",
-      recreate: -1,
-      dynamic: "",
-      interactive: 0,
-      videos: videos,
-      act_reserve_create: 0,
-      no_disturbance: 0,
-      no_reprint: 1,
-      subtitle: { open: 0, lan: "" },
-      dolby: 0,
-      lossless_music: 0,
-      up_selection_reply: false,
-      up_close_reply: false,
-      up_close_danmu: false,
-      mission_id: 0,
-      ...options,
-    };
-
-    if (options.cover && !options.cover.startsWith("http")) {
-      const coverRes = await this.uploadCover(options.cover);
-      data["cover"] = coverRes.url;
-    }
-
-    const csrf = this.auth.cookieObj.bili_jct;
-    return this.request.post(
-      "http://member.bilibili.com/x/vu/client/add",
-      data,
-      {
-        params: {
-          csrf: csrf,
-          access_key: this.auth.accessToken,
-        },
-      }
-    );
   }
 
   /**
@@ -738,76 +684,6 @@ export default class Platform extends BaseRequest {
       {
         params: {
           t: Date.now(),
-          csrf: csrf,
-        },
-      }
-    );
-  }
-
-  /**
-   * 通过client api接口编辑视频
-   * @deprecated 由于 B 站投稿客户端已停用
-   */
-  async editMediaClientApi(
-    videos: { cid: number; filename: string; title: string; desc?: string }[],
-    options: Partial<MediaOptions> & { aid: number },
-    mode: "append" | "replace"
-  ): Promise<{
-    aid: number;
-    bvid: string;
-  }> {
-    this.auth.authLogin(["client"]);
-    const archive = await this.getArchive({
-      aid: options.aid,
-    });
-    const archiveData = archive.archive;
-    for (const key of [
-      "recreate",
-      "human_type2",
-      "activity",
-      "attrs",
-      "tp_info",
-    ]) {
-      delete archiveData[key];
-    }
-
-    const data: MediaOptions & {
-      videos: { cid: number; filename: string; title: string; desc?: string }[];
-      aid: number;
-    } = {
-      videos: [],
-      ...archiveData,
-      ...options,
-    };
-    this.checkOptions(data);
-
-    data.aid = Number(data.aid);
-
-    if (data.cover && !data.cover.startsWith("http")) {
-      const coverRes = await this.uploadCover(data.cover);
-      data["cover"] = coverRes.url;
-    }
-    if (data.desc_v2) {
-      data.desc = this.convertDescV2ToDesc(data.desc_v2);
-    }
-    if (mode === "append") {
-      data.videos = [...archive.videos, ...videos];
-    } else if (mode === "replace") {
-      data.videos = videos;
-      if (data.videos.length === 0) {
-        throw new Error("videos can not be empty");
-      }
-    } else {
-      throw new Error("mode can only be append or replace");
-    }
-
-    const csrf = this.auth.cookieObj.bili_jct;
-    return this.request.post(
-      "http://member.bilibili.com/x/vu/client/edit",
-      data,
-      {
-        params: {
-          access_key: this.auth.accessToken,
           csrf: csrf,
         },
       }

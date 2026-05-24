@@ -217,7 +217,7 @@ export interface getArchivesReturnType {
 }
 
 export type UploaderType = "web";
-export type SubmitType = "web" | "client" | "b-cut";
+export type SubmitType = "web" | "b-cut" | "webV3";
 
 export interface getSeasonListReturnType {
   play_type: 1 | number;
