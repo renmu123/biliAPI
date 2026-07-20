@@ -202,3 +202,55 @@ export function retry<T>(
     attempt(times);
   });
 }
+
+interface SubtitleJsonItem {
+  from: number;
+  to: number;
+  location?: number;
+  content: string;
+}
+
+interface SubtitleJsonData {
+  font_size?: number;
+  font_color?: string;
+  background_alpha?: number;
+  background_color?: string;
+  stroke?: string;
+  body: SubtitleJsonItem[];
+}
+
+function padNumber(value: number, length: number = 2) {
+  return String(value).padStart(length, "0");
+}
+
+function formatSrtTimestamp(seconds: number) {
+  const totalMs = Math.max(0, Math.round(seconds * 1000));
+  const hours = Math.floor(totalMs / 3600000);
+  const minutes = Math.floor((totalMs % 3600000) / 60000);
+  const secs = Math.floor((totalMs % 60000) / 1000);
+  const ms = totalMs % 1000;
+  return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(secs)},${padNumber(ms, 3)}`;
+}
+
+export function subtitleJsonToSrt(
+  data: SubtitleJsonData | { body: SubtitleJsonItem[] },
+  options: { offset?: number } = {}
+): string {
+  const body = data.body || [];
+  if (!Array.isArray(body)) {
+    throw new Error("subtitleJsonToSrt: body must be an array");
+  }
+
+  const offset = options.offset ?? 0;
+
+  const rows = [...body]
+    .sort((a, b) => a.from - b.from)
+    .map((item, index) => {
+      const start = formatSrtTimestamp(item.from + offset);
+      const end = formatSrtTimestamp(item.to + offset);
+      const content = item.content?.trim() || "";
+      return `${index + 1}\n${start} --> ${end}\n${content}`;
+    });
+
+  return rows.join("\n\n") + (rows.length ? "\n" : "");
+}

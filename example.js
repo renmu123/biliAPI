@@ -1,4 +1,11 @@
-import { Client, TvQrcodeLogin, Auth, User, utils } from "./dist/index.js";
+import {
+  Client,
+  TvQrcodeLogin,
+  Auth,
+  User,
+  utils,
+  Video,
+} from "./dist/index.js";
 import fs from "fs";
 
 // 上传视频
@@ -90,3 +97,16 @@ const convertDm = async () => {
   const xmlContent = await utils.protoBufToXml(data);
   fs.writeFileSync("test.xml", xmlContent);
 };
+
+// 下载字幕
+const downloadSubtitle = async () => {
+  const video = new Video();
+  video.downloadSubtitle({
+    aid: "116934964218576",
+    cid: "40062356206",
+    useV2: false,
+    output: "aa.srt",
+  });
+};
+
+// downloadSubtitle();

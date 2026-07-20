@@ -9,7 +9,7 @@ import { BaseRequest } from "../base/index.js";
 import Auth from "../base/Auth.js";
 import Downloader from "../utils/downloader.js";
 import { mergeMedia } from "../utils/ffmpeg.js";
-import { uuid } from "../utils/index.js";
+import { uuid, subtitleJsonToSrt } from "../utils/index.js";
 
 import type { GenerateNumberRange } from "../types/utils.js";
 import type { VideoId } from "../types/index.js";
@@ -80,15 +80,16 @@ export default class Video extends BaseRequest {
   /**
    * 获取视频播放信息
    */
-  playerInfo(
+  async playerInfo(
     params: VideoId & {
       cid: number;
     }
   ): Promise<PlayerInfoReturnType> {
+    this.auth.authLogin();
+
+    const signParams = await this.WbiSign({ ...params, ...this.dm });
     const url = `https://api.bilibili.com/x/player/wbi/v2`;
-    return this.request.get(url, {
-      params: params,
-    });
+    return this.request.get(`${url}?${signParams}`);
   }
   /**
    * 获取视频简介
@@ -375,6 +376,85 @@ export default class Video extends BaseRequest {
     }
     // @ts-ignore
     return Buffer.concat(dmList);
+  }
+
+  /**
+   * 下载视频字幕，srt格式
+   * @param options
+   * @param options.aid 视频 aid, 与 bvid 二选一
+   * @param options.bvid 视频 bvid, 与 aid 二选一
+   * @param options.cid 视频 cid
+   * @param options.part 视频分 P，从0开始，如果传递 cid 则忽略
+   * @param options.subtitleId 字幕 id，优先使用
+   * @param options.lan 字幕语言，优先使用
+   * @param options.output 输出文件路径
+   * @param options.useV2 是否优先使用 subtitle_url_v2
+   */
+  async downloadSubtitle(
+    options: {
+      cid: number;
+      subtitleId?: number | string;
+      lan?: string;
+      output: string;
+      useV2?: boolean;
+    } & VideoId
+  ): Promise<string> {
+    this.auth.authLogin();
+    const detail = await this.playerInfo({
+      aid: options.aid,
+      bvid: options.bvid,
+      cid: options.cid,
+    });
+    // console.log(detail);
+    const subtitles = detail?.subtitle?.subtitles || [];
+    if (!subtitles.length) {
+      throw new Error("视频没有字幕");
+    }
+    console.log("subtitles", subtitles);
+    let subtitle = subtitles.find((item: any) => {
+      if (options.subtitleId != null) {
+        return String(item.id || item.id_str) === String(options.subtitleId);
+      }
+      if (options.lan) {
+        return item.lan === options.lan || item.lan_doc === options.lan;
+      }
+      return false;
+    });
+
+    if (!subtitle && options.lan) {
+      subtitle = subtitles.find((item: any) => {
+        return (
+          String(item.lan).includes(options.lan) ||
+          String(item.lan_doc).includes(options.lan)
+        );
+      });
+    }
+
+    if (!subtitle) {
+      subtitle = subtitles[0];
+    }
+
+    let url = options.useV2
+      ? subtitle.subtitle_url_v2 || subtitle.subtitle_url
+      : subtitle.subtitle_url || subtitle.subtitle_url_v2;
+
+    if (!url) {
+      throw new Error("字幕地址获取失败");
+    } else {
+      if (!url.startsWith("http")) {
+        url = `https:${url}`;
+      }
+    }
+    const res = await fetch(url, {
+      headers: {
+        Referer: "https://www.bilibili.com/",
+        cookie: this.auth.cookie,
+      },
+    });
+    const jsonData = (await res.json()) as any;
+    const srtData = subtitleJsonToSrt(jsonData);
+    fs.writeFileSync(options.output, srtData);
+    return options.output;
   }
 
   private authAid() {

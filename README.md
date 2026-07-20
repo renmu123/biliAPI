@@ -448,6 +448,19 @@ const convertDm = async () => {
 };
 ```
 
+### 下载字幕
+
+```js
+const downloadSubtitle = async () => {
+  const client = new Client();
+  const output = await client.video.downloadSubtitle({
+    bvid: "BV1wc41127vK",
+    output: "subtitle.xml",
+  });
+  console.log(output);
+};
+```
+
 ### 设置 aid
 
 `video.setAid(aid)`

@@ -10,7 +10,11 @@ import Video from "./video/index.js";
 import Reply from "./video/reply.js";
 import Common from "./common/index.js";
 import { WbiSign } from "./base/sign.js";
-import { fakeBuvid3, fakeDmCoverImgStr } from "./utils/index.js";
+import {
+  fakeBuvid3,
+  fakeDmCoverImgStr,
+  subtitleJsonToSrt,
+} from "./utils/index.js";
 import { protobufDecode, protoBufToXml } from "./utils/dm.js";
 import Downloader from "./utils/downloader.js";
 import { BcutASR } from "./bCut/asr.js";
@@ -110,6 +114,7 @@ const utils = {
   fakeDmCoverImgStr,
   protobufDecode,
   protoBufToXml,
+  subtitleJsonToSrt,
 };
 
 export {

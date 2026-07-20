@@ -1,4 +1,4 @@
-import { WebVideoUploader, Platform } from "../src/index";
+import { WebVideoUploader, Platform, utils } from "../src/index";
 import { describe, expect, it, vi } from "vitest";
 
 describe("Platform", () => {
@@ -90,6 +90,38 @@ describe("Platform", () => {
       // @ts-ignore
       expect(postSpy.mock.calls[0][1].sortByCid).toBeUndefined();
     });
+  });
+});
+
+describe("Subtitle Utils", () => {
+  it("should convert subtitle JSON to SRT format", () => {
+    const subtitleJson = {
+      font_size: 0.4,
+      font_color: "#FFFFFF",
+      background_alpha: 0.5,
+      background_color: "#9C27B0",
+      stroke: "none",
+      body: [
+        {
+          from: 0,
+          to: 3.27,
+          location: 2,
+          content: "今天我们要上手体验的是一颗非常特殊的芯片",
+        },
+        {
+          from: 4.0,
+          to: 7.5,
+          location: 2,
+          content: "下一句测试字幕转换",
+        },
+      ],
+    };
+
+    const srt = utils.subtitleJsonToSrt(subtitleJson);
+
+    expect(srt).toBe(
+      "1\n00:00:00,000 --> 00:00:03,270\n今天我们要上手体验的是一颗非常特殊的芯片\n\n2\n00:00:04,000 --> 00:00:07,500\n下一句测试字幕转换\n"
+    );
   });
 });
 
