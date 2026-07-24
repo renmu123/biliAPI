@@ -194,15 +194,15 @@ export default class Platform extends BaseRequest {
 
     const pause = () => {
       queue.pause();
-      uploadTasks.map(uploader => uploader.queue && uploader.pause());
+      uploadTasks.forEach(uploader => uploader.pause());
     };
     const start = () => {
       queue.start();
-      uploadTasks.map(uploader => uploader.queue && uploader.start());
+      uploadTasks.forEach(uploader => uploader.start());
     };
     const cancel = () => {
       queue.clear();
-      uploadTasks.map(uploader => uploader.queue && uploader.cancel());
+      uploadTasks.forEach(uploader => uploader.cancel());
     };
 
     return {

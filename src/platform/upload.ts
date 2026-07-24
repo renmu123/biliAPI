@@ -565,11 +565,17 @@ export class WebVideoUploader extends BaseRequest {
         return;
       }
 
-      abortSignal.addEventListener("abort", () => {
-        const abortError = new CancelError("Upload aborted");
-        reject(abortError);
-        req.destroy();
-      });
+      abortSignal.addEventListener(
+        "abort",
+        () => {
+          const abortError = new CancelError("Upload aborted");
+          reject(abortError);
+          req.destroy();
+        },
+        {
+          once: true,
+        }
+      );
 
       // 如果是 Buffer，直接写入
       if (Buffer.isBuffer(fileStream)) {
