@@ -54,7 +54,7 @@ interface UploadChunkTask {
   uploadId: string;
   chunk: number;
   chunks: number;
-  controller: AbortController;
+  controller?: AbortController;
   status?: "pending" | "completed" | "running" | "error" | "abort";
 }
 
@@ -68,7 +68,7 @@ export class WebVideoUploader extends BaseRequest {
     | "completed"
     | "error"
     | "cancel" = "pending";
-  queue: PQueue;
+  private queue: PQueue;
   emitter = new TypedEmitter<WebEmitterEvents>();
   progress: { [key: string]: number } = {};
   chunkTasks: {
@@ -231,6 +231,10 @@ export class WebVideoUploader extends BaseRequest {
       this.emitter.emit("error", e);
       this.status = "error";
       throw e;
+    } finally {
+      // 出错时其他并发分片可能仍在处理 abort，等待它们退出后再释放任务状态。
+      await this.queue.onIdle();
+      this.cleanupTaskState();
     }
   }
 
@@ -449,6 +453,10 @@ export class WebVideoUploader extends BaseRequest {
     streamSize: number
   ) {
     const { start, size, auth, url, uploadId, chunk, chunks } = options;
+    const controller = options.controller;
+    if (!controller) {
+      throw new CancelError("Upload aborted");
+    }
     const params = {
       uploadId: uploadId,
       partNumber: chunk + 1,
@@ -466,7 +474,7 @@ export class WebVideoUploader extends BaseRequest {
       auth,
       throttleStream,
       streamSize,
-      options.controller.signal,
+      controller.signal,
       (loaded: number) => {
         this.progress[params.partNumber] = loaded;
         const progress = sum(Object.values(this.progress));
@@ -692,6 +700,7 @@ export class WebVideoUploader extends BaseRequest {
         // console.log("completed", partNumber);
         if (partNumber === undefined) return;
         this.chunkTasks[partNumber].status = "completed";
+        this.chunkTasks[partNumber].controller = undefined;
         parts.push({ partNumber, eTag: "etag" });
       });
 
@@ -748,7 +757,7 @@ export class WebVideoUploader extends BaseRequest {
     Object.values(this.chunkTasks)
       .filter(task => task.status === "running")
       .map(task => {
-        task.controller.abort();
+        task.controller?.abort();
         this.progress[task.chunk + 1] = 0;
       });
     // console.log("上传已暂停", this.progress);
@@ -780,7 +789,18 @@ export class WebVideoUploader extends BaseRequest {
   taskClear() {
     this.queue.clear();
     Object.values(this.chunkTasks).map(task => {
-      task.controller.abort();
+      task.controller?.abort();
     });
+  }
+
+  private cleanupTaskState() {
+    this.queue.removeAllListeners();
+
+    Object.values(this.chunkTasks).forEach(task => {
+      task.controller?.abort();
+      task.controller = undefined;
+    });
+    this.chunkTasks = {};
+    this.progress = {};
   }
 }

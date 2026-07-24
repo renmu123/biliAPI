@@ -169,14 +169,20 @@ describe("WebVideoUploader", () => {
     it("should upload a video successfully", async () => {
       const uploadChunkSpy = vi
         .spyOn(uploader, "uploadChunk")
-        .mockResolvedValue([
-          {
-            partNumber: 1,
-            eTag: "etag",
-          },
-        ]);
+        .mockImplementation(async () => {
+          uploader.chunkTasks = {
+            1: {
+              status: "completed",
+              controller: new AbortController(),
+            },
+          };
+          uploader.progress = { 1: 10485760 };
+          return true;
+        });
 
       await uploader.upload();
+      expect(uploader.chunkTasks).toEqual({});
+      expect(uploader.progress).toEqual({});
       expect(preuploadSPy).toHaveBeenCalledWith();
       expect(getUploadInfoSpy).toHaveBeenLastCalledWith(
         "https://upos-cs-upcdnbldsa.bilivideo.com/ugcfx2lf/n240809sa.mp4",
@@ -201,6 +207,65 @@ describe("WebVideoUploader", () => {
         },
         "ak=14944&cdn=%2F%2Fupos-cs-upcdnbldsa.bilivideo.com&os=upos&sign=aeed1d0f57b27bf9359a5b36d&timestamp=1723173507.145&uid=10995238&uip=1.84.214.166&uport=9896&use_dqp=0"
       );
+    });
+    it("should clear chunk state after upload failure", async () => {
+      const failedUploader = new WebVideoUploader({
+        path: "/data/test.mp4",
+      }) as any;
+      failedUploader.chunkTasks = {
+        1: {
+          status: "running",
+          controller: new AbortController(),
+        },
+      };
+      failedUploader.progress = { 1: 1024 };
+      vi.spyOn(failedUploader, "preupload").mockRejectedValue(
+        new Error("preupload failed")
+      );
+      failedUploader.emitter.on("error", () => {});
+
+      await expect(failedUploader.upload()).rejects.toThrow("preupload failed");
+      expect(failedUploader.chunkTasks).toEqual({});
+      expect(failedUploader.progress).toEqual({});
+    });
+    it("should clear chunk state after upload cancellation", async () => {
+      const canceledUploader = new WebVideoUploader({
+        path: "/data/test.mp4",
+      }) as any;
+      canceledUploader.chunkTasks = {
+        1: {
+          status: "running",
+          controller: new AbortController(),
+        },
+      };
+      canceledUploader.progress = { 1: 1024 };
+
+      let resolvePreupload: (value: any) => void;
+      vi.spyOn(canceledUploader, "preupload").mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolvePreupload = resolve;
+          })
+      );
+      vi.spyOn(canceledUploader, "getUploadInfo").mockResolvedValue({
+        OK: 1,
+        bucket: "ugcfx2lf",
+        key: "/n240809sa.mp4",
+        upload_id: "6bb8-q1fe-442a-82e3-717cc0ed2432",
+      });
+
+      const uploadPromise = canceledUploader.upload();
+      canceledUploader.cancel();
+      resolvePreupload({
+        url: "https://upos.example.com/test.mp4",
+        biz_id: 1,
+        chunk_size: 10485760,
+        auth: "",
+      });
+
+      await uploadPromise;
+      expect(canceledUploader.chunkTasks).toEqual({});
+      expect(canceledUploader.progress).toEqual({});
     });
     // it("should merge error", async () => {
     //   const mergeVideoSpy = vi
@@ -247,7 +312,7 @@ describe("WebVideoUploader", () => {
       expect(
         Object.entries(uploader.chunkTasks).every(([partNumber, task]) => {
           // @ts-ignore
-          return task.status === "completed";
+          return task.status === "completed" && task.controller === undefined;
         })
       ).toBe(true);
     });
