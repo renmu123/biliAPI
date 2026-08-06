@@ -70,6 +70,13 @@ class RangeDownloader {
     this.timeoutId = null;
   }
 
+  private clearDownloadTimeout(): void {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+  }
+
   async start(): Promise<void> {
     if (!["pending", "paused"].includes(this.status)) return;
     if (this.status === "pending") {
@@ -84,10 +91,11 @@ class RangeDownloader {
     const _self = this;
 
     const resetTimeout = () => {
-      if (_self.timeoutId) {
-        clearTimeout(_self.timeoutId);
-      }
+      _self.clearDownloadTimeout();
       _self.timeoutId = setTimeout(() => {
+        _self.timeoutId = null;
+        if (_self.status !== "running") return;
+
         if (_self.retryCount < _self.maxRetries) {
           _self.retryCount++;
           _self.start();
@@ -141,15 +149,14 @@ class RangeDownloader {
         response.data.pipe(writableStream);
 
         writableStream.on("finish", () => {
-          if (_self.timeoutId) {
-            clearTimeout(_self.timeoutId);
-          }
+          _self.clearDownloadTimeout();
           this.status = "completed";
           if (typeof _self.oncompleted === "function") {
             _self.oncompleted(_self);
           }
         });
         writableStream.on("error", error => {
+          _self.clearDownloadTimeout();
           if (typeof _self.onerror === "function") {
             _self.onerror(error);
           }
@@ -187,7 +194,7 @@ class RangeDownloader {
     if (this.status !== "running") return;
 
     this.status = "paused";
-
+    this.clearDownloadTimeout();
     this.abortController !== null ? this.abortController.abort() : undefined;
     // this.downloadedSize = this.supportPartial ? this.downloadedSize : 0;
   }
@@ -196,6 +203,7 @@ class RangeDownloader {
     if (!["running", "pending", "paused"].includes(this.status)) return;
 
     this.status = "canceled";
+    this.clearDownloadTimeout();
     this.abortController !== null ? this.abortController.abort() : undefined;
     this.downloadedSize = 0;
     this.totalSize = 0;
