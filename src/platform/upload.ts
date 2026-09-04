@@ -437,6 +437,9 @@ export class WebVideoUploader extends BaseRequest {
       headers: {
         "X-Upos-Auth": auth,
       },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
       extra: {
         rawResponse: true,
       },
@@ -526,6 +529,7 @@ export class WebVideoUploader extends BaseRequest {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
         },
         timeout: 1000000,
+        rejectUnauthorized: false,
       };
       // console.log("Uploading chunk to", options);
       const req = https.request(options, res => {
