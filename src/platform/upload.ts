@@ -415,7 +415,6 @@ export class WebVideoUploader extends BaseRequest {
     if (res.data.lines.length === 0) {
       throw new Error("获取线路失败");
     }
-    console.log("获取线路成功", res.data);
     const line = res.data.lines.find((line: { query: string }) => {
       const params = new URLSearchParams(line.query);
       const key = `${params.get("zone")}-${params.get("upcdn")}`;
@@ -424,7 +423,6 @@ export class WebVideoUploader extends BaseRequest {
     if (!line) {
       throw new Error("获取线路失败：可用线路均在黑名单中");
     }
-    console.log("选择线路成功", line);
     return line;
   }
 
