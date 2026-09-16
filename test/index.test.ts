@@ -138,6 +138,63 @@ describe("WebVideoUploader", () => {
     };
   });
   WebVideoUploader.prototype.getFileSizeSync = () => 240850008;
+  describe("line blacklist", () => {
+    const lines = [
+      { os: "upos", query: "probe_version=20221109&upcdn=bldsa&zone=cs", probe_url: "" },
+      { os: "upos", query: new URLSearchParams("probe_version=20221109&upcdn=qn&zone=cs"), probe_url: "" },
+      { os: "upos", query: "probe_version=20221109&upcdn=bldsa&zone=hk", probe_url: "" },
+    ];
+
+    it("skips matching zone-line pairs while preserving API order", async () => {
+      const uploader = new WebVideoUploader(
+        { path: "/data/test.mp4" },
+        undefined,
+        { lineBlacklist: ["cs-bldsa", "cs-qn"] }
+      );
+      vi.spyOn(uploader.request, "get").mockResolvedValue({
+        data: { OK: 1, lines },
+      } as any);
+
+      expect(await uploader.getUploadLineApi()).toBe(lines[2]);
+    });
+
+    it("reports when every automatic line is excluded", async () => {
+      const uploader = new WebVideoUploader(
+        { path: "/data/test.mp4" },
+        undefined,
+        { lineBlacklist: ["cs-bldsa", "cs-qn", "hk-bldsa"] }
+      );
+      vi.spyOn(uploader.request, "get").mockResolvedValue({
+        data: { OK: 1, lines },
+      } as any);
+
+      await expect(uploader.getUploadLineApi()).rejects.toThrow("可用线路均在黑名单中");
+    });
+
+    it("does not apply the blacklist to a manually selected line", async () => {
+      const uploader = new WebVideoUploader(
+        { path: "/data/test.mp4" },
+        undefined,
+        { line: "bldsa", zone: "cs", lineBlacklist: ["cs-bldsa"] }
+      );
+      const lineSpy = vi.spyOn(uploader, "getUploadLineApi");
+      const preuploadSpy = vi.spyOn(uploader, "preuploadApi").mockResolvedValue({
+        endpoint: "//upos.example.com",
+        upos_uri: "upos://test.mp4",
+        biz_id: 1,
+        chunk_size: 1024,
+        auth: "",
+      } as any);
+
+      await uploader.preupload();
+      expect(lineSpy).not.toHaveBeenCalled();
+      expect(preuploadSpy).toHaveBeenCalledWith({
+        zone: "cs",
+        upcdn: "bldsa",
+        probe_version: "20250923",
+      });
+    });
+  });
   describe("upload", () => {
     const uploader = new WebVideoUploader({
       path: "/data/test.mp4",

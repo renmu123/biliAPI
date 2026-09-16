@@ -80,6 +80,7 @@ export class WebVideoUploader extends BaseRequest {
     retryTimes: number;
     retryDelay: number;
     line: Line;
+    lineBlacklist: string[];
     zone: string;
     limitRate: number;
     bcutPreUpload: boolean;
@@ -103,6 +104,8 @@ export class WebVideoUploader extends BaseRequest {
       retryTimes?: number;
       retryDelay?: number;
       line?: Line;
+      /** 自动选择线路时排除的 zone-upcdn 组合，例如 cs-bldsa */
+      lineBlacklist?: string[];
       zone?: string;
       throttleRate?: number;
       // 使用必剪的预上传接口，web的存在406风控，b-cut的看起来不存在
@@ -116,6 +119,7 @@ export class WebVideoUploader extends BaseRequest {
         retryTimes: 3,
         retryDelay: 3000,
         line: "auto",
+        lineBlacklist: [],
         zone: "cs",
         limitRate: 0,
         bcutPreUpload: false,
@@ -411,7 +415,17 @@ export class WebVideoUploader extends BaseRequest {
     if (res.data.lines.length === 0) {
       throw new Error("获取线路失败");
     }
-    return res.data.lines[0];
+    console.log("获取线路成功", res.data);
+    const line = res.data.lines.find((line: { query: string }) => {
+      const params = new URLSearchParams(line.query);
+      const key = `${params.get("zone")}-${params.get("upcdn")}`;
+      return !this.options.lineBlacklist.includes(key);
+    });
+    if (!line) {
+      throw new Error("获取线路失败：可用线路均在黑名单中");
+    }
+    console.log("选择线路成功", line);
+    return line;
   }
 
   private async getUploadInfoApi(
